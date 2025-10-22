@@ -1,0 +1,26 @@
+# TODO for Image Search and Update Page
+
+- [x] Create upload.php with HTML form for image input
+- [x] Add PHP code to connect to MySQL database azzahra2_multibrand
+- [x] Handle file upload, validate image, move to assets/image/
+- [x] Insert image path into produk table field gambar
+- [x] Test the upload functionality
+- [x] Modify upload.php to include kode_barang input
+- [x] Check if kode_barang exists in produk table
+- [x] Update gambar field for existing kode_barang, else show alert
+- [x] Test the modified functionality
+- [x] Create search_image.py script for automatic image search
+- [x] Query produk WHERE gambar IS NULL
+- [x] Use Unsplash API to search and download images
+- [x] Update database with image paths
+- [x] Test the Python script
+- [x] Modify upload.php to search images by nama_produk using Unsplash and Pixabay APIs
+- [x] Display searched images on the page
+- [x] Add update buttons for each image to update DB
+- [x] Test the search and update functionality
+- [x] Create auto_upload.php for automatic image search and upload for all products without images
+- [x] Fetch products with empty gambar field
+- [x] Search 3 images per product using SerpAPI
+- [x] Download and save images to assets/image/
+- [x] Update DB with JSON array of image paths
+- [x] Test the automation
