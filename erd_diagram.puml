@@ -1,0 +1,96 @@
+@startuml ERD Diagram - Azza Service App
+
+entity "User" as user {
+  * id : VARCHAR
+  --
+  * name : VARCHAR
+  * phone : VARCHAR
+  * email : VARCHAR
+  * role : VARCHAR (customer/technician)
+  * points : INT
+  * birthday : DATE
+  * address : TEXT
+  * created_at : TIMESTAMP
+}
+
+entity "Order" as order {
+  * order_id : VARCHAR
+  --
+  * customer_id : VARCHAR
+  technician_id : VARCHAR
+  * device_type : VARCHAR
+  * device_brand : VARCHAR
+  * device_serial : VARCHAR
+  * warranty_status : VARCHAR
+  * service_type : VARCHAR
+  * visit_cost : DECIMAL
+  * damage_description : TEXT
+  * damage_photos : JSON
+  * estimated_price : DECIMAL
+  * status : ENUM
+  * created_at : TIMESTAMP
+  approval_notes : TEXT
+}
+
+entity "Product" as product {
+  * kode_barang : VARCHAR
+  --
+  * nama_produk : VARCHAR
+  * harga : INT
+  deskripsi : TEXT
+  gambar : VARCHAR
+  gambar_url : VARCHAR
+}
+
+entity "Voucher" as voucher {
+  * voucher_id : INT
+  --
+  * voucher_code : VARCHAR
+  description : TEXT
+  * discount_percent : DECIMAL
+  * start_date : DATE
+  * end_date : DATE
+  * max_usage : INT
+  * status : VARCHAR
+  image : VARCHAR
+}
+
+entity "UserVoucher" as uservoucher {
+  * id : INT
+  --
+  * user_id : VARCHAR
+  * voucher_id : INT
+  * claimed_date : DATE
+  * used : VARCHAR
+}
+
+entity "Promo" as promo {
+  * kode_barang : VARCHAR
+  --
+  * tipe_produk : VARCHAR
+  * diskon : INT
+  * koin : INT
+  * gambar : VARCHAR
+  * harga : DECIMAL
+}
+
+entity "Notification" as notification {
+  * id : INT (auto)
+  --
+  * user_id : VARCHAR
+  * title : VARCHAR
+  * subtitle : VARCHAR
+  * icon : VARCHAR
+  * color : INT
+  * text_color : INT
+  * timestamp : TIMESTAMP
+}
+
+' Relationships
+user ||--o{ order : places (customer)
+user ||--o{ order : handles (technician)
+user ||--o{ uservoucher : claims
+voucher ||--o{ uservoucher : claimed by
+user ||--o{ notification : receives
+
+@enduml

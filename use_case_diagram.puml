@@ -1,0 +1,63 @@
+@startuml Use Case Diagram - Azza Service App
+
+left to right direction
+
+actor "Customer" as customer
+actor "Technician" as technician
+actor "Admin" as admin
+actor "Payment System" as payment <<system>>
+
+rectangle "Azza Service App" {
+  usecase "Login/Register" as login
+  usecase "View Home/Dashboard" as home
+  usecase "Order Service (Cleaning/Repair)" as order_service
+  usecase "Buy Products" as buy_product
+  usecase "View Profile & Points" as profile
+  usecase "Chat with Technician/Customer" as chat
+  usecase "View Notifications" as notifications
+  usecase "Use Vouchers/Promos" as vouchers
+  usecase "View History" as history
+  usecase "Accept Order" as accept_order
+  usecase "Update Order Status" as update_status
+  usecase "Track Location" as track
+  usecase "Approve Order" as approve
+  usecase "Process Payment" as process_payment
+  usecase "Scan QR Code" as qr_scan
+  usecase "View Articles/Tips" as articles
+}
+
+' Customer use cases
+customer --> login
+customer --> home
+customer --> order_service
+customer --> buy_product
+customer --> profile
+customer --> chat
+customer --> notifications
+customer --> vouchers
+customer --> history
+customer --> qr_scan
+customer --> articles
+
+' Technician use cases
+technician --> login
+technician --> home
+technician --> accept_order
+technician --> update_status
+technician --> chat
+technician --> track
+technician --> notifications
+technician --> history
+
+' Admin use cases
+admin --> approve
+
+' Payment system
+payment --> process_payment
+
+' Relationships
+order_service ..> process_payment : includes
+buy_product ..> process_payment : includes
+approve ..> order_service : approves
+
+@enduml
