@@ -318,7 +318,7 @@ class BackgroundServiceManager {
       // This is a simplified version - in production, ensure proper initialization
       final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
-      final AndroidNotificationDetails androidPlatformChannelSpecifics =
+      const AndroidNotificationDetails androidPlatformChannelSpecifics =
           AndroidNotificationDetails(
         'birthday_channel',
         'Birthday Notifications',

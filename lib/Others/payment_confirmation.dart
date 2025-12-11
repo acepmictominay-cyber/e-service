@@ -91,7 +91,7 @@ class _PaymentConfirmationPageState extends State<PaymentConfirmationPage> {
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 6,
                     offset: const Offset(0, 3),
                   ),
@@ -102,7 +102,8 @@ class _PaymentConfirmationPageState extends State<PaymentConfirmationPage> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.receipt_long, color: Colors.white, size: 24),
+                      const Icon(Icons.receipt_long,
+                          color: Colors.white, size: 24),
                       const SizedBox(width: 8),
                       Text(
                         'Detail Pesanan',
@@ -144,7 +145,7 @@ class _PaymentConfirmationPageState extends State<PaymentConfirmationPage> {
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 6,
                       offset: const Offset(0, 3),
                     ),
@@ -213,7 +214,7 @@ class _PaymentConfirmationPageState extends State<PaymentConfirmationPage> {
                             icon: Container(
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: Colors.green.withOpacity(0.1),
+                                color: Colors.green.withValues(alpha: 0.1),
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(
@@ -261,7 +262,7 @@ class _PaymentConfirmationPageState extends State<PaymentConfirmationPage> {
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 6,
                       offset: const Offset(0, 3),
                     ),
@@ -328,7 +329,7 @@ class _PaymentConfirmationPageState extends State<PaymentConfirmationPage> {
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 6,
                       offset: const Offset(0, 3),
                     ),
@@ -399,7 +400,6 @@ class _PaymentConfirmationPageState extends State<PaymentConfirmationPage> {
                   ],
                 ),
               ),
-
               const SizedBox(height: 16),
             ],
 
@@ -413,7 +413,7 @@ class _PaymentConfirmationPageState extends State<PaymentConfirmationPage> {
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 6,
                       offset: const Offset(0, 3),
                     ),
@@ -453,7 +453,6 @@ class _PaymentConfirmationPageState extends State<PaymentConfirmationPage> {
                   ],
                 ),
               ),
-
               const SizedBox(height: 16),
             ],
 
@@ -466,7 +465,7 @@ class _PaymentConfirmationPageState extends State<PaymentConfirmationPage> {
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 6,
                     offset: const Offset(0, 3),
                   ),
@@ -475,7 +474,7 @@ class _PaymentConfirmationPageState extends State<PaymentConfirmationPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  const Text(
                     'Konfirmasi Pembayaran',
                     style: TextStyle(
                       fontSize: 16,
@@ -496,7 +495,7 @@ class _PaymentConfirmationPageState extends State<PaymentConfirmationPage> {
                         activeColor: const Color(0xFF0041c3),
                       ),
                       const SizedBox(width: 8),
-                      Expanded(
+                      const Expanded(
                         child: Text(
                           'Saya telah melakukan pembayaran sesuai dengan instruksi di atas',
                           style: TextStyle(fontSize: 14, color: Colors.black87),
@@ -514,56 +513,48 @@ class _PaymentConfirmationPageState extends State<PaymentConfirmationPage> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed:
-                    _hasConfirmedTransfer
-                        ? () {
-                          // Navigate to success page
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder:
-                                  (context) => StruckPesananPage(
-                                    serviceType: 'shop',
-                                    nama:
-                                        widget.selectedAddress?['nama'] ??
-                                        'Customer',
-                                    jumlahBarang: widget.quantity,
-                                    items: [
-                                      {
-                                        'merek':
-                                            widget.produk['nama_produk'] ??
-                                            'Produk',
-                                        'device':
-                                            widget.produk['deskripsi'] ??
-                                            'Deskripsi',
-                                        'seri': 'Order: ${widget.orderCode}',
-                                      },
-                                    ],
-                                    alamat:
-                                        widget
-                                            .selectedAddress?['detailAlamat'] ??
-                                        'Atur alamat anda di sini',
-                                    totalHarga: NumberFormat.currency(
-                                      locale: 'id_ID',
-                                      symbol: 'Rp ',
-                                      decimalDigits: 0,
-                                    ).format(widget.totalAmount),
-                                  ),
+                onPressed: _hasConfirmedTransfer
+                    ? () {
+                        // Navigate to success page
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => StruckPesananPage(
+                              serviceType: 'shop',
+                              nama:
+                                  widget.selectedAddress?['nama'] ?? 'Customer',
+                              jumlahBarang: widget.quantity,
+                              items: [
+                                {
+                                  'merek':
+                                      widget.produk['nama_produk'] ?? 'Produk',
+                                  'device':
+                                      widget.produk['deskripsi'] ?? 'Deskripsi',
+                                  'seri': 'Order: ${widget.orderCode}',
+                                },
+                              ],
+                              alamat: widget.selectedAddress?['detailAlamat'] ??
+                                  'Atur alamat anda di sini',
+                              totalHarga: NumberFormat.currency(
+                                locale: 'id_ID',
+                                symbol: 'Rp ',
+                                decimalDigits: 0,
+                              ).format(widget.totalAmount),
                             ),
-                          );
-                        }
-                        : null,
+                          ),
+                        );
+                      }
+                    : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor:
-                      _hasConfirmedTransfer
-                          ? const Color(0xFF0041c3)
-                          : Colors.grey,
+                  backgroundColor: _hasConfirmedTransfer
+                      ? const Color(0xFF0041c3)
+                      : Colors.grey,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
-                child: Text(
+                child: const Text(
                   'Konfirmasi Pembayaran Selesai',
                   style: TextStyle(
                     fontSize: 16,
@@ -598,7 +589,7 @@ class _PaymentConfirmationPageState extends State<PaymentConfirmationPage> {
           Text(label, style: TextStyle(fontSize: 14, color: Colors.grey[600])),
           Text(
             value,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
               color: Colors.black87,
@@ -620,7 +611,7 @@ class _PaymentConfirmationPageState extends State<PaymentConfirmationPage> {
             children: [
               Text(
                 value,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
                   color: Colors.black87,
@@ -636,7 +627,7 @@ class _PaymentConfirmationPageState extends State<PaymentConfirmationPage> {
                       icon: Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Colors.green.withOpacity(0.1),
+                          color: Colors.green.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
@@ -683,7 +674,7 @@ class _PaymentConfirmationPageState extends State<PaymentConfirmationPage> {
             child: Center(
               child: Text(
                 step.toString(),
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
@@ -695,7 +686,7 @@ class _PaymentConfirmationPageState extends State<PaymentConfirmationPage> {
           Expanded(
             child: Text(
               instruction,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 14,
                 color: Colors.black87,
                 height: 1.4,

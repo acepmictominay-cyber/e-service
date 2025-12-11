@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'package:azza_service/Beli/shop.dart';
-import 'package:azza_service/Home/Home.dart';
+import 'package:azza_service/Home/home.dart';
 import 'package:azza_service/Others/session_manager.dart';
 import 'package:azza_service/Profile/profile.dart';
 import 'package:azza_service/Promo/promo.dart';
-import 'package:azza_service/Service/Service.dart';
+import 'package:azza_service/Service/service.dart';
 import 'package:azza_service/api_services/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -61,7 +61,8 @@ class _ShowQrCustomerDataState extends State<ShowQrCustomerData> {
           const begin = Offset(0.5, 0.0);
           const end = Offset.zero;
           const curve = Curves.easeInOut;
-          var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+          var tween =
+              Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
           return SlideTransition(
             position: animation.drive(tween),
             child: FadeTransition(opacity: animation, child: child),
@@ -239,25 +240,26 @@ class _ShowQrCustomerDataState extends State<ShowQrCustomerData> {
         showUnselectedLabels: true,
         selectedLabelStyle: GoogleFonts.poppins(fontSize: 12),
         unselectedLabelStyle: GoogleFonts.poppins(fontSize: 12),
-        items:  [
-          BottomNavigationBarItem(
+        items: [
+          const BottomNavigationBarItem(
             icon: Icon(Icons.build_circle_outlined),
             label: 'Service',
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(Icons.shopping_cart_outlined),
             label: 'Beli',
           ),
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          const BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(
             icon: currentIndex == 3
                 ? Image.asset('assets/image/promo.png', width: 24, height: 24)
                 : Opacity(
                     opacity: 0.6,
-                    child: Image.asset('assets/image/promo.png', width: 24, height: 24)),
+                    child: Image.asset('assets/image/promo.png',
+                        width: 24, height: 24)),
             label: 'Promo',
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),
             label: 'Profile',
           ),

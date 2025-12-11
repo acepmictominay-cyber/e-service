@@ -1,10 +1,10 @@
 import 'package:azza_service/Beli/shop.dart';
-import 'package:azza_service/Home/Home.dart';
+import 'package:azza_service/Home/home.dart';
 import 'package:azza_service/Others/notifikasi.dart';
 import 'package:azza_service/Others/session_manager.dart';
 import 'package:azza_service/Profile/profile.dart';
 import 'package:azza_service/Promo/promo.dart';
-import 'package:azza_service/Service/Service.dart';
+import 'package:azza_service/Service/service.dart';
 import 'package:azza_service/Service/detail_alamat.dart';
 import 'package:azza_service/api_services/api_service.dart';
 import 'package:flutter/material.dart';
@@ -87,7 +87,6 @@ class _PerbaikanServicePageState extends State<PerbaikanServicePage> {
           }
         });
       } catch (e) {
-        print('Error loading user data: $e');
       }
     }
   }
@@ -296,7 +295,7 @@ class _PerbaikanServicePageState extends State<PerbaikanServicePage> {
                               // ===== VALIDASI =====
                               if (namaController.text.isEmpty) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
+                                  const SnackBar(
                                     content: Text(
                                       'Nama wajib diisi dan tidak boleh kosong',
                                     ),
@@ -306,7 +305,7 @@ class _PerbaikanServicePageState extends State<PerbaikanServicePage> {
                               }
                               if (selectedAddress == null) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
+                                  const SnackBar(
                                     content: Text(
                                       'Alamat pengiriman wajib dipilih',
                                     ),
@@ -389,7 +388,7 @@ class _PerbaikanServicePageState extends State<PerbaikanServicePage> {
                               showDialog(
                                 context: context,
                                 barrierDismissible: false,
-                                builder: (context) => Center(
+                                builder: (context) => const Center(
                                   child: CircularProgressIndicator(),
                                 ),
                               );
@@ -471,15 +470,12 @@ class _PerbaikanServicePageState extends State<PerbaikanServicePage> {
                                       jumlahBarang, // Tambahan info jumlah item
                                 };
 
-                                print('Creating order: $orderData');
-
                                 Map<String, dynamic> orderResponse =
                                     await ApiService.createOrderList(orderData);
 
-                                print('Order response: $orderResponse');
 
                                 // Close loading dialog
-                                Navigator.of(context).pop();
+                                if (mounted) Navigator.of(context).pop();
 
                                 if (_isSuccess(orderResponse)) {
                                   // Ambil trans_kode dari response API
@@ -489,16 +485,18 @@ class _PerbaikanServicePageState extends State<PerbaikanServicePage> {
                                       '';
 
                                   if (transKode.isNotEmpty) {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            WaitingApprovalPage(
-                                          transKode: transKode,
-                                          jumlahItem: jumlahBarang,
+                                    if (mounted) {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              WaitingApprovalPage(
+                                            transKode: transKode,
+                                            jumlahItem: jumlahBarang,
+                                          ),
                                         ),
-                                      ),
-                                    );
+                                      );
+                                    }
                                   } else {
                                     _showErrorDialog(
                                       'Trans kode tidak ditemukan dalam response',
@@ -511,7 +509,7 @@ class _PerbaikanServicePageState extends State<PerbaikanServicePage> {
                                 }
                               } catch (e) {
                                 // Close loading dialog
-                                Navigator.of(context).pop();
+                                if (mounted) Navigator.of(context).pop();
                                 _showErrorDialog('Gagal membuat pesanan: $e');
                               }
                             },
@@ -683,9 +681,6 @@ class _PerbaikanServicePageState extends State<PerbaikanServicePage> {
   }
 
   Widget _buildAlamat() {
-    print('Brightness: ${Theme.of(context).brightness}');
-    print('Primary: ${Theme.of(context).colorScheme.primary}');
-    print('OnPrimary: ${Theme.of(context).colorScheme.onPrimary}');
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -840,7 +835,7 @@ class _PerbaikanServicePageState extends State<PerbaikanServicePage> {
           controller: controller,
           keyboardType:
               TextInputType.emailAddress, // Keyboard email untuk bantuan format
-          autofillHints: [AutofillHints.email], // Bantuan autofill email
+          autofillHints: const [AutofillHints.email], // Bantuan autofill email
           decoration: InputDecoration(
             filled: true,
             fillColor: Theme.of(context).colorScheme.surface,
@@ -988,12 +983,12 @@ class _PerbaikanServicePageState extends State<PerbaikanServicePage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Gagal'),
+          title: const Text('Gagal'),
           content: Text(message),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: Text('OK'),
+              child: const Text('OK'),
             ),
           ],
         );

@@ -1,7 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:azza_service/services/location_service.dart';
-import 'package:geolocator/geolocator.dart';
-import 'dart:async';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

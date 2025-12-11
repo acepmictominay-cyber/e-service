@@ -1,16 +1,15 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import '../api_services/payment_service.dart';
 
-class MidtransWebView extends StatefulWidget {
+class DokuWebView extends StatefulWidget {
   final String redirectUrl;
   final String orderId;
   final Function(String) onTransactionFinished;
 
-  const MidtransWebView({
+  const DokuWebView({
     super.key,
     required this.redirectUrl,
     required this.orderId,
@@ -18,10 +17,10 @@ class MidtransWebView extends StatefulWidget {
   });
 
   @override
-  State<MidtransWebView> createState() => _MidtransWebViewState();
+  State<DokuWebView> createState() => _DokuWebViewState();
 }
 
-class _MidtransWebViewState extends State<MidtransWebView> {
+class _DokuWebViewState extends State<DokuWebView> {
   late final WebViewController _controller;
   Timer? _pollingTimer;
   bool _isLoading = true;
@@ -58,8 +57,7 @@ class _MidtransWebViewState extends State<MidtransWebView> {
           onNavigationRequest: (NavigationRequest request) {
             // Handle external links if needed
             if (request.url.startsWith('http') &&
-                !request.url.contains('midtrans.com') &&
-                !request.url.contains('app.midtrans.com')) {
+                !request.url.contains('doku.com')) {
               // Open external links in browser
               return NavigationDecision.prevent;
             }
@@ -76,7 +74,7 @@ class _MidtransWebViewState extends State<MidtransWebView> {
 
   void _injectJavaScript() {
     const String jsCode = '''
-      // Override Midtrans events
+      // Override Doku events
       if (window.snap) {
         var originalPay = window.snap.pay;
         window.snap.pay = function(token, options) {
@@ -134,9 +132,7 @@ class _MidtransWebViewState extends State<MidtransWebView> {
       setTimeout(function() {
         var elements = document.querySelectorAll('button, a, div, span');
         for (var i = 0; i < elements.length; i++) {
-          if (elements[i].textContent.trim() === 'Leave This Page' ||
-              elements[i].innerText.trim() === 'Leave This Page' ||
-              elements[i].textContent.trim().toLowerCase().includes('leave')) {
+          if (elements[i].textContent.trim() === 'Leave This Page' || elements[i].innerText.trim() === 'Leave This Page') {
             elements[i].style.display = 'none';
           }
         }
@@ -179,10 +175,7 @@ class _MidtransWebViewState extends State<MidtransWebView> {
 
   void _startPolling() {
     // Production-ready: Reduce polling frequency to save resources
-    const bool isProduction = kReleaseMode;
-    const pollingInterval = isProduction
-        ? Duration(seconds: 5) // Less frequent in production
-        : Duration(seconds: 3); // More frequent in development
+    const pollingInterval = Duration(seconds: 3);
 
     _pollingTimer = Timer.periodic(pollingInterval, (timer) async {
       // Check if widget is still mounted before polling

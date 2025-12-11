@@ -1,7 +1,7 @@
 import 'package:azza_service/Beli/shop.dart';
-import 'package:azza_service/Home/Home.dart';
+import 'package:azza_service/Home/home.dart';
 import 'package:azza_service/Profile/profile.dart';
-import 'package:azza_service/Service/Service.dart';
+import 'package:azza_service/Service/service.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 class CekHargaPage extends StatefulWidget {
@@ -105,8 +105,8 @@ class _CekHargaPageState extends State<CekHargaPage> {
                         const SizedBox(height: 8),
                         Row(
                           children: [
-                            Expanded(
-                              child: const Text(
+                            const Expanded(
+                              child: Text(
                                 'Rp. 5.000.000',
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,

@@ -1,3 +1,4 @@
+
 class Voucher {
   final int voucherId;
   final String voucherCode;
@@ -22,22 +23,32 @@ class Voucher {
   });
 
   factory Voucher.fromJson(Map<String, dynamic> json) {
-    return Voucher(
-      voucherId: json['voucher_id'] ?? 0,
-      voucherCode: json['voucher_code'] ?? '',
-      description: json['description'],
-      discountPercent: double.tryParse(json['discount_percent']?.toString() ?? '0') ?? 0.0,
-      startDate: DateTime.parse(json['start_date'] ?? DateTime.now().toIso8601String()),
-      endDate: DateTime.parse(json['end_date'] ?? DateTime.now().toIso8601String()),
-      maxUsage: json['max_usage'] ?? 1,
-      status: json['status'] ?? 'active',
-      image: json['voucher_gambar'] ?? json['image'], // Try both column names
-    );
+    try {
+      final voucher = Voucher(
+        voucherId: json['voucher_id'] ?? 0,
+        voucherCode: json['voucher_code'] ?? '',
+        description: json['description'],
+        discountPercent:
+            double.tryParse(json['discount_percent']?.toString() ?? '0') ?? 0.0,
+        startDate: DateTime.parse(
+            json['start_date'] ?? DateTime.now().toIso8601String()),
+        endDate: DateTime.parse(
+            json['end_date'] ?? DateTime.now().toIso8601String()),
+        maxUsage: json['max_usage'] ?? 1,
+        status: json['status'] ?? 'active',
+        image: json['voucher_gambar'] ?? json['image'], // Try both column names
+      );
+      return voucher;
+    } catch (e) {
+      rethrow;
+    }
   }
 
   bool get isActive {
     final now = DateTime.now();
-    return status == 'active' && now.isAfter(startDate) && now.isBefore(endDate);
+    return status == 'active' &&
+        now.isAfter(startDate) &&
+        now.isBefore(endDate);
   }
 }
 
@@ -63,9 +74,11 @@ class UserVoucher {
       id: json['id'] ?? 0,
       idCostomer: json['id_costomer'] ?? '',
       voucherId: json['voucher_id'] ?? 0,
-      claimedDate: DateTime.parse(json['claimed_date'] ?? DateTime.now().toIso8601String()),
+      claimedDate: DateTime.parse(
+          json['claimed_date'] ?? DateTime.now().toIso8601String()),
       used: json['used'] ?? 'no',
-      voucher: json['voucher'] != null ? Voucher.fromJson(json['voucher']) : null,
+      voucher:
+          json['voucher'] != null ? Voucher.fromJson(json['voucher']) : null,
     );
   }
 

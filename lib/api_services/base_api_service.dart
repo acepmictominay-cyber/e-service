@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:azza_service/config/api_config.dart';
+import 'package:azza_service/utils/error_handler.dart';
 
 /// Base API service with comprehensive error handling, timeouts, and retries
 class BaseApiService {
@@ -101,7 +102,8 @@ class BaseApiService {
         );
 
         request.headers.addAll(_buildHeaders(headers));
-        request.files.add(await http.MultipartFile.fromPath(fieldName, file.path));
+        request.files
+            .add(await http.MultipartFile.fromPath(fieldName, file.path));
 
         if (fields != null) {
           request.fields.addAll(fields);
@@ -135,9 +137,15 @@ class BaseApiService {
         final responseData = _parseResponse(response);
 
         // Check for API-level errors
-        if (responseData.containsKey('success') && responseData['success'] == false) {
+        if (responseData.containsKey('success') &&
+            responseData['success'] == false) {
+          final errorMessage = ErrorHandler.handleApiError(
+            responseData['message'] ?? 'API request failed',
+            context: 'BaseApiService',
+            showToUser: false, // Don't show to user yet, let caller decide
+          );
           throw ApiException(
-            message: responseData['message'] ?? 'API request failed',
+            message: errorMessage,
             statusCode: response.statusCode,
             data: responseData,
           );
@@ -147,7 +155,8 @@ class BaseApiService {
       } on TimeoutException {
         if (attempts >= _maxRetries || !retryOnFailure) {
           throw ApiException(
-            message: 'Request timeout after ${effectiveTimeout.inSeconds} seconds',
+            message:
+                'Request timeout after ${effectiveTimeout.inSeconds} seconds',
             statusCode: 408,
           );
         }
@@ -155,7 +164,8 @@ class BaseApiService {
       } on SocketException {
         if (attempts >= _maxRetries || !retryOnFailure) {
           throw ApiException(
-            message: 'Network connection failed. Please check your internet connection.',
+            message:
+                'Network connection failed. Please check your internet connection.',
             statusCode: 0,
           );
         }
@@ -303,7 +313,9 @@ class ApiHelper {
       final data = response[key];
       if (data is List) {
         return data.cast<T>();
-      } else if (data is Map && data.containsKey('data') && data['data'] is List) {
+      } else if (data is Map &&
+          data.containsKey('data') &&
+          data['data'] is List) {
         return (data['data'] as List).cast<T>();
       }
       return [];

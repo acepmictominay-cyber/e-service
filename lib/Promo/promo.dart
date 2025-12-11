@@ -2,14 +2,13 @@ import 'dart:async';
 
 import 'package:azza_service/Beli/shop.dart';
 import 'package:azza_service/Chat/chat_page.dart';
-import 'package:azza_service/Home/Home.dart';
+import 'package:azza_service/Home/home.dart';
 import 'package:azza_service/Others/checkout.dart';
-import 'package:azza_service/Others/informasi.dart';
 import 'package:azza_service/Others/notifikasi.dart';
 import 'package:azza_service/Others/riwayat.dart';
 import 'package:azza_service/Others/user_point_data.dart';
 import 'package:azza_service/Profile/profile.dart';
-import 'package:azza_service/Service/Service.dart';
+import 'package:azza_service/Service/service.dart';
 import 'package:azza_service/Service/perbaikan_service.dart';
 import 'package:azza_service/api_services/api_service.dart';
 import 'package:azza_service/config/api_config.dart';
@@ -84,7 +83,6 @@ class _TukarPoinPageState extends State<TukarPoinPage> {
         _isLoading = false;
       });
     } catch (e) {
-      debugPrint("Error loading promo: $e");
       setState(() => _isLoading = false);
     }
   }
@@ -92,15 +90,27 @@ class _TukarPoinPageState extends State<TukarPoinPage> {
   Future<void> _fetchVouchers() async {
     try {
       final response = await ApiService.getVouchers();
-      debugPrint("📊 Total vouchers received from API: ${response.length}");
+      if (response.isEmpty) {
+        setState(() {
+          voucherList = [];
+          _isVoucherLoading = false;
+        });
+        return;
+      }
+      final parsedVouchers = <Voucher>[];
+      for (int i = 0; i < response.length; i++) {
+        try {
+          final voucher = Voucher.fromJson(response[i] as Map<String, dynamic>);
+          parsedVouchers.add(voucher);
+        } catch (e) {
+        }
+      }
+
       setState(() {
-        voucherList =
-            response.map<Voucher>((json) => Voucher.fromJson(json)).toList();
-        debugPrint("✅ Parsed vouchers in app: ${voucherList.length}");
+        voucherList = parsedVouchers;
         _isVoucherLoading = false;
       });
     } catch (e) {
-      debugPrint("❌ Error loading vouchers: $e");
       setState(() => _isVoucherLoading = false);
     }
   }
@@ -112,14 +122,12 @@ class _TukarPoinPageState extends State<TukarPoinPage> {
       if (customerId != null) {
         final response = await ApiService.getUserVouchers(customerId);
         setState(() {
-          userVouchers =
-              response
-                  .map<UserVoucher>((json) => UserVoucher.fromJson(json))
-                  .toList();
+          userVouchers = response
+              .map<UserVoucher>((json) => UserVoucher.fromJson(json))
+              .toList();
         });
       }
     } catch (e) {
-      debugPrint("Error loading user vouchers: $e");
     }
   }
 
@@ -129,14 +137,17 @@ class _TukarPoinPageState extends State<TukarPoinPage> {
 
   Future<void> _claimVoucher(Voucher voucher) async {
     if (_isVoucherClaimed(voucher)) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Voucher sudah diklaim')));
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Voucher sudah diklaim')));
+      }
       return;
     }
 
     try {
       final session = await SessionManager.getUserSession();
+      if (!mounted) return;
       final customerId = session['id']?.toString();
       if (customerId == null) {
         ScaffoldMessenger.of(
@@ -149,6 +160,7 @@ class _TukarPoinPageState extends State<TukarPoinPage> {
         customerId,
         voucher.voucherId,
       );
+      if (!mounted) return;
       if (response['success'] == true) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -160,13 +172,16 @@ class _TukarPoinPageState extends State<TukarPoinPage> {
         _fetchUserVouchers();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(response['message'] ?? 'Gagal claim voucher')),
+          SnackBar(
+              content: Text(response['message'] ?? 'Gagal claim voucher')),
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
     }
   }
 
@@ -203,7 +218,7 @@ class _TukarPoinPageState extends State<TukarPoinPage> {
             height: 130,
             decoration: BoxDecoration(
               color: Theme.of(context).appBarTheme.backgroundColor,
-              borderRadius: BorderRadius.only(
+              borderRadius: const BorderRadius.only(
                 bottomLeft: Radius.circular(20),
                 bottomRight: Radius.circular(20),
               ),
@@ -260,7 +275,7 @@ class _TukarPoinPageState extends State<TukarPoinPage> {
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: Colors.black.withValues(alpha: 0.1),
                           blurRadius: 8,
                           offset: const Offset(0, 4),
                         ),
@@ -299,11 +314,10 @@ class _TukarPoinPageState extends State<TukarPoinPage> {
                                 IconButton(
                                   icon: Icon(
                                     Icons.add_circle_outline,
-                                    color:
-                                        Theme.of(context).brightness ==
-                                                Brightness.dark
-                                            ? Colors.white
-                                            : Colors.black54,
+                                    color: Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? Colors.white
+                                        : Colors.black54,
                                   ),
                                   onPressed: () {
                                     showDialog(
@@ -321,9 +335,8 @@ class _TukarPoinPageState extends State<TukarPoinPage> {
                                                 Navigator.push(
                                                   context,
                                                   MaterialPageRoute(
-                                                    builder:
-                                                        (context) =>
-                                                            const PerbaikanServicePage(),
+                                                    builder: (context) =>
+                                                        const PerbaikanServicePage(),
                                                   ),
                                                 );
                                               },
@@ -347,18 +360,17 @@ class _TukarPoinPageState extends State<TukarPoinPage> {
                                 IconButton(
                                   icon: Icon(
                                     Icons.history,
-                                    color:
-                                        Theme.of(context).brightness ==
-                                                Brightness.dark
-                                            ? Colors.white
-                                            : Colors.black54,
+                                    color: Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? Colors.white
+                                        : Colors.black54,
                                   ),
                                   onPressed: () {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder:
-                                            (context) => const RiwayatPage(),
+                                        builder: (context) =>
+                                            const RiwayatPage(),
                                       ),
                                     );
                                   },
@@ -441,23 +453,22 @@ class _TukarPoinPageState extends State<TukarPoinPage> {
                         const SizedBox(height: 12),
                         SizedBox(
                           height: 180,
-                          child:
-                              _isVoucherLoading
+                          child: _isVoucherLoading
+                              ? const Center(
+                                  child: CircularProgressIndicator(),
+                                )
+                              : voucherList.isEmpty
                                   ? const Center(
-                                    child: CircularProgressIndicator(),
-                                  )
-                                  : voucherList.isEmpty
-                                  ? const Center(
-                                    child: Text("Tidak ada voucher tersedia"),
-                                  )
+                                      child: Text("Tidak ada voucher tersedia"),
+                                    )
                                   : ListView.builder(
-                                    scrollDirection: Axis.horizontal,
-                                    itemCount: voucherList.length,
-                                    itemBuilder: (context, index) {
-                                      final voucher = voucherList[index];
-                                      return _voucherCard(context, voucher);
-                                    },
-                                  ),
+                                      scrollDirection: Axis.horizontal,
+                                      itemCount: voucherList.length,
+                                      itemBuilder: (context, index) {
+                                        final voucher = voucherList[index];
+                                        return _voucherCard(context, voucher);
+                                      },
+                                    ),
                         ),
                       ],
                     ),
@@ -466,11 +477,11 @@ class _TukarPoinPageState extends State<TukarPoinPage> {
                   const SizedBox(height: 24),
 
                   // ==== PRODUK TUKAR POIN ====
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: const [
+                      children: [
                         Text(
                           "Tukarkan",
                           style: TextStyle(
@@ -486,23 +497,22 @@ class _TukarPoinPageState extends State<TukarPoinPage> {
 
                   SizedBox(
                     height: 280,
-                    child:
-                        _isLoading
-                            ? const Center(child: CircularProgressIndicator())
-                            : ListView.builder(
-                              scrollDirection: Axis.horizontal,
-                              itemCount: promoList.length,
-                              itemBuilder: (context, index) {
-                                final promo = promoList[index];
-                                return Padding(
-                                  padding: EdgeInsets.only(
-                                    left: index == 0 ? 16 : 8,
-                                    right: 8,
-                                  ),
-                                  child: _productCard(context, promo),
-                                );
-                              },
-                            ),
+                    child: _isLoading
+                        ? const Center(child: CircularProgressIndicator())
+                        : ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: promoList.length,
+                            itemBuilder: (context, index) {
+                              final promo = promoList[index];
+                              return Padding(
+                                padding: EdgeInsets.only(
+                                  left: index == 0 ? 16 : 8,
+                                  right: 8,
+                                ),
+                                child: _productCard(context, promo),
+                              );
+                            },
+                          ),
                   ),
 
                   const SizedBox(height: 20),
@@ -564,7 +574,7 @@ class _TukarPoinPageState extends State<TukarPoinPage> {
           ),
           BottomNavigationBarItem(
             icon: ColorFiltered(
-              colorFilter: ColorFilter.mode(Colors.white70, BlendMode.srcIn),
+              colorFilter: const ColorFilter.mode(Colors.white70, BlendMode.srcIn),
               child: Image.asset(
                 'assets/image/promo.png',
                 width: 24,
@@ -572,7 +582,7 @@ class _TukarPoinPageState extends State<TukarPoinPage> {
               ),
             ),
             activeIcon: ColorFiltered(
-              colorFilter: ColorFilter.mode(Colors.white, BlendMode.srcIn),
+              colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
               child: Image.asset(
                 'assets/image/promo.png',
                 width: 24,
@@ -614,7 +624,7 @@ class _TukarPoinPageState extends State<TukarPoinPage> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 6,
             offset: const Offset(0, 3),
           ),
@@ -630,40 +640,26 @@ class _TukarPoinPageState extends State<TukarPoinPage> {
               topLeft: Radius.circular(16),
               topRight: Radius.circular(16),
             ),
-            child:
-                imageUrl.isNotEmpty
-                    ? CachedNetworkImage(
-                      imageUrl: imageUrl,
+            child: imageUrl.isNotEmpty
+                ? CachedNetworkImage(
+                    imageUrl: imageUrl,
+                    width: double.infinity,
+                    height: 79,
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) => Container(
                       width: double.infinity,
                       height: 79,
-                      fit: BoxFit.cover,
-                      placeholder:
-                          (context, url) => Container(
-                            width: double.infinity,
-                            height: 79,
-                            color: Colors.blue.shade100,
-                            child: const Center(
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2.5,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  Color(0xFF0041c3),
-                                ),
-                              ),
-                            ),
+                      color: Colors.blue.shade100,
+                      child: const Center(
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.5,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Color(0xFF0041c3),
                           ),
-                      errorWidget:
-                          (context, url, error) => Container(
-                            width: double.infinity,
-                            height: 79,
-                            color: Colors.blue.shade100,
-                            child: const Icon(
-                              Icons.card_giftcard,
-                              size: 40,
-                              color: Color(0xFF0041c3),
-                            ),
-                          ),
-                    )
-                    : Container(
+                        ),
+                      ),
+                    ),
+                    errorWidget: (context, url, error) => Container(
                       width: double.infinity,
                       height: 79,
                       color: Colors.blue.shade100,
@@ -673,6 +669,17 @@ class _TukarPoinPageState extends State<TukarPoinPage> {
                         color: Color(0xFF0041c3),
                       ),
                     ),
+                  )
+                : Container(
+                    width: double.infinity,
+                    height: 79,
+                    color: Colors.blue.shade100,
+                    child: const Icon(
+                      Icons.card_giftcard,
+                      size: 40,
+                      color: Color(0xFF0041c3),
+                    ),
+                  ),
           ),
           Padding(
             padding: const EdgeInsets.all(8.0),
@@ -704,10 +711,9 @@ class _TukarPoinPageState extends State<TukarPoinPage> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
-                    onPressed:
-                        voucher.isActive && !_isVoucherClaimed(voucher)
-                            ? () => _claimVoucher(voucher)
-                            : null,
+                    onPressed: voucher.isActive && !_isVoucherClaimed(voucher)
+                        ? () => _claimVoucher(voucher)
+                        : null,
                     child: Text(
                       voucher.isActive
                           ? (_isVoucherClaimed(voucher) ? "Claimed" : "Claim")
@@ -727,232 +733,232 @@ class _TukarPoinPageState extends State<TukarPoinPage> {
       ),
     );
   }
-}
 
-// Enhanced Product Card - Using shop.dart style
-Widget _productCard(BuildContext context, Promo promo) {
-  final name = promo.tipeProduk;
-  final poin = promo.koin.toString();
-  final img =
-      promo.gambar.startsWith('http')
-          ? promo.gambar
-          : '${ApiConfig.storageBaseUrl}${promo.gambar}';
-  final diskon = promo.diskon;
+  // Enhanced Product Card - Using shop.dart style
+  Widget _productCard(BuildContext context, Promo promo) {
+    final name = promo.tipeProduk;
+    final poin = promo.koin.toString();
+    final img = promo.gambar.startsWith('http')
+        ? promo.gambar
+        : '${ApiConfig.storageBaseUrl}${promo.gambar}';
+    final diskon = promo.diskon;
 
-  return GestureDetector(
-    onTap: () {
-      // Optional: Add tap functionality if needed
-    },
-    child: Container(
-      width: 190,
-      margin: const EdgeInsets.only(right: 14),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-          BoxShadow(
-            color: const Color(0xFF0041c3).withOpacity(0.03),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Image Section dengan Badge
-          Stack(
-            children: [
-              Container(
-                height: 135,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [Colors.grey.shade50, Colors.grey.shade100],
+    return GestureDetector(
+      onTap: () {
+        // Optional: Add tap functionality if needed
+      },
+      child: Container(
+        width: 190,
+        margin: const EdgeInsets.only(right: 14),
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+            BoxShadow(
+              color: const Color(0xFF0041c3).withValues(alpha: 0.03),
+              blurRadius: 24,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Image Section dengan Badge
+            Stack(
+              children: [
+                Container(
+                  height: 135,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [Colors.grey.shade50, Colors.grey.shade100],
+                    ),
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(18),
+                    ),
                   ),
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(18),
-                  ),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: CachedNetworkImage(
-                    imageUrl: img,
-                    fit: BoxFit.contain,
-                    height: 135,
-                    width: double.infinity,
-                    placeholder:
-                        (context, url) => Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                Colors.grey.shade100,
-                                Colors.grey.shade200,
-                              ],
-                            ),
-                          ),
-                          child: const Center(
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2.5,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Color(0xFF0041c3),
-                              ),
-                            ),
-                          ),
-                        ),
-                    errorWidget:
-                        (context, url, error) => Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                Colors.grey.shade200,
-                                Colors.grey.shade300,
-                              ],
-                            ),
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.image_not_supported_outlined,
-                                color: Colors.grey.shade400,
-                                size: 30,
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'No Image',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 8,
-                                  color: Colors.grey.shade500,
-                                ),
-                              ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: CachedNetworkImage(
+                      imageUrl: img,
+                      fit: BoxFit.contain,
+                      height: 135,
+                      width: double.infinity,
+                      placeholder: (context, url) => Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Colors.grey.shade100,
+                              Colors.grey.shade200,
                             ],
                           ),
                         ),
-                  ),
-                ),
-              ),
-              // Discount Badge - sama seperti shop.dart badge style
-              Positioned(
-                top: 10,
-                left: 10,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 5,
-                  ),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        const Color(0xFFFF6B6B),
-                        const Color(0xFFFF6B6B).withOpacity(0.8),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(8),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFFFF6B6B).withOpacity(0.4),
-                        blurRadius: 8,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: Text(
-                    "-$diskon%",
-                    style: GoogleFonts.poppins(
-                      fontSize: 9,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          // Content Section
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Product Name
-                  Text(
-                    name,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color:
-                          Theme.of(context).brightness == Brightness.dark
-                              ? Colors.white
-                              : Colors.grey.shade800,
-                      height: 1.3,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  // Price & Button Row
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      // Poin dengan Coin Icon
-                      Row(
-                        children: [
-                          Text(
-                            poin,
-                            style: GoogleFonts.poppins(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.blue.shade700,
-                              letterSpacing: -0.5,
+                        child: const Center(
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Color(0xFF0041c3),
                             ),
                           ),
-                          const SizedBox(width: 4),
-                          Image.asset(
-                            'assets/logo/point.png',
-                            width: 16,
-                            height: 16,
+                        ),
+                      ),
+                      errorWidget: (context, url, error) => Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Colors.grey.shade200,
+                              Colors.grey.shade300,
+                            ],
                           ),
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.image_not_supported_outlined,
+                              color: Colors.grey.shade400,
+                              size: 30,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'No Image',
+                              style: GoogleFonts.poppins(
+                                fontSize: 8,
+                                color: Colors.grey.shade500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                // Discount Badge - sama seperti shop.dart badge style
+                Positioned(
+                  top: 10,
+                  left: 10,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          const Color(0xFFFF6B6B),
+                          const Color(0xFFFF6B6B).withValues(alpha: 0.8),
                         ],
                       ),
-                      // Tukar Button
-                      ElevatedButton(
-                        onPressed: () async {
-                          final session = await SessionManager.getUserSession();
-                          final customerId = session['id']?.toString();
-
-                          if (customerId == null) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('User tidak ditemukan'),
+                      borderRadius: BorderRadius.circular(8),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFFF6B6B).withValues(alpha: 0.4),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      "-$diskon%",
+                      style: GoogleFonts.poppins(
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            // Content Section
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Product Name
+                    Text(
+                      name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white
+                            : Colors.grey.shade800,
+                        height: 1.3,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    // Price & Button Row
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        // Poin dengan Coin Icon
+                        Row(
+                          children: [
+                            Text(
+                              poin,
+                              style: GoogleFonts.poppins(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue.shade700,
+                                letterSpacing: -0.5,
                               ),
-                            );
-                            return;
-                          }
-
-                          final currentPoints = UserPointData.userPoints.value;
-
-                          if (currentPoints >= promo.koin) {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder:
-                                    (context) => CheckoutPage(
+                            ),
+                            const SizedBox(width: 4),
+                            Image.asset(
+                              'assets/logo/point.png',
+                              width: 16,
+                              height: 16,
+                            ),
+                          ],
+                        ),
+                        // Tukar Button
+                        ElevatedButton(
+                          onPressed: () async {
+                            final session =
+                                await SessionManager.getUserSession();
+                            if (!mounted) return;
+                            final customerId = session['id']?.toString();
+  
+                            if (customerId == null) {
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('User tidak ditemukan'),
+                                  ),
+                                );
+                              }
+                              return;
+                            }
+  
+                            final currentPoints =
+                                UserPointData.userPoints.value;
+  
+                            if (currentPoints >= promo.koin) {
+                              if (mounted) {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => CheckoutPage(
                                       usePointsFromPromo: true,
                                       produk: {
                                         'nama_produk': promo.tipeProduk,
@@ -963,213 +969,118 @@ Widget _productCard(BuildContext context, Promo promo) {
                                         'kode_barang': promo.kodeBarang,
                                       },
                                     ),
-                              ),
-                            );
-                          } else {
-                            showDialog(
-                              context: context,
-                              builder: (BuildContext context) {
-                                return AlertDialog(
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20),
                                   ),
-                                  backgroundColor: Theme.of(context).cardColor,
-                                  title: Row(
-                                    children: [
-                                      Icon(
-                                        Icons.warning_amber_rounded,
-                                        color: Colors.amber.shade600,
-                                        size: 28,
+                                );
+                              }
+                            } else {
+                              if (mounted) {
+                                showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return AlertDialog(
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(20),
                                       ),
-                                      const SizedBox(width: 10),
-                                      Expanded(
-                                        child: Text(
-                                          'Poin Tidak Cukup',
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.bold,
+                                      backgroundColor:
+                                          Theme.of(context).cardColor,
+                                      title: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.warning_amber_rounded,
+                                            color: Colors.amber.shade600,
+                                            size: 28,
                                           ),
-                                        ),
+                                          const SizedBox(width: 10),
+                                          Expanded(
+                                            child: Text(
+                                              'Poin Tidak Cukup',
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                    ],
-                                  ),
-                                  content: Text(
-                                    'Poin Anda tidak cukup untuk menukar produk ini. Anda membutuhkan ${promo.koin} poin.',
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 14,
-                                      color:
-                                          Theme.of(context).brightness ==
+                                      content: Text(
+                                        'Poin Anda tidak cukup untuk menukar produk ini. Anda membutuhkan ${promo.koin} poin.',
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 14,
+                                          color: Theme.of(context).brightness ==
                                                   Brightness.dark
                                               ? Colors.white70
                                               : Colors.black54,
-                                    ),
-                                  ),
-                                  actions: [
-                                    Center(
-                                      child: ElevatedButton(
-                                        onPressed:
-                                            () => Navigator.of(context).pop(),
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: const Color(
-                                            0xFF0041c3,
-                                          ),
-                                          foregroundColor: Colors.white,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                          ),
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 24,
-                                            vertical: 12,
-                                          ),
-                                          elevation: 2,
-                                        ),
-                                        child: Text(
-                                          'OK',
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w600,
-                                          ),
                                         ),
                                       ),
-                                    ),
-                                  ],
+                                      actions: [
+                                        Center(
+                                          child: ElevatedButton(
+                                            onPressed: () =>
+                                                Navigator.of(context).pop(),
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: const Color(
+                                                0xFF0041c3,
+                                              ),
+                                              foregroundColor: Colors.white,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(
+                                                  12,
+                                                ),
+                                              ),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                horizontal: 24,
+                                                vertical: 12,
+                                              ),
+                                              elevation: 2,
+                                            ),
+                                            child: Text(
+                                              'OK',
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    );
+                                  },
                                 );
-                              },
-                            );
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF0041c3),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
+                              }
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF0041c3),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            minimumSize: const Size(60, 28),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            elevation: 2,
                           ),
-                          minimumSize: const Size(60, 28),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                          child: Text(
+                            "Tukar",
+                            style: GoogleFonts.poppins(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                          elevation: 2,
                         ),
-                        child: Text(
-                          "Tukar",
-                          style: GoogleFonts.poppins(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
-  );
-}
-
-Widget _promoCard(
-  BuildContext context, {
-  required String imageUrl,
-  required String title,
-  required String description,
-}) {
-  return Container(
-    width: 260,
-    margin: const EdgeInsets.only(right: 12),
-    decoration: BoxDecoration(
-      color: Theme.of(context).cardColor,
-      borderRadius: BorderRadius.circular(16),
-
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withOpacity(0.1),
-          blurRadius: 6,
-          offset: const Offset(0, 3),
-        ),
-      ],
-    ),
-    child: Column(
-      mainAxisSize: MainAxisSize.min, // biar fleksibel
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        ClipRRect(
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(16),
-            topRight: Radius.circular(16),
-          ),
-          child: Image.network(
-            imageUrl,
-            width: double.infinity,
-            height: 79, // sedikit lebih tinggi biar proporsional
-            fit: BoxFit.cover,
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                description,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: Theme.of(context).textTheme.bodySmall?.color,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Align(
-                alignment: Alignment.bottomRight,
-                child: TextButton(
-                  style: TextButton.styleFrom(
-                    padding: EdgeInsets.zero,
-                    minimumSize: const Size(0, 24),
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                  onPressed: () {
-                    // Navigasi ke InformasiPage dengan data promo
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder:
-                            (context) => InformasiPage(
-                              bannerImage: imageUrl,
-                              bannerTitle: title,
-                              bannerText: description,
-                            ),
-                      ),
-                    );
-                  },
-                  child: const Text(
-                    "Lihat Detail",
-                    style: TextStyle(
-                      color: Color(0xFF0041c3),
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    ),
-  );
+    );
+  }
 }

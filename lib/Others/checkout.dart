@@ -1,7 +1,5 @@
-import 'dart:convert';
 import 'package:azza_service/Service/detail_alamat.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:geolocator/geolocator.dart';
 import 'dart:io';
@@ -10,15 +8,13 @@ import 'package:image_picker/image_picker.dart';
 import '../api_services/payment_service.dart';
 import '../api_services/api_service.dart';
 import '../Others/session_manager.dart';
-import '../Others/user_point_data.dart';
 import '../models/promo_model.dart';
 import '../models/voucher_model.dart';
 import '../config/api_config.dart';
 import 'custom_dialog.dart';
 import '../main.dart';
-import 'struck_pesanan.dart';
-import 'payment_confirmation.dart';
 import 'riwayat.dart';
+import '../utils/error_handler.dart' as error_handler;
 
 class PaymentModal extends StatefulWidget {
   final String? initialPaymentMethod;
@@ -86,8 +82,16 @@ class _PaymentModalState extends State<PaymentModal> {
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
-              color: Colors.white,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.white
+                  : Colors.black87,
             ),
+          ),
+          // DEBUG: Log theme-adaptive color usage
+          Builder(
+            builder: (context) {
+              return const SizedBox.shrink();
+            },
           ),
           const SizedBox(height: 16),
 
@@ -108,8 +112,16 @@ class _PaymentModalState extends State<PaymentModal> {
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 15,
-                    color: Colors.white,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white
+                        : Colors.black87,
                   ),
+                ),
+                // DEBUG: Log theme-adaptive color usage for payment method title
+                Builder(
+                  builder: (context) {
+                    return const SizedBox.shrink();
+                  },
                 ),
                 const SizedBox(height: 12),
                 _buildPaymentMethodOption(
@@ -144,6 +156,17 @@ class _PaymentModalState extends State<PaymentModal> {
                     selectedBank = null;
                   }),
                 ),
+                const SizedBox(height: 8),
+                _buildPaymentMethodOption(
+                  "Transfer Bank Online",
+                  "Transfer langsung via internet banking",
+                  Icons.account_balance,
+                  selectedPaymentMethod == "Transfer Bank Online",
+                  () => stateSetter(() {
+                    selectedPaymentMethod = "Transfer Bank Online";
+                    selectedBank = null;
+                  }),
+                ),
               ],
             ),
           ),
@@ -167,12 +190,14 @@ class _PaymentModalState extends State<PaymentModal> {
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 15,
-                      color: Colors.white,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : Colors.black87,
                     ),
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: selectedBank,
+                    initialValue: selectedBank,
                     hint: const Text("Pilih bank untuk transfer"),
                     decoration: InputDecoration(
                       border: OutlineInputBorder(
@@ -238,12 +263,14 @@ class _PaymentModalState extends State<PaymentModal> {
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 15,
-                      color: Colors.white,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : Colors.black87,
                     ),
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value:
+                    initialValue:
                         selectedBank, // Reuse selectedBank for e-wallet selection
                     hint: const Text("Pilih e-wallet untuk pembayaran"),
                     decoration: InputDecoration(
@@ -288,9 +315,15 @@ class _PaymentModalState extends State<PaymentModal> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.blue[50],
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.blue[900]!.withValues(alpha: 0.3)
+                  : Colors.blue[50],
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.blue[200]!),
+              border: Border.all(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.blue[700]!
+                    : Colors.blue[200]!,
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -299,9 +332,17 @@ class _PaymentModalState extends State<PaymentModal> {
                   'Total Pembayaran',
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.white,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white
+                        : Colors.black87,
                     fontWeight: FontWeight.w500,
                   ),
+                ),
+                // DEBUG: Log theme-adaptive color usage for total payment label
+                Builder(
+                  builder: (context) {
+                    return const SizedBox.shrink();
+                  },
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -313,7 +354,9 @@ class _PaymentModalState extends State<PaymentModal> {
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.w700,
-                    color: Colors.white,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white
+                        : Colors.black87,
                   ),
                 ),
               ],
@@ -389,7 +432,7 @@ class _PaymentModalState extends State<PaymentModal> {
                 widget.onPaymentConfirmed(selectedPaymentMethod!, selectedBank);
               },
               icon: const Icon(Icons.payment, size: 20),
-              label: Text(
+              label: const Text(
                 'Bayar',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
               ),
@@ -448,69 +491,30 @@ class _PaymentModalState extends State<PaymentModal> {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color:
-                          isSelected ? const Color(0xFF0041c3) : Colors.black87,
+                      color: isSelected
+                          ? const Color(0xFF0041c3)
+                          : (Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black87),
                     ),
                   ),
+                  // DEBUG: Log theme-adaptive color usage in payment option
+                  if (!isSelected)
+                    Builder(
+                      builder: (context) {
+                        return const SizedBox.shrink();
+                      },
+                    ),
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    style: TextStyle(
+                        fontSize: 12,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.grey[400]
+                            : Colors.grey[600]),
                   ),
                 ],
-              ),
-            ),
-            if (isSelected)
-              const Icon(
-                Icons.check_circle,
-                color: Color(0xFF0041c3),
-                size: 20,
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBankOption(
-    String bankName,
-    bool isSelected,
-    VoidCallback onTap,
-  ) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: isSelected ? const Color(0xFF0041c3) : Colors.grey.shade300,
-            width: isSelected ? 2 : 1,
-          ),
-          borderRadius: BorderRadius.circular(8),
-          color: isSelected
-              ? const Color(0xFF0041c3).withOpacity(0.1)
-              : Colors.white,
-        ),
-        child: Row(
-          children: [
-            Icon(
-              Icons.account_balance,
-              color: isSelected ? const Color(0xFF0041c3) : Colors.grey,
-              size: 24,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                bankName,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: isSelected
-                      ? const Color(0xFF0041c3)
-                      : (Theme.of(context).brightness == Brightness.dark
-                          ? Colors.white
-                          : Colors.black87),
-                ),
               ),
             ),
             if (isSelected)
@@ -541,7 +545,6 @@ class CheckoutPage extends StatefulWidget {
 
 class _CheckoutPageState extends State<CheckoutPage> {
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey();
-  late BuildContext _pageContext;
   late BuildContext pageContext;
   String? selectedPaymentMethod;
   String? selectedShipping;
@@ -782,7 +785,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
           }
         }
       } catch (e) {
-        debugPrint("Error fetching harga asli: $e");
+        // Handle error silently
       }
     }
   }
@@ -812,7 +815,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
           });
         }
       } catch (e) {
-        debugPrint('Error loading user data: $e');
+        // Handle error silently
       }
     }
   }
@@ -833,7 +836,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
           isPromoLoaded = true;
         });
       }
-      debugPrint("Error loading promo: $e");
     }
   }
 
@@ -864,14 +866,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
           isUserVouchersLoaded = true;
         });
       }
-      debugPrint("Error loading user vouchers: $e");
     }
-  }
-
-  bool _isProductInPromo() {
-    if (!isPromoLoaded || promoList.isEmpty) return false;
-    String kodeBarang = widget.produk['kode_barang']?.toString() ?? '';
-    return promoList.any((promo) => promo.kodeBarang == kodeBarang);
   }
 
   String getFirstImageUrl(dynamic gambarField) {
@@ -905,7 +900,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
     // Add assets/image/ path if not already a full URL
     if (!cleanPath.startsWith('http')) {
-      cleanPath = 'assets/image/' + cleanPath;
+      cleanPath = 'assets/image/$cleanPath';
     }
 
     String imageUrl =
@@ -939,8 +934,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
   // Helper untuk mendapatkan diskon voucher
   double _getVoucherDiscount() {
-    if (!useVoucher || selectedVoucher == null || !isUserVouchersLoaded)
+    if (!useVoucher || selectedVoucher == null || !isUserVouchersLoaded) {
       return 0.0;
+    }
 
     final userVoucher = userVouchers.firstWhere(
       (uv) => uv.voucher?.voucherCode == selectedVoucher && uv.isAvailable,
@@ -1125,8 +1121,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
   @override
   Widget build(BuildContext context) {
-    _pageContext = context; // Store the page context for navigation
     pageContext = context; // Store for async operations
+
     // Gunakan total harga berdasarkan quantity
     double totalHarga = _getTotalHarga();
     double voucherDiscount = _getVoucherDiscount();
@@ -1134,20 +1130,17 @@ class _CheckoutPageState extends State<CheckoutPage> {
     double effectivePrice = hargaAsli != null
         ? (hargaAsli! * quantity) - voucherDiscount + finalShippingCost
         : totalHarga - voucherDiscount + finalShippingCost;
-    int poinPerItem =
-        int.tryParse(widget.produk['poin']?.toString() ?? '0') ?? 0;
 
     return Scaffold(
       key: scaffoldKey,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
-        title: Text(
+        title: const Text(
           "Ringkasan Pesanan",
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color:
-                Theme.of(context).appBarTheme.foregroundColor ?? Colors.white,
+            color: Colors.white,
           ),
         ),
         elevation: 0,
@@ -1168,7 +1161,12 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 children: [
                   Text(
                     "$quantity Produk",
-                    style: TextStyle(color: Colors.white, fontSize: 13),
+                    style: TextStyle(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : Colors.black87,
+                      fontSize: 13,
+                    ),
                   ),
                   const SizedBox(height: 6),
                   Row(
@@ -1194,7 +1192,12 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   const SizedBox(height: 4),
                   Text(
                     selectedShipping ?? "Pilih ekspedisi terlebih dahulu",
-                    style: TextStyle(color: Colors.white, fontSize: 12),
+                    style: TextStyle(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white70
+                          : Colors.black54,
+                      fontSize: 12,
+                    ),
                   ),
 
                   // Location & Distance Info
@@ -1204,7 +1207,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
                     const SizedBox(height: 10),
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.blue.shade50,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.blue.shade900.withOpacity(0.3)
+                            : Colors.blue.shade50,
                         borderRadius: BorderRadius.circular(10),
                       ),
                       padding: const EdgeInsets.all(10),
@@ -1224,7 +1229,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                   'Jarak: ${distanceKm.toStringAsFixed(2)} km dari toko',
                                   style: TextStyle(
                                     fontSize: 13,
-                                    color: Colors.blue.shade900,
+                                    color: Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? Colors.blue.shade300
+                                        : Colors.blue.shade900,
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
@@ -1233,7 +1241,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                   _getZonaDescription(),
                                   style: TextStyle(
                                     fontSize: 11,
-                                    color: Colors.blue.shade700,
+                                    color: Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? Colors.blue.shade400
+                                        : Colors.blue.shade700,
                                   ),
                                 ),
                               ],
@@ -1247,7 +1258,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   const SizedBox(height: 10),
                   Container(
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFFF4E5),
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.orange.shade900.withOpacity(0.3)
+                          : const Color(0xFFFFF4E5),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     padding: const EdgeInsets.all(10),
@@ -1255,7 +1268,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                       children: [
                         const Icon(
                           Icons.delivery_dining,
-                          color: const Color(0xFF0041c3),
+                          color: Color(0xFF0041c3),
                           size: 30,
                         ),
                         const SizedBox(width: 8),
@@ -1275,8 +1288,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
                               ),
                               Text(
                                 _getJamOperasional(),
-                                style: const TextStyle(
-                                  color: Colors.black54,
+                                style: TextStyle(
+                                  color: Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? Colors.grey[400]
+                                      : Colors.black54,
                                   fontSize: 12,
                                 ),
                               ),
@@ -1331,18 +1347,36 @@ class _CheckoutPageState extends State<CheckoutPage> {
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 14,
-                            color: Colors.white,
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.white
+                                    : Colors.black,
                           ),
+                        ),
+                        // DEBUG: Log theme-adaptive color usage for product name
+                        Builder(
+                          builder: (context) {
+                            return const SizedBox.shrink();
+                          },
                         ),
                         Text(
                           deskripsi,
-                          style: TextStyle(fontSize: 13, color: Colors.white),
+                          style: TextStyle(
+                            fontSize: 13,
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.white
+                                    : Colors.black,
+                          ),
                         ),
                         const SizedBox(height: 6),
                         Text(
                           "${quantity}x   ${NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0).format((totalHarga - voucherDiscount) / quantity)}",
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: TextStyle(
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.white
+                                    : Colors.black,
                             fontWeight: FontWeight.bold,
                             fontSize: 14,
                           ),
@@ -1369,11 +1403,20 @@ class _CheckoutPageState extends State<CheckoutPage> {
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 15,
-                      color: Colors.white,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : Colors.black,
                     ),
+                  ),
+                  // DEBUG: Log theme-adaptive color usage for summary title
+                  Builder(
+                    builder: (context) {
+                      return const SizedBox.shrink();
+                    },
                   ),
                   const SizedBox(height: 10),
                   _summaryRow(
+                    context,
                     "Subtotal ($quantity item)",
                     NumberFormat.currency(
                       locale: 'id_ID',
@@ -1384,21 +1427,23 @@ class _CheckoutPageState extends State<CheckoutPage> {
                     ),
                   ),
 
-                  _summaryRow("Diskon", "Rp 0"),
+                  _summaryRow(context, "Diskon", "Rp 0"),
                   if (useVoucher && voucherDiscount > 0)
                     _summaryRow(
+                      context,
                       "Voucher",
                       "- ${NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0).format(voucherDiscount)}",
                       color: Colors.green,
                     )
                   else
-                    _summaryRow("Voucher", "Rp 0"),
+                    _summaryRow(context, "Voucher", "Rp 0"),
 
                   // Ongkos kirim
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _summaryRow(
+                        context,
                         "Ongkos kirim",
                         _hasVoucherFreeShipping()
                             ? "Gratis"
@@ -1416,9 +1461,12 @@ class _CheckoutPageState extends State<CheckoutPage> {
                           padding: const EdgeInsets.only(left: 4, top: 2),
                           child: Text(
                             '• ${_getDetailEstimasi()}',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 11,
-                              color: Colors.grey,
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.grey[400]
+                                  : Colors.grey,
                             ),
                           ),
                         ),
@@ -1427,6 +1475,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
                   const Divider(),
                   _summaryRow(
+                    context,
                     "Total Belanja",
                     NumberFormat.currency(
                       locale: 'id_ID',
@@ -1434,7 +1483,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
                       decimalDigits: 0,
                     ).format(effectivePrice),
                     isTotal: true,
-                    color: Colors.white,
                   ),
                 ],
               ),
@@ -1487,7 +1535,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                               child: const Text(
                                 "Pilih",
                                 style: TextStyle(
-                                  color: const Color(0xFF0041c3),
+                                  color: Color(0xFF0041c3),
                                   fontSize: 13,
                                 ),
                               ),
@@ -1606,7 +1654,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
                         Text(
                           "Pilih",
                           style: TextStyle(
-                            color: Colors.white,
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.white
+                                    : Colors.black,
                             fontWeight: FontWeight.w500,
                             fontSize: 13,
                           ),
@@ -1712,11 +1763,14 @@ class _CheckoutPageState extends State<CheckoutPage> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         padding: const EdgeInsets.all(10),
-                        child: const Text(
+                        child: Text(
                           "Pilih ekspedisi pengiriman",
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.white
+                                    : Colors.black,
                           ),
                         ),
                       ),
@@ -1776,15 +1830,21 @@ class _CheckoutPageState extends State<CheckoutPage> {
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 15,
-                            color: Colors.white,
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.white
+                                    : Colors.black,
                           ),
                         ),
                         Text(
                           selectedAddress != null
                               ? "Ubah Alamat"
                               : "Tambahkan Alamat",
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: TextStyle(
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.white
+                                    : Colors.black,
                             fontWeight: FontWeight.w500,
                             fontSize: 13,
                           ),
@@ -1811,18 +1871,24 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                 const SizedBox(height: 4),
                                 Text(
                                   selectedAddress!['detailAlamat'],
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 13,
-                                    color: Colors.white,
+                                    color: Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? Colors.white
+                                        : Colors.black,
                                   ),
                                 ),
                                 if (selectedAddress!['catatan'] != null &&
                                     selectedAddress!['catatan'].isNotEmpty)
                                   Text(
                                     "Catatan: ${selectedAddress!['catatan']}",
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 12,
-                                      color: Colors.black54,
+                                      color: Theme.of(context).brightness ==
+                                              Brightness.dark
+                                          ? Colors.grey[400]
+                                          : Colors.black54,
                                     ),
                                   ),
                               ],
@@ -1830,27 +1896,36 @@ class _CheckoutPageState extends State<CheckoutPage> {
                           : Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
+                                Text(
                                   "Atur alamat anda di sini",
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.white,
+                                    color: Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? Colors.white
+                                        : Colors.black,
                                   ),
                                 ),
                                 const SizedBox(height: 2),
-                                const Text(
+                                Text(
                                   "Masukan detail alamat agar memudahkan pengiriman barang",
                                   style: TextStyle(
                                     fontSize: 13,
-                                    color: Colors.white,
+                                    color: Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? Colors.white
+                                        : Colors.black,
                                   ),
                                 ),
                                 const SizedBox(height: 6),
-                                const Text(
+                                Text(
                                   "Tambahkan catatan untuk memudahkan kurir menemukan lokasimu.",
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: Colors.white,
+                                    color: Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? Colors.white
+                                        : Colors.black,
                                   ),
                                 ),
                                 const SizedBox(height: 8),
@@ -1874,7 +1949,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                             ? "GPS aktif"
                                             : "GPS belum aktif. Aktifkan dulu supaya alamatmu terbaca dengan tepat.",
                                         style: TextStyle(
-                                          color: Colors.white,
+                                          color: Theme.of(context).brightness ==
+                                                  Brightness.dark
+                                              ? Colors.white
+                                              : Colors.black,
                                           fontSize: 12,
                                         ),
                                       ),
@@ -1988,6 +2066,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
   }
 
   Widget _summaryRow(
+    BuildContext context,
     String label,
     String value, {
     bool isTotal = false,
@@ -2000,14 +2079,28 @@ class _CheckoutPageState extends State<CheckoutPage> {
         children: [
           Text(
             label,
-            style: const TextStyle(fontSize: 13, color: Colors.white),
+            style: TextStyle(
+              fontSize: 13,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.white
+                  : Colors.black87,
+            ),
+          ),
+          // DEBUG: Log theme-adaptive color usage in summary row label
+          Builder(
+            builder: (context) {
+              return const SizedBox.shrink();
+            },
           ),
           Text(
             value,
             style: TextStyle(
               fontSize: isTotal ? 15 : 13,
               fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
-              color: color ?? Colors.white,
+              color: color ??
+                  (Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white
+                      : Colors.black87),
             ),
           ),
         ],
@@ -2059,7 +2152,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 voucher.description ?? 'Diskon ${voucher.discountPercent}%',
                 canUse,
               );
-            }).toList(),
+            }),
         ],
       ),
     );
@@ -2106,9 +2199,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
         trailing: canUse
             ? const Icon(
                 Icons.check_circle_outline,
-                color: const Color(0xFF0041c3),
+                color: Color(0xFF0041c3),
               )
-            : Icon(Icons.lock_outline, color: Colors.white24),
+            : const Icon(Icons.lock_outline, color: Colors.white24),
         enabled: canUse,
         onTap: canUse
             ? () {
@@ -2243,7 +2336,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
           trailing: enabled
               ? const Icon(
                   Icons.check_circle_outline,
-                  color: const Color(0xFF0041c3),
+                  color: Color(0xFF0041c3),
                 )
               : const Icon(Icons.lock_outline, color: Colors.grey),
           enabled: enabled,
@@ -2308,63 +2401,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
       default:
         return Icons.local_shipping;
     }
-  }
-
-  IconData _getPaymentIcon(String method) {
-    switch (method) {
-      case "Transfer Bank BCA":
-        return Icons.account_balance;
-      case "Transfer Bank BRI":
-        return Icons.account_balance_wallet;
-      case "Transfer Bank Mandiri":
-        return Icons.account_balance_rounded;
-      default:
-        return Icons.account_balance;
-    }
-  }
-
-  Widget _buildAmountCard(
-    String title,
-    String amount,
-    Color color,
-    IconData icon,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.2)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, color: color, size: 20),
-              const SizedBox(width: 8),
-              Text(
-                title,
-                style: GoogleFonts.poppins(
-                  fontSize: 12,
-                  color: color.withOpacity(0.8),
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            amount,
-            style: GoogleFonts.poppins(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: color,
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   Widget _buildModernPaymentOption(
@@ -2465,71 +2501,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
             ),
             if (available && isSelected)
               Icon(Icons.check_circle, color: color, size: 20),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPaymentMethodOption(
-    String title,
-    String subtitle,
-    IconData icon,
-    bool isSelected,
-    VoidCallback onTap,
-  ) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: isSelected ? const Color(0xFF0041c3) : Colors.grey.shade300,
-            width: isSelected ? 2 : 1,
-          ),
-          borderRadius: BorderRadius.circular(8),
-          color: isSelected
-              ? const Color(0xFF0041c3).withOpacity(0.1)
-              : Colors.white,
-        ),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              color: isSelected ? const Color(0xFF0041c3) : Colors.grey,
-              size: 24,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: isSelected
-                          ? const Color(0xFF0041c3)
-                          : (Theme.of(context).brightness == Brightness.dark
-                              ? Colors.white
-                              : Colors.black87),
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                  ),
-                ],
-              ),
-            ),
-            if (isSelected)
-              const Icon(
-                Icons.check_circle,
-                color: Color(0xFF0041c3),
-                size: 20,
-              ),
           ],
         ),
       ),
@@ -2780,7 +2751,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                     style: GoogleFonts.poppins(
                                       fontSize: 32,
                                       fontWeight: FontWeight.w800,
-                                      color: Colors.blue.shade900,
+                                      color: Theme.of(context).brightness ==
+                                              Brightness.dark
+                                          ? Colors.white
+                                          : Colors.blue.shade900,
                                       letterSpacing: -0.5,
                                     ),
                                   ),
@@ -2868,15 +2842,17 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
                             const SizedBox(height: 16),
 
-                            // Transfer Bank - Coming Soon with better design
+                            // Transfer Bank - Now Available
                             _buildModernPaymentOption(
                               "Transfer Bank",
-                              "Transfer ke rekening bank (Coming Soon)",
+                              "Transfer ke rekening bank",
                               Icons.account_balance,
-                              Colors.grey,
-                              false,
-                              null,
-                              available: false,
+                              Colors.blue,
+                              selectedPaymentMethod == "Transfer Bank",
+                              () => setModalState(
+                                () => selectedPaymentMethod = "Transfer Bank",
+                              ),
+                              available: true,
                             ),
 
                             const SizedBox(height: 16),
@@ -3074,10 +3050,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
   // Process checkout and create order
   Future<void> _processCheckout(BuildContext context) async {
-    debugPrint('=== STARTING CHECKOUT PROCESS ===');
-    debugPrint('Selected Payment Method: $selectedPaymentMethod');
-    debugPrint('Selected Address: $selectedAddress');
-    debugPrint('Selected Shipping: $selectedShipping');
     // Validasi
     if (selectedAddress == null) {
       CustomDialog.show(
@@ -3218,11 +3190,13 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
     // Handle manual payment methods
     if (selectedPaymentMethod == "QRIS") {
-      debugPrint('Processing QRIS payment with amount: $finalPrice');
       _showQrisPayment(context, finalPrice);
       return;
     } else if (selectedPaymentMethod == "Transfer Bank") {
       _showBankTransferPayment(context, finalPrice, selectedBank);
+      return;
+    } else if (selectedPaymentMethod == "Transfer Bank Online") {
+      _showOnlineBankTransferPayment(context, finalPrice);
       return;
     } else if (selectedPaymentMethod == "E-wallet") {
       _showEwalletPayment(context, finalPrice);
@@ -3434,39 +3408,27 @@ class _CheckoutPageState extends State<CheckoutPage> {
   }
 
   void _navigateToPaymentSuccess() {
-    debugPrint('Navigating to RiwayatPage using global navigator');
     // Use global navigator key to navigate regardless of context state
     navigatorKey.currentState!
         .pushReplacement(
-      MaterialPageRoute(
-        builder: (context) => const RiwayatPage(shouldRefresh: true),
-      ),
-    )
-        .then((_) {
-      debugPrint('Navigation to RiwayatPage completed');
-    }).catchError((e) {
-      debugPrint('Navigation error: $e');
-    });
+          MaterialPageRoute(
+            builder: (context) => const RiwayatPage(shouldRefresh: true),
+          ),
+        )
+        .then((_) {})
+        .catchError((e) {});
   }
 
   void _onPaymentSuccess(BuildContext ctx, String orderCode) {
-    debugPrint(
-      'Navigating to RiwayatPage from _onPaymentSuccess using global navigator',
-    );
     // Use global navigator key to navigate regardless of context state
     navigatorKey.currentState!
         .pushReplacement(
-      MaterialPageRoute(
-        builder: (context) => const RiwayatPage(shouldRefresh: true),
-      ),
-    )
-        .then((_) {
-      debugPrint(
-        'Navigation to RiwayatPage from _onPaymentSuccess completed',
-      );
-    }).catchError((e) {
-      debugPrint('Navigation error from _onPaymentSuccess: $e');
-    });
+          MaterialPageRoute(
+            builder: (context) => const RiwayatPage(shouldRefresh: true),
+          ),
+        )
+        .then((_) {})
+        .catchError((e) {});
   }
 
   void _showManualPaymentDialog(BuildContext context) {
@@ -3571,7 +3533,12 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   ),
                   Text(
                     subtitle,
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.grey[400]
+                          : Colors.grey[600],
+                    ),
                   ),
                 ],
               ),
@@ -4431,6 +4398,215 @@ class _CheckoutPageState extends State<CheckoutPage> {
     );
   }
 
+  void _showOnlineBankTransferPayment(BuildContext context, double amount) {
+    Navigator.pop(context); // Close method selection dialog
+
+    File? paymentProof;
+    String? selectedBank;
+    final ImagePicker picker = ImagePicker();
+
+    CustomDialog.show(
+      context: context,
+      barrierDismissible: false,
+      icon: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.blue[50],
+          shape: BoxShape.circle,
+        ),
+        child: const Icon(Icons.account_balance, color: Colors.blue, size: 48),
+      ),
+      title: 'Transfer Bank Online',
+      content: StatefulBuilder(
+        builder: (context, setState) => Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.blue[50],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                children: [
+                  const Text(
+                    'Pilih Bank untuk Internet Banking:',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    initialValue: selectedBank,
+                    hint: const Text("Pilih bank Anda"),
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.grey.shade300),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.grey.shade300),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(color: Color(0xFF0041c3)),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 14,
+                      ),
+                    ),
+                    items: const [
+                      DropdownMenuItem(value: "BCA", child: Text("BCA Klik")),
+                      DropdownMenuItem(
+                          value: "BRI", child: Text("BRI Internet Banking")),
+                      DropdownMenuItem(
+                          value: "Mandiri", child: Text("Mandiri Online")),
+                      DropdownMenuItem(
+                          value: "BNI", child: Text("BNI Internet Banking")),
+                      DropdownMenuItem(
+                          value: "CIMB Niaga", child: Text("CIMB Clicks")),
+                      DropdownMenuItem(
+                          value: "Danamon",
+                          child: Text("Danamon Online Banking")),
+                      DropdownMenuItem(
+                          value: "Permata", child: Text("PermataNet")),
+                    ],
+                    onChanged: (value) => setState(() => selectedBank = value),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Mohon pilih bank';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Nominal: Rp ${NumberFormat('#,###', 'id_ID').format(amount)}',
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Lakukan transfer melalui internet banking dan upload bukti pembayaran',
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            const Divider(),
+            const SizedBox(height: 10),
+            const Text(
+              'Upload Bukti Pembayaran',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            if (paymentProof != null)
+              Container(
+                width: double.infinity,
+                height: 120,
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade300),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.file(paymentProof!, fit: BoxFit.cover),
+                ),
+              )
+            else
+              Container(
+                width: double.infinity,
+                height: 80,
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade300),
+                  borderRadius: BorderRadius.circular(8),
+                  color: Colors.grey.shade50,
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.camera_alt,
+                      size: 32,
+                      color: Colors.grey.shade400,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      "Belum ada bukti",
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            const SizedBox(height: 10),
+            OutlinedButton.icon(
+              onPressed: () async {
+                try {
+                  final XFile? pickedFile = await picker.pickImage(
+                    source: ImageSource.gallery,
+                    maxWidth: 1920,
+                    maxHeight: 1080,
+                    imageQuality: 85,
+                  );
+
+                  if (pickedFile != null) {
+                    setState(() {
+                      paymentProof = File(pickedFile.path);
+                    });
+                  }
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Error picking image: $e'),
+                      backgroundColor: Colors.red.withOpacity(0.8),
+                    ),
+                  );
+                }
+              },
+              icon: const Icon(Icons.photo_library),
+              label: Text(
+                paymentProof != null ? "Ganti Foto" : "Pilih dari Galeri",
+              ),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 40),
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Batal'),
+        ),
+        ElevatedButton(
+          onPressed: (paymentProof == null || selectedBank == null)
+              ? null
+              : () {
+                  Navigator.pop(context);
+                  _confirmManualPayment(
+                    amount,
+                    'Transfer Bank Online - $selectedBank',
+                    paymentProof: paymentProof,
+                  );
+                },
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+          child: const Text(
+            'Konfirmasi Pembayaran',
+            style: TextStyle(color: Colors.white),
+          ),
+        ),
+      ],
+    );
+  }
+
   void _showEwalletPayment(BuildContext context, double amount) {
     Navigator.pop(context); // Close method selection dialog
 
@@ -4722,38 +4898,23 @@ class _CheckoutPageState extends State<CheckoutPage> {
     String method, {
     File? paymentProof,
   }) async {
-    debugPrint('=== STARTING MANUAL PAYMENT CONFIRMATION ===');
-    debugPrint(
-      'Amount: $amount, Method: $method, Has Payment Proof: ${paymentProof != null}',
-    );
-    debugPrint('Context mounted: ${mounted}');
-
     // Use stored page context to avoid invalid context issues
-    final safeContext = this.pageContext;
-    debugPrint('Using safeContext for dialog: ${safeContext != null}');
+    final safeContext = pageContext;
 
     // Show loading
     try {
       CustomLoadingDialog.show(context: safeContext);
-      debugPrint('Loading dialog shown');
-    } catch (e) {
-      debugPrint('Failed to show loading dialog: $e');
-    }
+    } catch (e) {}
 
     try {
       // Get customer ID first
-      debugPrint('Getting customer ID...');
       String? customerId = await SessionManager.getCustomerId();
       if (customerId == null) {
-        debugPrint('ERROR: Customer ID is null');
         throw Exception('Customer ID tidak ditemukan');
       }
-      debugPrint('Customer ID obtained: $customerId');
 
       // Generate order code
       final orderCode = 'ORD_${DateTime.now().millisecondsSinceEpoch}';
-      debugPrint('Generated order code: $orderCode');
-      debugPrint('Starting price calculations...');
 
       // Calculate prices
       double totalHarga = _getTotalHarga();
@@ -4763,13 +4924,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
           hargaAsli != null ? (hargaAsli! * quantity) : totalHarga;
       double totalPayment = totalPrice - voucherDiscount + finalShippingCost;
 
-      debugPrint('Price calculations:');
-      debugPrint('- Total Harga: $totalHarga');
-      debugPrint('- Voucher Discount: $voucherDiscount');
-      debugPrint('- Final Shipping Cost: $finalShippingCost');
-      debugPrint('- Total Price: $totalPrice');
-      debugPrint('- Total Payment: $totalPayment');
-
       // For manual payments, use the selected voucher directly
       // The backend will validate it during order creation
       String? validVoucherCode = selectedVoucher;
@@ -4778,31 +4932,18 @@ class _CheckoutPageState extends State<CheckoutPage> {
       // Recalculate total payment with validated voucher
       totalPayment = totalPrice - validVoucherDiscount + finalShippingCost;
 
-      debugPrint(
-        'Final validVoucherCode: $validVoucherCode, validVoucherDiscount: $validVoucherDiscount',
-      );
-
       // UPLOAD PAYMENT PROOF FIRST (atomic with data creation)
       String? buktiPembayaranPath;
       if (paymentProof != null) {
-        debugPrint(
-          'Uploading payment proof... File exists: ${paymentProof.existsSync()}, size: ${paymentProof.lengthSync()}',
-        );
         try {
           final uploadResult = await ApiService.uploadPaymentProof(
             paymentProof,
           );
           buktiPembayaranPath = uploadResult['path'];
-          debugPrint(
-            'Payment proof uploaded successfully: $buktiPembayaranPath',
-          );
         } catch (uploadError) {
-          debugPrint('Payment proof upload failed: $uploadError');
-          debugPrint('Upload error details: ${uploadError.toString()}');
           throw Exception('Gagal upload bukti pembayaran. Proses dibatalkan.');
         }
       } else {
-        debugPrint('ERROR: Payment proof is null');
         throw Exception('Bukti pembayaran diperlukan.');
       }
 
@@ -4818,13 +4959,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
           'subtotal': ((totalHarga / quantity) * quantity).toInt(),
         },
       ];
-      debugPrint('Items: $items');
 
       // Create checkout order ONLY after successful image upload
-      debugPrint('Creating checkout order...');
-      debugPrint(
-        'Order params: customerId=$customerId, items=$items, totalPrice=$totalPrice, method=$method',
-      );
+
       final orderResponse = await ApiService.createCheckoutOrder(
         customerId: customerId,
         items: items,
@@ -4836,15 +4973,12 @@ class _CheckoutPageState extends State<CheckoutPage> {
         voucherCode: validVoucherCode,
         voucherDiscount: validVoucherDiscount,
       );
-      debugPrint('Order response received: $orderResponse');
 
       if (orderResponse['success'] == true) {
         final orderData = orderResponse['data'];
         final actualOrderCode = orderData['order_code'];
-        debugPrint('Order created successfully with code: $actualOrderCode');
 
         // Update order with additional fields including payment proof path
-        debugPrint('Updating order with additional fields...');
         await ApiService.updateCheckoutOrder(actualOrderCode, {
           'shipping_cost': finalShippingCost,
           'total_payment': totalPayment,
@@ -4858,10 +4992,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
           if (validVoucherCode != null)
             'voucher_code': validVoucherCode, // Only update if not null
         });
-        debugPrint('Order updated successfully');
 
         // Close loading
-        if (mounted && safeContext != null && Navigator.canPop(safeContext)) {
+        if (mounted && Navigator.canPop(safeContext)) {
           Navigator.of(safeContext, rootNavigator: true).pop();
         }
 
@@ -4870,14 +5003,12 @@ class _CheckoutPageState extends State<CheckoutPage> {
         // Show success dialog before navigation
         _showPaymentSuccessDialog(method);
       } else {
-        debugPrint('Order creation failed: ${orderResponse['message']}');
         throw Exception(orderResponse['message'] ?? 'Gagal membuat order');
       }
     } catch (e) {
-      debugPrint('ERROR in _confirmManualPayment: $e');
       // Close loading
       try {
-        if (safeContext != null && Navigator.canPop(safeContext)) {
+        if (Navigator.canPop(safeContext)) {
           Navigator.of(safeContext, rootNavigator: true).pop();
         }
 
@@ -4901,17 +5032,17 @@ class _CheckoutPageState extends State<CheckoutPage> {
           ],
         );
       } catch (dialogError) {
-        debugPrint('Failed to show error dialog: $dialogError');
         // Show snackbar as fallback
-        if (safeContext != null) {
-          try {
-            ScaffoldMessenger.of(
-              safeContext,
-            ).showSnackBar(SnackBar(content: Text('Error: $e')));
-          } catch (snackbarError) {
-            debugPrint('Failed to show snackbar: $snackbarError');
-          }
-        }
+        try {
+          final userMessage = error_handler.ErrorHandler.handleUiError(
+            e,
+            context: 'CheckoutPage',
+            customUserMessage: 'Terjadi kesalahan saat memproses pembayaran',
+          );
+          ScaffoldMessenger.of(safeContext).showSnackBar(
+            SnackBar(content: Text(userMessage)),
+          );
+        } catch (snackbarError) {}
       }
     }
   }
@@ -4956,7 +5087,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                     borderRadius: const BorderRadius.vertical(
                       top: Radius.circular(20),
                     ),
-                    border: Border(
+                    border: const Border(
                       bottom: BorderSide(color: Colors.white24, width: 1),
                     ),
                   ),
@@ -4980,7 +5111,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black87,
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -4996,7 +5129,12 @@ class _CheckoutPageState extends State<CheckoutPage> {
                     children: [
                       Text(
                         "Pembayaran dengan metode $method telah dikonfirmasi.",
-                        style: TextStyle(fontSize: 14, color: Colors.white70),
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white70
+                              : Colors.black54,
+                        ),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 16),
@@ -5004,7 +5142,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
                         "Anda akan diarahkan ke halaman riwayat...",
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.white54,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white54
+                              : Colors.black45,
                           fontStyle: FontStyle.italic,
                         ),
                         textAlign: TextAlign.center,
@@ -5025,7 +5165,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   child: ElevatedButton(
                     onPressed: () {
                       Navigator.of(context).pop(); // Close dialog
-                      debugPrint('OK clicked, navigating to RiwayatPage');
                       _navigateToPaymentSuccess();
                     },
                     style: ElevatedButton.styleFrom(
@@ -5104,7 +5243,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                     borderRadius: const BorderRadius.vertical(
                       top: Radius.circular(20),
                     ),
-                    border: Border(
+                    border: const Border(
                       bottom: BorderSide(color: Colors.white24, width: 1),
                     ),
                   ),
@@ -5128,7 +5267,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black87,
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -5144,7 +5285,12 @@ class _CheckoutPageState extends State<CheckoutPage> {
                     children: [
                       Text(
                         "Pembayaran dengan metode $method telah dikonfirmasi.",
-                        style: TextStyle(fontSize: 14, color: Colors.white70),
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white70
+                              : Colors.black54,
+                        ),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 16),
@@ -5152,7 +5298,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
                         "Anda akan diarahkan ke halaman riwayat...",
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.white54,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white54
+                              : Colors.black45,
                           fontStyle: FontStyle.italic,
                         ),
                         textAlign: TextAlign.center,
@@ -5174,9 +5322,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
                     onPressed: () {
                       if (Navigator.canPop(context)) {
                         Navigator.of(context).pop(); // Close dialog
-                        debugPrint(
-                          'Attempting navigation to RiwayatPage from button',
-                        );
                         // Navigate immediately
                         _navigateToPaymentSuccess();
                       }
@@ -5209,7 +5354,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
       },
     ).then((_) {
       // Auto-navigate after dialog is dismissed (either by button or auto)
-      debugPrint('Dialog dismissed, navigating to RiwayatPage');
       _navigateToPaymentSuccess();
     });
 

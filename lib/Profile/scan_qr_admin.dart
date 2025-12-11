@@ -114,18 +114,18 @@ class _AdminScanQrPageState extends State<AdminScanQrPage> {
                   ),
                 ],
               ),
-              child: Row(
+              child: const Row(
                 children: [
-                  const CircleAvatar(
+                  CircleAvatar(
                     radius: 30,
                     backgroundColor: Color(0xFF1976D2),
                     child: Icon(Icons.admin_panel_settings,
                         color: Colors.white, size: 30),
                   ),
-                  const SizedBox(width: 16),
+                  SizedBox(width: 16),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
+                    children: [
                       Text(
                         "Admin Azzahra",
                         style: TextStyle(
@@ -180,9 +180,9 @@ class _AdminScanQrPageState extends State<AdminScanQrPage> {
                       ),
 
                       // 🔸 Overlay / Petunjuk saat belum ada QR terdeteksi
-                      Column(
+                      const Column(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        children: const [
+                        children: [
                           Icon(Icons.qr_code_scanner,
                               size: 100, color: Colors.black26),
                           SizedBox(height: 12),

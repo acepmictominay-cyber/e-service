@@ -66,7 +66,7 @@ class _TeknisiProfilPageState extends State<TeknisiProfilPage> {
     final id = userData?['id'] ?? '-';
 
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.background,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.primary,
         elevation: 0,
@@ -78,7 +78,7 @@ class _TeknisiProfilPageState extends State<TeknisiProfilPage> {
           ),
         ),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -105,7 +105,7 @@ class _TeknisiProfilPageState extends State<TeknisiProfilPage> {
                             color: Colors.white.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(40),
                           ),
-                          child: Icon(
+                          child: const Icon(
                             Icons.person,
                             size: 40,
                             color: Colors.white,
@@ -182,7 +182,7 @@ class _TeknisiProfilPageState extends State<TeknisiProfilPage> {
                             ),
                             Switch(
                               value: isOnDuty,
-                              activeColor: Colors.green,
+                              activeThumbColor: Colors.green,
                               onChanged: (value) => _toggleDutyStatus(),
                             ),
                           ],

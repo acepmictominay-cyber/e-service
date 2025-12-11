@@ -164,7 +164,6 @@ class _DetailProdukPageState extends State<DetailProdukPage>
       });
     } catch (e) {
       setState(() => isProductLoading = false);
-      debugPrint('Kesalahan Server');
     }
   }
 

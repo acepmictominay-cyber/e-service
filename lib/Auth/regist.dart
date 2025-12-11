@@ -1,12 +1,16 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:azza_service/Others/session_manager.dart';
 import 'package:azza_service/api_services/api_service.dart';
 import 'package:azza_service/utils/error_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // haptic + formatters
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'login.dart';
-import '../Home/Home.dart';
+import '../Home/home.dart';
 
 class AuthPage extends StatefulWidget {
   const AuthPage({super.key});
@@ -76,8 +80,8 @@ class _AuthPageState extends State<AuthPage> {
     final isLandscape = screenSize.width > screenSize.height;
     final padding = screenSize.width * 0.06;
 
-    final Color blue = const Color(0xFF0D47A1);
-    final Color light = const Color.fromARGB(255, 209, 224, 255);
+    const Color blue = Color(0xFF0D47A1);
+    const Color light = Color.fromARGB(255, 209, 224, 255);
 
     return Scaffold(
       backgroundColor: Theme.of(context).brightness == Brightness.dark
@@ -131,7 +135,7 @@ class _AuthPageState extends State<AuthPage> {
                     width: double.infinity,
                     decoration: BoxDecoration(
                       color: Theme.of(context).cardColor,
-                      borderRadius: BorderRadius.vertical(
+                      borderRadius: const BorderRadius.vertical(
                         top: Radius.circular(30),
                       ),
                     ),
@@ -160,10 +164,10 @@ class _AuthPageState extends State<AuthPage> {
                             Container(
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: blue.withOpacity(0.05),
+                                color: blue.withValues(alpha: 0.05),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: blue.withOpacity(0.1),
+                                  color: blue.withValues(alpha: 0.1),
                                 ),
                               ),
                               child: Column(
@@ -215,10 +219,10 @@ class _AuthPageState extends State<AuthPage> {
                             Container(
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: blue.withOpacity(0.05),
+                                color: blue.withValues(alpha: 0.05),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: blue.withOpacity(0.1),
+                                  color: blue.withValues(alpha: 0.1),
                                 ),
                               ),
                               child: Column(
@@ -288,7 +292,7 @@ class _AuthPageState extends State<AuthPage> {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: blue,
                               foregroundColor: Colors.white,
-                              side: BorderSide(color: blue),
+                              side: const BorderSide(color: blue),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
@@ -345,6 +349,8 @@ class _AuthPageState extends State<AuthPage> {
                                   tglLahirAsli.trim(),
                                 );
 
+                                if (!mounted) return;
+
                                 setState(() => isLoading = false);
 
                                 if (result['success'] == true) {
@@ -360,6 +366,7 @@ class _AuthPageState extends State<AuthPage> {
                                   );
 
                                   if (!mounted) return;
+                                  if (!context.mounted) return;
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
                                       content: Text('Registrasi berhasil!'),
@@ -397,14 +404,14 @@ class _AuthPageState extends State<AuthPage> {
                                         break;
                                     }
                                   }
-                                  if (!mounted) return;
+                                  if (!context.mounted) return;
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(content: Text(message)),
                                   );
                                 }
                               } catch (e) {
                                 setState(() => isLoading = false);
-                                if (!mounted) return;
+                                if (!context.mounted) return;
                                 ErrorUtils.showErrorSnackBar(context, e,
                                     customMessage: 'Gagal mendaftarkan akun');
                               }
@@ -426,7 +433,7 @@ class _AuthPageState extends State<AuthPage> {
             ),
             if (isLoading)
               Container(
-                color: Colors.black.withOpacity(0.5),
+                color: Colors.black.withValues(alpha: 0.5),
                 child: const Center(
                   child: CircularProgressIndicator(color: Colors.white),
                 ),
@@ -448,7 +455,7 @@ class _AuthPageState extends State<AuthPage> {
             ? Colors.grey[800]
             : light,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: blue.withOpacity(0.25), width: 1),
+        border: Border.all(color: blue.withValues(alpha: 0.25), width: 1),
       ),
       clipBehavior: Clip.antiAlias,
       child: Stack(
@@ -472,7 +479,7 @@ class _AuthPageState extends State<AuthPage> {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: blue.withOpacity(0.30),
+                      color: blue.withValues(alpha: 0.30),
                       blurRadius: 12,
                       offset: const Offset(0, 6),
                     ),
@@ -620,7 +627,7 @@ class _AuthPageState extends State<AuthPage> {
         filled: true,
         fillColor: Theme.of(context).brightness == Brightness.dark
             ? Colors.grey[800]
-            : blue.withOpacity(0.12),
+            : blue.withValues(alpha: 0.12),
         suffixIcon: isPassword
             ? IconButton(
                 icon: Icon(

@@ -122,9 +122,9 @@ class _ScanQrPageState extends State<ScanQrPage> {
                               }
                             },
                           ),
-                          Column(
+                          const Column(
                             mainAxisAlignment: MainAxisAlignment.center,
-                            children: const [
+                            children: [
                               Icon(Icons.qr_code_scanner,
                                   size: 80, color: Colors.black38),
                               SizedBox(height: 8),

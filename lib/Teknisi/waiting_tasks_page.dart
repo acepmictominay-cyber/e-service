@@ -87,7 +87,7 @@ class _WaitingTasksPageState extends State<WaitingTasksPage> {
                           color: Colors.white.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: Icon(
+                        child: const Icon(
                           Icons.inbox,
                           color: Colors.white,
                           size: 24,

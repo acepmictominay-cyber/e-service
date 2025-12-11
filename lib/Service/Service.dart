@@ -1,6 +1,6 @@
 import 'package:azza_service/Beli/shop.dart';
 import 'package:azza_service/Chat/chat_page.dart';
-import 'package:azza_service/Home/Home.dart';
+import 'package:azza_service/Home/home.dart';
 import 'package:azza_service/Others/custom_dialog.dart';
 import 'package:azza_service/Others/notifikasi.dart';
 import 'package:azza_service/Others/session_manager.dart';
@@ -41,7 +41,7 @@ class _ServicePageState extends State<ServicePage> {
         icon: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.orange.withOpacity(0.1),
+            color: Colors.orange.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: const Icon(Icons.warning, color: Colors.orange, size: 24),
@@ -69,7 +69,7 @@ class _ServicePageState extends State<ServicePage> {
           icon: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.red.withOpacity(0.1),
+              color: Colors.red.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: const Icon(Icons.error, color: Colors.red, size: 24),
@@ -86,11 +86,9 @@ class _ServicePageState extends State<ServicePage> {
         return;
       }
 
-      debugPrint('Searching for kode: $kode, currentUserId: $currentUserId');
 
       // Get all orders to search by cos_kode or trans_kode
       final allOrders = await ApiService.getOrderList();
-      debugPrint('All orders count: ${allOrders.length}');
 
       dynamic order;
 
@@ -111,24 +109,15 @@ class _ServicePageState extends State<ServicePage> {
         orElse: () => null,
       );
 
-      debugPrint('CosKodeOrder found: ${cosKodeOrder != null}');
       if (cosKodeOrder != null) {
-        debugPrint(
-          'CosKodeOrder details: cos_kode=${cosKodeOrder['cos_kode']}, trans_status=${cosKodeOrder['trans_status']}, trans_kode=${cosKodeOrder['trans_kode']}',
-        );
         order = cosKodeOrder;
       } else {
         // If not found, search by trans_kode
-        final transKodeOrders =
-            allOrders
-                .where((o) => o['trans_kode']?.toString() == kode)
-                .toList();
-        debugPrint('TransKodeOrders count: ${transKodeOrders.length}');
+        final transKodeOrders = allOrders
+            .where((o) => o['trans_kode']?.toString() == kode)
+            .toList();
         if (transKodeOrders.isNotEmpty) {
           order = transKodeOrders.first;
-          debugPrint(
-            'TransKodeOrder details: cos_kode=${order['cos_kode']}, trans_status=${order['trans_status']}, trans_kode=${order['trans_kode']}',
-          );
         } else {
           // If still not found, try to search in transaksi table for pickup orders
           try {
@@ -140,20 +129,41 @@ class _ServicePageState extends State<ServicePage> {
                 'cos_kode': transaksiData['cos_kode'],
                 'trans_status':
                     transaksiData['trans_status']?.toString().toLowerCase() ??
-                    'waiting',
+                        'waiting',
                 'trans_kode': kode,
               };
-              debugPrint('Pickup order found in transaksi: $order');
             } else {
-              debugPrint(
-                'No trans_kode match found in order_list or transaksi',
-              );
+              if (mounted) {
+                CustomDialog.show(
+                  context: context,
+                  icon: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.error, color: Colors.red, size: 24),
+                  ),
+                  title: 'Error',
+                  content: const Text('Transaksi tidak ditemukan'),
+                  actions: [
+                    ElevatedButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('OK'),
+                    ),
+                  ],
+                );
+              }
+              return;
+            }
+          } catch (e) {
+            if (mounted) {
               CustomDialog.show(
                 context: context,
                 icon: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.1),
+                    color: Colors.red.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.error, color: Colors.red, size: 24),
@@ -167,29 +177,7 @@ class _ServicePageState extends State<ServicePage> {
                   ),
                 ],
               );
-              return;
             }
-          } catch (e) {
-            debugPrint('Error searching transaksi: $e');
-            CustomDialog.show(
-              context: context,
-              icon: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.red.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.error, color: Colors.red, size: 24),
-              ),
-              title: 'Error',
-              content: const Text('Transaksi tidak ditemukan'),
-              actions: [
-                ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('OK'),
-                ),
-              ],
-            );
             return;
           }
         }
@@ -197,63 +185,88 @@ class _ServicePageState extends State<ServicePage> {
 
       final status = order['trans_status']?.toString().toLowerCase() ?? '';
       final orderCosKode = order['cos_kode']?.toString();
-      debugPrint(
-        'Order cos_kode: $orderCosKode, currentUserId: $currentUserId',
-      );
       if (orderCosKode != currentUserId) {
-        debugPrint('Access denied');
-        CustomDialog.show(
-          context: context,
-          icon: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.red.withOpacity(0.1),
-              shape: BoxShape.circle,
+        if (mounted) {
+          CustomDialog.show(
+            context: context,
+            icon: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.red.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.error, color: Colors.red, size: 24),
             ),
-            child: const Icon(Icons.error, color: Colors.red, size: 24),
-          ),
-          title: 'Akses Ditolak',
-          content: const Text('Anda tidak memiliki akses ke transaksi ini'),
-          actions: [
-            ElevatedButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('OK'),
-            ),
-          ],
-        );
+            title: 'Akses Ditolak',
+            content: const Text('Anda tidak memiliki akses ke transaksi ini'),
+            actions: [
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK'),
+              ),
+            ],
+          );
+        }
         return;
       }
 
       final transKode = order['trans_kode']?.toString() ?? kode;
-      debugPrint('Navigating with transKode: $transKode, status: $status');
 
       if (status == 'pending') {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => WaitingApprovalPage(transKode: transKode),
-          ),
-        );
+        if (mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => WaitingApprovalPage(transKode: transKode),
+            ),
+          );
+        }
       } else if (status != 'completed') {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => TrackingPage(queueCode: transKode),
-          ),
-        );
+        if (mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => TrackingPage(queueCode: transKode),
+            ),
+          );
+        }
       } else {
+        if (mounted) {
+          CustomDialog.show(
+            context: context,
+            icon: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.orange.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.warning, color: Colors.orange, size: 24),
+            ),
+            title: 'Status Tidak Valid',
+            content: const Text('Status transaksi tidak valid'),
+            actions: [
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK'),
+              ),
+            ],
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
         CustomDialog.show(
           context: context,
           icon: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.orange.withOpacity(0.1),
+              color: Colors.red.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.warning, color: Colors.orange, size: 24),
+            child: const Icon(Icons.error, color: Colors.red, size: 24),
           ),
-          title: 'Status Tidak Valid',
-          content: const Text('Status transaksi tidak valid'),
+          title: 'Error',
+          content: const Text('Transaksi tidak ditemukan'),
           actions: [
             ElevatedButton(
               onPressed: () => Navigator.pop(context),
@@ -262,27 +275,6 @@ class _ServicePageState extends State<ServicePage> {
           ],
         );
       }
-    } catch (e) {
-      debugPrint('Error in _handleSearch: $e');
-      CustomDialog.show(
-        context: context,
-        icon: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.red.withOpacity(0.1),
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(Icons.error, color: Colors.red, size: 24),
-        ),
-        title: 'Error',
-        content: const Text('Transaksi tidak ditemukan'),
-        actions: [
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
-          ),
-        ],
-      );
     }
   }
 
@@ -331,10 +323,9 @@ class _ServicePageState extends State<ServicePage> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   decoration: BoxDecoration(
-                    color:
-                        Theme.of(context).brightness == Brightness.dark
-                            ? Colors.grey.shade800
-                            : Colors.grey.shade200,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.grey.shade800
+                        : Colors.grey.shade200,
                     borderRadius: BorderRadius.circular(24),
                   ),
                   child: Row(
@@ -357,9 +348,14 @@ class _ServicePageState extends State<ServicePage> {
                         ),
                       ),
                       IconButton(
-                        onPressed:
-                            () => _handleSearch(searchController.text.trim()),
-                        icon: const Icon(Icons.search, color: Colors.black54),
+                        onPressed: () =>
+                            _handleSearch(searchController.text.trim()),
+                        icon: Icon(
+                          Icons.search,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black54,
+                        ),
                         padding: const EdgeInsets.all(8),
                         constraints: const BoxConstraints(),
                       ),
@@ -376,7 +372,6 @@ class _ServicePageState extends State<ServicePage> {
                       borderRadius: BorderRadius.circular(8),
                       image: const DecorationImage(
                         image: AssetImage('assets/image/service_image.jpeg'),
-
                         fit: BoxFit.cover,
                       ),
                     ),
@@ -442,7 +437,7 @@ class _ServicePageState extends State<ServicePage> {
                           Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: const Icon(

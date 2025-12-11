@@ -1,8 +1,8 @@
 import 'package:azza_service/Beli/shop.dart';
-import 'package:azza_service/Home/Home.dart';
+import 'package:azza_service/Home/home.dart';
 import 'package:azza_service/Profile/profile.dart';
 import 'package:azza_service/Promo/promo.dart';
-import 'package:azza_service/Service/Service.dart';
+import 'package:azza_service/Service/service.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -56,7 +56,8 @@ class _StruckPesananPageState extends State<StruckPesananPage> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const NotificationPage()),
+                MaterialPageRoute(
+                    builder: (context) => const NotificationPage()),
               );
             },
           ),
@@ -99,11 +100,11 @@ class _StruckPesananPageState extends State<StruckPesananPage> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: [
+                boxShadow: const [
                   BoxShadow(
                     color: Colors.black12,
                     blurRadius: 8,
-                    offset: const Offset(0, 4),
+                    offset: Offset(0, 4),
                   ),
                 ],
               ),
@@ -126,7 +127,8 @@ class _StruckPesananPageState extends State<StruckPesananPage> {
                   // Order Details
                   _buildDetailRow('Nama Penerima', widget.nama),
                   _buildDetailRow('Jenis Layanan', _getServiceName()),
-                  _buildDetailRow('Jumlah Barang', '${widget.jumlahBarang} item'),
+                  _buildDetailRow(
+                      'Jumlah Barang', '${widget.jumlahBarang} item'),
                   if (widget.totalHarga != null)
                     _buildDetailRow('Total Harga', widget.totalHarga!),
 
@@ -142,12 +144,12 @@ class _StruckPesananPageState extends State<StruckPesananPage> {
                   ),
                   const SizedBox(height: 8),
                   ...widget.items.map((item) => Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Text(
-                      '- ${item['merek'] ?? ''} ${item['device'] ?? ''} (Seri: ${item['seri'] ?? ''})',
-                      style: GoogleFonts.poppins(fontSize: 14),
-                    ),
-                  )),
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Text(
+                          '- ${item['merek'] ?? ''} ${item['device'] ?? ''} (Seri: ${item['seri'] ?? ''})',
+                          style: GoogleFonts.poppins(fontSize: 14),
+                        ),
+                      )),
 
                   const SizedBox(height: 16),
 
@@ -181,7 +183,8 @@ class _StruckPesananPageState extends State<StruckPesananPage> {
                         ),
                         const SizedBox(height: 16),
                         QrImageView(
-                          data: 'order-${DateTime.now().millisecondsSinceEpoch}-${widget.nama}',
+                          data:
+                              'order-${DateTime.now().millisecondsSinceEpoch}-${widget.nama}',
                           version: QrVersions.auto,
                           size: 150.0,
                         ),
@@ -205,7 +208,8 @@ class _StruckPesananPageState extends State<StruckPesananPage> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF0041c3),
                             foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 8),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
@@ -227,7 +231,8 @@ class _StruckPesananPageState extends State<StruckPesananPage> {
                 onPressed: () {
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (context) => const ServicePage()),
+                    MaterialPageRoute(
+                        builder: (context) => const ServicePage()),
                   );
                 },
                 style: ElevatedButton.styleFrom(
@@ -289,20 +294,20 @@ class _StruckPesananPageState extends State<StruckPesananPage> {
         selectedLabelStyle: GoogleFonts.poppins(fontSize: 12),
         unselectedLabelStyle: GoogleFonts.poppins(fontSize: 12),
         items: [
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(Icons.build_circle_outlined),
             label: 'Service',
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(Icons.shopping_cart_outlined),
             label: 'Beli',
           ),
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          const BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(
             icon: Image.asset('assets/image/promo.png', width: 24, height: 24),
             label: 'Promo',
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),
             label: 'Profile',
           ),
@@ -355,7 +360,9 @@ class _StruckPesananPageState extends State<StruckPesananPage> {
       var status = await Permission.storage.request();
       if (!status.isGranted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Izin penyimpanan diperlukan untuk menyimpan QR Code')),
+          const SnackBar(
+              content:
+                  Text('Izin penyimpanan diperlukan untuk menyimpan QR Code')),
         );
         return;
       }
@@ -380,13 +387,15 @@ class _StruckPesananPageState extends State<StruckPesananPage> {
 
       // Save to Downloads folder
       final directory = await getDownloadsDirectory();
-      final filePath = '${directory!.path}/qr_code_${DateTime.now().millisecondsSinceEpoch}.png';
+      final filePath =
+          '${directory!.path}/qr_code_${DateTime.now().millisecondsSinceEpoch}.png';
       final file = File(filePath);
       await file.writeAsBytes(pngBytes);
 
       // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('QR Code berhasil disimpan ke folder Downloads')),
+        const SnackBar(
+            content: Text('QR Code berhasil disimpan ke folder Downloads')),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(

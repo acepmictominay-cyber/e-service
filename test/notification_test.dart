@@ -25,7 +25,7 @@ void main() {
   });
 
   testWidgets('Detail page back button is blue', (WidgetTester tester) async {
-    await tester.pumpWidget(MaterialApp(
+    await tester.pumpWidget(const MaterialApp(
       home: NotificationDetailPage(
         title: 'Test Title',
         subtitle: 'Test Subtitle',
@@ -42,7 +42,7 @@ void main() {
   });
 
   testWidgets('Back button navigates back', (WidgetTester tester) async {
-    await tester.pumpWidget(MaterialApp(
+    await tester.pumpWidget(const MaterialApp(
       home: NotificationDetailPage(
         title: 'Test Title',
         subtitle: 'Test Subtitle',

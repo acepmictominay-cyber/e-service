@@ -1,9 +1,9 @@
 import 'package:azza_service/Beli/shop.dart';
-import 'package:azza_service/Home/Home.dart';
+import 'package:azza_service/Home/home.dart';
 import 'package:azza_service/Others/notifikasi.dart';
 import 'package:azza_service/Profile/profile.dart';
 import 'package:azza_service/Promo/promo.dart';
-import 'package:azza_service/Service/Service.dart';
+import 'package:azza_service/Service/service.dart';
 import 'package:azza_service/Service/detail_service_midtrans.dart';
 import 'package:azza_service/api_services/api_service.dart';
 import 'package:azza_service/utils/error_utils.dart';
@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:async';
+import 'dart:developer';
 import 'dart:io';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
@@ -31,7 +32,7 @@ class _TrackingPageState extends State<TrackingPage>
   Timer? _statusPollingTimer;
 
   // Payment loading state
-  bool _isPaymentProcessing = false;
+  final bool _isPaymentProcessing = false;
 
   // Payment method selection
   String? _selectedPaymentMethod;
@@ -140,12 +141,12 @@ class _TrackingPageState extends State<TrackingPage>
 
       // Ambil subtotal dari tindakan (tidak digunakan lagi)
       try {
-        final tindakanList = await ApiService.getTindakanByTransKode(
+        await ApiService.getTindakanByTransKode(
           widget.queueCode!,
         );
         // Subtotal calculation removed as it's not used
       } catch (e) {
-        print('Error getting tindakan: $e');
+        log('Error getting tindakan: $e');
       }
 
       // Ambil trans_total dari detail
@@ -167,7 +168,7 @@ class _TrackingPageState extends State<TrackingPage>
         });
       }
     } catch (e) {
-      print('Error refreshing status: $e');
+      log('Error refreshing status: $e');
     }
   }
 
@@ -235,7 +236,6 @@ class _TrackingPageState extends State<TrackingPage>
       case 'itemsubmitted':
       case 'item_submitted':
         return 'itemSubmitted';
-      case 'menunggu_verifikasi':
       case 'menunggu_verifikasi':
         return 'menunggu_verifikasi';
       default:
@@ -505,11 +505,12 @@ class _TrackingPageState extends State<TrackingPage>
             maxHeight: MediaQuery.of(context).size.height * 0.8,
           ),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color:
+                    Theme.of(context).colorScheme.shadow.withValues(alpha: 25),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -524,14 +525,14 @@ class _TrackingPageState extends State<TrackingPage>
                   horizontal: 24,
                   vertical: 20,
                 ),
-                decoration: BoxDecoration(
-                  color: Colors.green.shade50,
-                  borderRadius: const BorderRadius.vertical(
+                decoration: const BoxDecoration(
+                  color: Color(0xFF0041c3),
+                  borderRadius: BorderRadius.vertical(
                     top: Radius.circular(24),
                   ),
                   border: Border(
                     bottom: BorderSide(
-                      color: Colors.green.shade100,
+                      color: Color(0xFF0041c3),
                       width: 1,
                     ),
                   ),
@@ -542,12 +543,12 @@ class _TrackingPageState extends State<TrackingPage>
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
-                          colors: [Color(0xFF4CAF50), Color(0xFF2E7D32)],
+                          colors: [Color(0xFF2196F3), Color(0xFF1976D2)],
                         ),
                         borderRadius: BorderRadius.circular(12),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.green.withOpacity(0.3),
+                            color: Colors.blue.withValues(alpha: 76),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
@@ -569,14 +570,14 @@ class _TrackingPageState extends State<TrackingPage>
                             style: GoogleFonts.poppins(
                               fontSize: 18,
                               fontWeight: FontWeight.w700,
-                              color: Colors.green.shade800,
+                              color: Colors.white,
                             ),
                           ),
                           Text(
                             'Scan & Bayar Cepat',
                             style: GoogleFonts.poppins(
                               fontSize: 12,
-                              color: Colors.green.shade600,
+                              color: Colors.white.withOpacity(0.9),
                               fontWeight: FontWeight.w400,
                             ),
                           ),
@@ -601,18 +602,18 @@ class _TrackingPageState extends State<TrackingPage>
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: [
-                            Colors.green.shade50,
-                            Colors.green.shade100,
+                            Colors.blue.shade50,
+                            Colors.blue.shade100,
                           ],
                         ),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: Colors.green.shade200,
+                          color: Colors.blue.shade200,
                           width: 2,
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.green.withOpacity(0.1),
+                            color: Colors.blue.withValues(alpha: 25),
                             blurRadius: 12,
                             offset: const Offset(0, 4),
                           ),
@@ -624,11 +625,14 @@ class _TrackingPageState extends State<TrackingPage>
                             width: 180,
                             height: 180,
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: Theme.of(context).colorScheme.surface,
                               borderRadius: BorderRadius.circular(16),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .shadow
+                                      .withValues(alpha: 25),
                                   blurRadius: 8,
                                   offset: const Offset(0, 2),
                                 ),
@@ -659,16 +663,16 @@ class _TrackingPageState extends State<TrackingPage>
                               vertical: 8,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.green.shade600,
+                              color: Colors.blue.shade600,
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
-                                color: Colors.green.shade300,
+                                color: Colors.blue.shade300,
                               ),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(
+                                const Icon(
                                   Icons.payments,
                                   size: 16,
                                   color: Colors.white,
@@ -711,7 +715,9 @@ class _TrackingPageState extends State<TrackingPage>
                           Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: Colors.blue.shade100,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .secondaryContainer,
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Icon(
@@ -755,7 +761,7 @@ class _TrackingPageState extends State<TrackingPage>
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: Colors.grey[50],
+                  color: Theme.of(context).colorScheme.surfaceContainerLow,
                   borderRadius: const BorderRadius.vertical(
                     bottom: Radius.circular(24),
                   ),
@@ -766,9 +772,10 @@ class _TrackingPageState extends State<TrackingPage>
                       child: Container(
                         height: 50,
                         decoration: BoxDecoration(
-                          color: Colors.grey.shade100,
+                          color: Theme.of(context).colorScheme.surfaceContainer,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.grey.shade300),
+                          border: Border.all(
+                              color: Theme.of(context).colorScheme.outline),
                         ),
                         child: TextButton(
                           onPressed: () => Navigator.pop(context),
@@ -782,7 +789,7 @@ class _TrackingPageState extends State<TrackingPage>
                             style: GoogleFonts.poppins(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
-                              color: Colors.grey.shade700,
+                              color: Theme.of(context).colorScheme.onSurface,
                             ),
                           ),
                         ),
@@ -794,12 +801,17 @@ class _TrackingPageState extends State<TrackingPage>
                         height: 50,
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
-                            colors: [Color(0xFF4CAF50), Color(0xFF2E7D32)],
+                            colors: [
+                              Color(0xFF0041c3),
+                              Color(0xFF0066FF),
+                            ],
                           ),
                           borderRadius: BorderRadius.circular(12),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.green.withOpacity(0.4),
+                              color: const Color(
+                                0xFF0041c3,
+                              ).withOpacity(0.4),
                               blurRadius: 12,
                               offset: const Offset(0, 4),
                             ),
@@ -827,7 +839,7 @@ class _TrackingPageState extends State<TrackingPage>
                             style: GoogleFonts.poppins(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              color: Colors.white,
+                              color: Theme.of(context).colorScheme.onPrimary,
                             ),
                           ),
                         ),
@@ -869,11 +881,14 @@ class _TrackingPageState extends State<TrackingPage>
             ),
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .shadow
+                        .withValues(alpha: 25),
                     blurRadius: 20,
                     offset: const Offset(0, 10),
                   ),
@@ -905,24 +920,30 @@ class _TrackingPageState extends State<TrackingPage>
                         Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            gradient: const LinearGradient(
+                            gradient: LinearGradient(
                               colors: [
-                                Color(0xFFFFA726),
-                                Color(0xFFFF9800),
+                                Theme.of(context).colorScheme.secondary,
+                                Theme.of(context)
+                                    .colorScheme
+                                    .secondary
+                                    .withOpacity(0.8),
                               ],
                             ),
                             borderRadius: BorderRadius.circular(10),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.orange.withOpacity(0.3),
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .secondary
+                                    .withOpacity(0.3),
                                 blurRadius: 6,
                                 offset: const Offset(0, 2),
                               ),
                             ],
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.receipt_long,
-                            color: Colors.white,
+                            color: Theme.of(context).colorScheme.onSecondary,
                             size: 20,
                           ),
                         ),
@@ -936,14 +957,19 @@ class _TrackingPageState extends State<TrackingPage>
                                 style: GoogleFonts.poppins(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w700,
-                                  color: Colors.orange.shade800,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSecondaryContainer,
                                 ),
                               ),
                               Text(
                                 'Verifikasi Pembayaran',
                                 style: GoogleFonts.poppins(
                                   fontSize: 11,
-                                  color: Colors.orange.shade600,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSecondaryContainer
+                                      .withOpacity(0.8),
                                   fontWeight: FontWeight.w400,
                                 ),
                               ),
@@ -972,13 +998,17 @@ class _TrackingPageState extends State<TrackingPage>
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                                 colors: [
-                                  Colors.blue.shade50,
-                                  Colors.indigo.shade50,
+                                  Theme.of(context)
+                                      .colorScheme
+                                      .tertiaryContainer,
+                                  Theme.of(context)
+                                      .colorScheme
+                                      .secondaryContainer,
                                 ],
                               ),
                               borderRadius: BorderRadius.circular(14),
                               border: Border.all(
-                                color: Colors.blue.shade200,
+                                color: Theme.of(context).colorScheme.tertiary,
                               ),
                             ),
                             child: Row(
@@ -986,14 +1016,18 @@ class _TrackingPageState extends State<TrackingPage>
                                 Container(
                                   padding: const EdgeInsets.all(8),
                                   decoration: BoxDecoration(
-                                    color: Colors.blue.shade100,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .tertiaryContainer,
                                     borderRadius: BorderRadius.circular(
                                       10,
                                     ),
                                   ),
                                   child: Icon(
                                     Icons.payments,
-                                    color: Colors.blue.shade600,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onTertiaryContainer,
                                     size: 20,
                                   ),
                                 ),
@@ -1008,7 +1042,9 @@ class _TrackingPageState extends State<TrackingPage>
                                         style: GoogleFonts.poppins(
                                           fontSize: 13,
                                           fontWeight: FontWeight.w600,
-                                          color: Colors.blue.shade800,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onTertiaryContainer,
                                         ),
                                       ),
                                       Text(
@@ -1016,7 +1052,9 @@ class _TrackingPageState extends State<TrackingPage>
                                         style: GoogleFonts.poppins(
                                           fontSize: 15,
                                           fontWeight: FontWeight.w700,
-                                          color: Colors.blue.shade900,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onTertiaryContainer,
                                         ),
                                       ),
                                     ],
@@ -1032,17 +1070,21 @@ class _TrackingPageState extends State<TrackingPage>
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: Colors.grey.shade50,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .surfaceContainerLow,
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(
-                                color: Colors.grey.shade200,
+                                color: Theme.of(context).colorScheme.outline,
                               ),
                             ),
                             child: Row(
                               children: [
                                 Icon(
                                   Icons.info_outline,
-                                  color: Colors.grey.shade600,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
                                   size: 18,
                                 ),
                                 const SizedBox(width: 10),
@@ -1051,7 +1093,9 @@ class _TrackingPageState extends State<TrackingPage>
                                     'Upload foto bukti pembayaran yang jelas dan terbaca',
                                     style: GoogleFonts.poppins(
                                       fontSize: 12,
-                                      color: Colors.grey.shade700,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface,
                                     ),
                                   ),
                                 ),
@@ -1095,18 +1139,25 @@ class _TrackingPageState extends State<TrackingPage>
                                   begin: Alignment.topCenter,
                                   end: Alignment.bottomCenter,
                                   colors: [
-                                    Colors.grey.shade50,
-                                    Colors.grey.shade100,
+                                    Theme.of(context)
+                                        .colorScheme
+                                        .surfaceContainerLow,
+                                    Theme.of(context)
+                                        .colorScheme
+                                        .surfaceContainer,
                                   ],
                                 ),
                                 borderRadius: BorderRadius.circular(14),
                                 border: Border.all(
-                                  color: Colors.grey.shade300,
+                                  color: Theme.of(context).colorScheme.outline,
                                   width: 2,
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.grey.withOpacity(0.1),
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .shadow
+                                        .withValues(alpha: 25),
                                     blurRadius: 6,
                                     offset: const Offset(0, 2),
                                   ),
@@ -1118,11 +1169,15 @@ class _TrackingPageState extends State<TrackingPage>
                                   Container(
                                     padding: const EdgeInsets.all(12),
                                     decoration: BoxDecoration(
-                                      color: Colors.white,
+                                      color:
+                                          Theme.of(context).colorScheme.surface,
                                       shape: BoxShape.circle,
                                       boxShadow: [
                                         BoxShadow(
-                                          color: Colors.grey.withOpacity(0.2),
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .shadow
+                                              .withOpacity(0.2),
                                           blurRadius: 6,
                                           offset: const Offset(0, 2),
                                         ),
@@ -1131,14 +1186,18 @@ class _TrackingPageState extends State<TrackingPage>
                                     child: Icon(
                                       Icons.cloud_upload,
                                       size: 24,
-                                      color: Colors.grey.shade500,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant,
                                     ),
                                   ),
                                   const SizedBox(height: 8),
                                   Text(
                                     "Belum ada bukti pembayaran",
                                     style: GoogleFonts.poppins(
-                                      color: Colors.grey.shade600,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant,
                                       fontSize: 12,
                                       fontWeight: FontWeight.w500,
                                     ),
@@ -1154,18 +1213,22 @@ class _TrackingPageState extends State<TrackingPage>
                             width: double.infinity,
                             height: 44,
                             decoration: BoxDecoration(
-                              gradient: const LinearGradient(
+                              gradient: LinearGradient(
                                 colors: [
-                                  Color(0xFF0041c3),
-                                  Color(0xFF0066FF),
+                                  Theme.of(context).colorScheme.primary,
+                                  Theme.of(context)
+                                      .colorScheme
+                                      .primary
+                                      .withOpacity(0.8),
                                 ],
                               ),
                               borderRadius: BorderRadius.circular(10),
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(
-                                    0xFF0041c3,
-                                  ).withOpacity(0.3),
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .primary
+                                      .withOpacity(0.3),
                                   blurRadius: 8,
                                   offset: const Offset(0, 3),
                                 ),
@@ -1210,10 +1273,12 @@ class _TrackingPageState extends State<TrackingPage>
                               vertical: 6,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.amber.shade50,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .tertiaryContainer,
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(
-                                color: Colors.amber.shade200,
+                                color: Theme.of(context).colorScheme.tertiary,
                               ),
                             ),
                             child: Row(
@@ -1222,14 +1287,18 @@ class _TrackingPageState extends State<TrackingPage>
                                 Icon(
                                   Icons.warning_amber_rounded,
                                   size: 14,
-                                  color: Colors.amber.shade600,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onTertiaryContainer,
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
                                   "Format: JPG, PNG • Maksimal 5MB",
                                   style: GoogleFonts.poppins(
                                     fontSize: 11,
-                                    color: Colors.amber.shade700,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onTertiaryContainer,
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
@@ -1250,7 +1319,7 @@ class _TrackingPageState extends State<TrackingPage>
                       vertical: 16,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.grey[50],
+                      color: Theme.of(context).colorScheme.surfaceContainerLow,
                       borderRadius: const BorderRadius.vertical(
                         bottom: Radius.circular(24),
                       ),
@@ -1261,10 +1330,12 @@ class _TrackingPageState extends State<TrackingPage>
                           child: Container(
                             height: 44,
                             decoration: BoxDecoration(
-                              color: Colors.grey.shade100,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .surfaceContainer,
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(
-                                color: Colors.grey.shade300,
+                                color: Theme.of(context).colorScheme.outline,
                               ),
                             ),
                             child: TextButton(
@@ -1281,7 +1352,8 @@ class _TrackingPageState extends State<TrackingPage>
                                 style: GoogleFonts.poppins(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
-                                  color: Colors.grey.shade700,
+                                  color:
+                                      Theme.of(context).colorScheme.onSurface,
                                 ),
                               ),
                             ),
@@ -1293,23 +1365,33 @@ class _TrackingPageState extends State<TrackingPage>
                             height: 44,
                             decoration: BoxDecoration(
                               gradient: _paymentProofImage != null
-                                  ? const LinearGradient(
+                                  ? LinearGradient(
                                       colors: [
-                                        Color(0xFF4CAF50),
-                                        Color(0xFF2E7D32),
+                                        Theme.of(context).colorScheme.primary,
+                                        Theme.of(context)
+                                            .colorScheme
+                                            .primary
+                                            .withOpacity(0.8),
                                       ],
                                     )
                                   : LinearGradient(
                                       colors: [
-                                        Colors.grey.shade300,
-                                        Colors.grey.shade400,
+                                        Theme.of(context)
+                                            .colorScheme
+                                            .surfaceContainer,
+                                        Theme.of(context)
+                                            .colorScheme
+                                            .surfaceContainerHighest,
                                       ],
                                     ),
                               borderRadius: BorderRadius.circular(10),
                               boxShadow: _paymentProofImage != null
                                   ? [
                                       BoxShadow(
-                                        color: Colors.green.withOpacity(0.4),
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary
+                                            .withOpacity(0.4),
                                         blurRadius: 8,
                                         offset: const Offset(0, 3),
                                       ),
@@ -1344,8 +1426,10 @@ class _TrackingPageState extends State<TrackingPage>
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
                                   color: _paymentProofImage != null
-                                      ? Colors.white
-                                      : Colors.grey.shade500,
+                                      ? Theme.of(context).colorScheme.onPrimary
+                                      : Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant,
                                 ),
                               ),
                             ),
@@ -1538,13 +1622,16 @@ class _TrackingPageState extends State<TrackingPage>
       builder: (context) => StatefulBuilder(
         builder: (context, setModalState) {
           return Container(
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [Color(0xFF0041c3), Color(0xFF0066FF)],
+                colors: [
+                  Theme.of(context).colorScheme.primary,
+                  Theme.of(context).colorScheme.primary.withOpacity(0.8)
+                ],
               ),
-              borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(25)),
             ),
             constraints: BoxConstraints(
               maxHeight: MediaQuery.of(context).size.height * 0.85,
@@ -1572,9 +1659,9 @@ class _TrackingPageState extends State<TrackingPage>
                 Expanded(
                   child: Container(
                     margin: const EdgeInsets.only(top: 20),
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.vertical(
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surface,
+                      borderRadius: const BorderRadius.vertical(
                         top: Radius.circular(25),
                       ),
                     ),
@@ -1595,18 +1682,24 @@ class _TrackingPageState extends State<TrackingPage>
                                 Container(
                                   padding: const EdgeInsets.all(12),
                                   decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
+                                    gradient: LinearGradient(
                                       colors: [
-                                        Color(0xFFFFA726),
-                                        Color(0xFFFF9800),
+                                        Theme.of(context).colorScheme.secondary,
+                                        Theme.of(context)
+                                            .colorScheme
+                                            .secondary
+                                            .withOpacity(0.8),
                                       ],
                                     ),
                                     borderRadius: BorderRadius.circular(15),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.orange.withOpacity(
-                                          0.3,
-                                        ),
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .secondary
+                                            .withOpacity(
+                                              0.3,
+                                            ),
                                         blurRadius: 10,
                                         offset: const Offset(0, 4),
                                       ),
@@ -1629,14 +1722,18 @@ class _TrackingPageState extends State<TrackingPage>
                                         style: GoogleFonts.poppins(
                                           fontSize: 22,
                                           fontWeight: FontWeight.w700,
-                                          color: Colors.black87,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface,
                                         ),
                                       ),
                                       Text(
                                         'Down Payment Service',
                                         style: GoogleFonts.poppins(
                                           fontSize: 14,
-                                          color: Colors.grey[600],
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurfaceVariant,
                                           fontWeight: FontWeight.w400,
                                         ),
                                       ),
@@ -1657,7 +1754,7 @@ class _TrackingPageState extends State<TrackingPage>
                                     _totalCost != null && _totalCost! > 0
                                         ? 'Rp ${NumberFormat('#,###', 'id_ID').format(_totalCost)}'
                                         : 'Rp 0',
-                                    Colors.blue,
+                                    Theme.of(context).colorScheme.primary,
                                     Icons.receipt_long,
                                   ),
                                 ),
@@ -1668,7 +1765,7 @@ class _TrackingPageState extends State<TrackingPage>
                                     _totalCost != null && _totalCost! > 0
                                         ? 'Rp ${NumberFormat('#,###', 'id_ID').format(minDp)}'
                                         : 'Rp 0',
-                                    Colors.orange,
+                                    Theme.of(context).colorScheme.secondary,
                                     Icons.account_balance_wallet,
                                   ),
                                 ),
@@ -1683,7 +1780,7 @@ class _TrackingPageState extends State<TrackingPage>
                               style: GoogleFonts.poppins(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
-                                color: Colors.black87,
+                                color: Theme.of(context).colorScheme.onSurface,
                               ),
                             ),
                             const SizedBox(height: 16),
@@ -1693,7 +1790,7 @@ class _TrackingPageState extends State<TrackingPage>
                               "QRIS",
                               "Scan QR code untuk pembayaran cepat",
                               Icons.qr_code_2,
-                              Colors.green,
+                              Theme.of(context).colorScheme.primary,
                               selectedPaymentMethod == "QRIS",
                               () => setModalState(
                                 () => selectedPaymentMethod = "QRIS",
@@ -1708,7 +1805,7 @@ class _TrackingPageState extends State<TrackingPage>
                               "Transfer Bank",
                               "Transfer ke rekening bank",
                               Icons.account_balance,
-                              Colors.grey,
+                              Theme.of(context).colorScheme.surfaceContainerHighest,
                               false,
                               null,
                               available: false,
@@ -1721,7 +1818,7 @@ class _TrackingPageState extends State<TrackingPage>
                               "E-wallet",
                               "GoPay, OVO, Dana, LinkAja",
                               Icons.account_balance_wallet,
-                              Colors.grey,
+                              Theme.of(context).colorScheme.surfaceContainerHighest,
                               false,
                               null,
                               available: false,
@@ -1733,10 +1830,12 @@ class _TrackingPageState extends State<TrackingPage>
                             Container(
                               padding: const EdgeInsets.all(20),
                               decoration: BoxDecoration(
-                                color: Colors.grey[50],
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .surfaceContainerLow,
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
-                                  color: Colors.grey[200]!,
+                                  color: Theme.of(context).colorScheme.outline,
                                 ),
                               ),
                               child: Column(
@@ -1747,7 +1846,9 @@ class _TrackingPageState extends State<TrackingPage>
                                     style: GoogleFonts.poppins(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w600,
-                                      color: Colors.black87,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface,
                                     ),
                                   ),
                                   const SizedBox(height: 8),
@@ -1755,24 +1856,32 @@ class _TrackingPageState extends State<TrackingPage>
                                     'Masukkan jumlah DP yang ingin dibayar (minimal 30%)',
                                     style: GoogleFonts.poppins(
                                       fontSize: 12,
-                                      color: Colors.grey[600],
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant,
                                     ),
                                   ),
                                   const SizedBox(height: 16),
                                   Container(
                                     decoration: BoxDecoration(
-                                      color: Colors.white,
+                                      color:
+                                          Theme.of(context).colorScheme.surface,
                                       borderRadius: BorderRadius.circular(
                                         12,
                                       ),
                                       border: Border.all(
-                                        color: Colors.grey[300]!,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .outline,
                                       ),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: Colors.grey.withOpacity(
-                                            0.1,
-                                          ),
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .shadow
+                                              .withOpacity(
+                                                0.1,
+                                              ),
                                           blurRadius: 8,
                                           offset: const Offset(0, 2),
                                         ),
@@ -1804,13 +1913,17 @@ class _TrackingPageState extends State<TrackingPage>
                                         hintText: '0',
                                         hintStyle: GoogleFonts.poppins(
                                           fontSize: 18,
-                                          color: Colors.grey[400],
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurfaceVariant,
                                         ),
                                         prefixText: 'Rp ',
                                         prefixStyle: GoogleFonts.poppins(
                                           fontSize: 18,
                                           fontWeight: FontWeight.w600,
-                                          color: Colors.black87,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface,
                                         ),
                                         border: InputBorder.none,
                                         contentPadding:
@@ -1822,7 +1935,9 @@ class _TrackingPageState extends State<TrackingPage>
                                       style: GoogleFonts.poppins(
                                         fontSize: 18,
                                         fontWeight: FontWeight.w600,
-                                        color: Colors.black87,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface,
                                       ),
                                     ),
                                   ),
@@ -1837,18 +1952,22 @@ class _TrackingPageState extends State<TrackingPage>
                               width: double.infinity,
                               height: 56,
                               decoration: BoxDecoration(
-                                gradient: const LinearGradient(
+                                gradient: LinearGradient(
                                   colors: [
-                                    Color(0xFF0041c3),
-                                    Color(0xFF0066FF),
+                                    Theme.of(context).colorScheme.primary,
+                                    Theme.of(context)
+                                        .colorScheme
+                                        .primary
+                                        .withOpacity(0.8),
                                   ],
                                 ),
                                 borderRadius: BorderRadius.circular(16),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: const Color(
-                                      0xFF0041c3,
-                                    ).withOpacity(0.3),
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .primary
+                                        .withOpacity(0.3),
                                     blurRadius: 12,
                                     offset: const Offset(0, 4),
                                   ),
@@ -1937,17 +2056,21 @@ class _TrackingPageState extends State<TrackingPage>
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: Colors.green[50],
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .primaryContainer,
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: Colors.green[200]!,
+                                  color: Theme.of(context).colorScheme.primary,
                                 ),
                               ),
                               child: Row(
                                 children: [
                                   Icon(
                                     Icons.security,
-                                    color: Colors.green[600],
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onPrimaryContainer,
                                     size: 20,
                                   ),
                                   const SizedBox(width: 8),
@@ -1956,7 +2079,9 @@ class _TrackingPageState extends State<TrackingPage>
                                       'Pembayaran aman & terenkripsi dengan teknologi terkini',
                                       style: GoogleFonts.poppins(
                                         fontSize: 12,
-                                        color: Colors.green[700],
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onPrimaryContainer,
                                       ),
                                     ),
                                   ),
@@ -1988,7 +2113,7 @@ class _TrackingPageState extends State<TrackingPage>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 25),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: color.withOpacity(0.2)),
       ),
@@ -2039,7 +2164,7 @@ class _TrackingPageState extends State<TrackingPage>
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: available
-              ? (isSelected ? color.withOpacity(0.1) : Colors.white)
+              ? (isSelected ? color.withValues(alpha: 25) : Colors.white)
               : Colors.grey[50],
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
@@ -2063,7 +2188,8 @@ class _TrackingPageState extends State<TrackingPage>
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: available ? color.withOpacity(0.1) : Colors.grey[200],
+                color:
+                    available ? color.withValues(alpha: 25) : Colors.grey[200],
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
@@ -2146,7 +2272,7 @@ class _TrackingPageState extends State<TrackingPage>
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 25),
                 shape: BoxShape.circle,
               ),
               child: Icon(Icons.error_outline, color: color, size: 48),
@@ -2213,7 +2339,7 @@ class _TrackingPageState extends State<TrackingPage>
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.orange.withOpacity(0.1),
+                color: Colors.orange.withValues(alpha: 25),
               ),
               child: Icon(
                 Icons.warning_amber_rounded,
@@ -2334,13 +2460,16 @@ class _TrackingPageState extends State<TrackingPage>
           maxHeight: MediaQuery.of(context).size.height * 0.8,
         ),
         child: Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [Color(0xFF0041c3), Color(0xFF0066FF)],
+              colors: [
+                Theme.of(context).colorScheme.primary,
+                Theme.of(context).colorScheme.primary.withOpacity(0.8)
+              ],
             ),
-            borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(25)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -2366,9 +2495,9 @@ class _TrackingPageState extends State<TrackingPage>
               Flexible(
                 child: Container(
                   margin: const EdgeInsets.only(top: 16),
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.vertical(
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    borderRadius: const BorderRadius.vertical(
                       top: Radius.circular(25),
                     ),
                   ),
@@ -2418,14 +2547,18 @@ class _TrackingPageState extends State<TrackingPage>
                                     style: GoogleFonts.poppins(
                                       fontSize: 18,
                                       fontWeight: FontWeight.w700,
-                                      color: Colors.black87,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface,
                                     ),
                                   ),
                                   Text(
                                     'Full Payment Service',
                                     style: GoogleFonts.poppins(
                                       fontSize: 12,
-                                      color: Colors.grey[600],
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant,
                                       fontWeight: FontWeight.w400,
                                     ),
                                   ),
@@ -2441,20 +2574,25 @@ class _TrackingPageState extends State<TrackingPage>
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            gradient: const LinearGradient(
+                            gradient: LinearGradient(
                               colors: [
-                                Color(0xFFE3F2FD),
-                                Color(0xFFBBDEFB),
+                                Theme.of(context)
+                                    .colorScheme
+                                    .secondaryContainer,
+                                Theme.of(context).colorScheme.tertiaryContainer,
                               ],
                             ),
                             borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: Colors.blue[200]!),
+                            border: Border.all(
+                                color: Theme.of(context).colorScheme.secondary),
                           ),
                           child: Row(
                             children: [
                               Icon(
                                 Icons.receipt_long,
-                                color: Colors.blue[700],
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSecondaryContainer,
                                 size: 20,
                               ),
                               const SizedBox(width: 12),
@@ -2466,7 +2604,9 @@ class _TrackingPageState extends State<TrackingPage>
                                       'Total Pembayaran',
                                       style: GoogleFonts.poppins(
                                         fontSize: 13,
-                                        color: Colors.blue[700],
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSecondaryContainer,
                                         fontWeight: FontWeight.w500,
                                       ),
                                     ),
@@ -2475,7 +2615,9 @@ class _TrackingPageState extends State<TrackingPage>
                                       style: GoogleFonts.poppins(
                                         fontSize: 18,
                                         fontWeight: FontWeight.w700,
-                                        color: Colors.blue[900],
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSecondaryContainer,
                                       ),
                                     ),
                                   ],
@@ -2493,7 +2635,7 @@ class _TrackingPageState extends State<TrackingPage>
                           style: GoogleFonts.poppins(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            color: Colors.black87,
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
                         ),
                         const SizedBox(height: 12),
@@ -2503,7 +2645,7 @@ class _TrackingPageState extends State<TrackingPage>
                           "QRIS",
                           "Scan QR code untuk pembayaran cepat",
                           Icons.qr_code_2,
-                          Colors.green,
+                          Theme.of(context).colorScheme.primary,
                           false,
                           () {
                             Navigator.pop(context);
@@ -2519,7 +2661,7 @@ class _TrackingPageState extends State<TrackingPage>
                           "Transfer Bank",
                           "Transfer ke rekening bank",
                           Icons.account_balance,
-                          Colors.grey,
+                          Theme.of(context).colorScheme.surfaceContainerHighest,
                           false,
                           null,
                           available: false,
@@ -2532,7 +2674,7 @@ class _TrackingPageState extends State<TrackingPage>
                           "E-wallet",
                           "GoPay, OVO, Dana, LinkAja",
                           Icons.account_balance_wallet,
-                          Colors.grey,
+                          Theme.of(context).colorScheme.surfaceContainerHighest,
                           false,
                           null,
                           available: false,
@@ -2544,15 +2686,19 @@ class _TrackingPageState extends State<TrackingPage>
                         Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: Colors.green[50],
+                            color:
+                                Theme.of(context).colorScheme.primaryContainer,
                             borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: Colors.green[200]!),
+                            border: Border.all(
+                                color: Theme.of(context).colorScheme.primary),
                           ),
                           child: Row(
                             children: [
                               Icon(
                                 Icons.security,
-                                color: Colors.green[600],
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onPrimaryContainer,
                                 size: 18,
                               ),
                               const SizedBox(width: 6),
@@ -2561,7 +2707,9 @@ class _TrackingPageState extends State<TrackingPage>
                                   'Pembayaran aman & terenkripsi',
                                   style: GoogleFonts.poppins(
                                     fontSize: 11,
-                                    color: Colors.green[700],
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onPrimaryContainer,
                                   ),
                                 ),
                               ),
@@ -2622,9 +2770,9 @@ class _TrackingPageState extends State<TrackingPage>
             Expanded(
               child: Container(
                 margin: const EdgeInsets.only(top: 20),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.vertical(
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface,
+                  borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(25),
                   ),
                 ),
@@ -2639,16 +2787,22 @@ class _TrackingPageState extends State<TrackingPage>
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              gradient: const LinearGradient(
+                              gradient: LinearGradient(
                                 colors: [
-                                  Color(0xFFF44336),
-                                  Color(0xFFD32F2F),
+                                  Theme.of(context).colorScheme.error,
+                                  Theme.of(context)
+                                      .colorScheme
+                                      .error
+                                      .withOpacity(0.8),
                                 ],
                               ),
                               borderRadius: BorderRadius.circular(15),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.red.withOpacity(0.3),
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .error
+                                      .withOpacity(0.3),
                                   blurRadius: 10,
                                   offset: const Offset(0, 4),
                                 ),
@@ -2670,14 +2824,17 @@ class _TrackingPageState extends State<TrackingPage>
                                   style: GoogleFonts.poppins(
                                     fontSize: 22,
                                     fontWeight: FontWeight.w700,
-                                    color: Colors.black87,
+                                    color:
+                                        Theme.of(context).colorScheme.onSurface,
                                   ),
                                 ),
                                 Text(
                                   'Cancel Order',
                                   style: GoogleFonts.poppins(
                                     fontSize: 14,
-                                    color: Colors.grey[600],
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
                                     fontWeight: FontWeight.w400,
                                   ),
                                 ),
@@ -2693,17 +2850,26 @@ class _TrackingPageState extends State<TrackingPage>
                       Container(
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFFFFEBEE), Color(0xFFFFCDD2)],
+                          gradient: LinearGradient(
+                            colors: [
+                              Theme.of(context).colorScheme.errorContainer,
+                              Theme.of(context)
+                                  .colorScheme
+                                  .errorContainer
+                                  .withOpacity(0.8)
+                            ],
                           ),
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.red[200]!),
+                          border: Border.all(
+                              color: Theme.of(context).colorScheme.error),
                         ),
                         child: Row(
                           children: [
                             Icon(
                               Icons.warning,
-                              color: Colors.red[700],
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onErrorContainer,
                               size: 24,
                             ),
                             const SizedBox(width: 16),
@@ -2715,7 +2881,9 @@ class _TrackingPageState extends State<TrackingPage>
                                     'Biaya Pembatalan',
                                     style: GoogleFonts.poppins(
                                       fontSize: 14,
-                                      color: Colors.red[700],
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onErrorContainer,
                                       fontWeight: FontWeight.w500,
                                     ),
                                   ),
@@ -2724,14 +2892,19 @@ class _TrackingPageState extends State<TrackingPage>
                                     style: GoogleFonts.poppins(
                                       fontSize: 20,
                                       fontWeight: FontWeight.w700,
-                                      color: Colors.red[900],
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onErrorContainer,
                                     ),
                                   ),
                                   Text(
                                     'Biaya jasa pengecekan yang telah dilakukan',
                                     style: GoogleFonts.poppins(
                                       fontSize: 12,
-                                      color: Colors.red[600],
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onErrorContainer
+                                          .withOpacity(0.8),
                                     ),
                                   ),
                                 ],
@@ -2748,13 +2921,22 @@ class _TrackingPageState extends State<TrackingPage>
                         width: double.infinity,
                         height: 56,
                         decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFFD32F2F), Color(0xFFF44336)],
+                          gradient: LinearGradient(
+                            colors: [
+                              Theme.of(context).colorScheme.error,
+                              Theme.of(context)
+                                  .colorScheme
+                                  .error
+                                  .withOpacity(0.8)
+                            ],
                           ),
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.red.withOpacity(0.3),
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .error
+                                  .withOpacity(0.3),
                               blurRadius: 12,
                               offset: const Offset(0, 4),
                             ),
@@ -2789,15 +2971,19 @@ class _TrackingPageState extends State<TrackingPage>
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.orange[50],
+                          color:
+                              Theme.of(context).colorScheme.tertiaryContainer,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.orange[200]!),
+                          border: Border.all(
+                              color: Theme.of(context).colorScheme.tertiary),
                         ),
                         child: Row(
                           children: [
                             Icon(
                               Icons.info_outline,
-                              color: Colors.orange[600],
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onTertiaryContainer,
                               size: 20,
                             ),
                             const SizedBox(width: 8),
@@ -2806,7 +2992,9 @@ class _TrackingPageState extends State<TrackingPage>
                                 'Tindakan ini tidak dapat dibatalkan',
                                 style: GoogleFonts.poppins(
                                   fontSize: 12,
-                                  color: Colors.orange[700],
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onTertiaryContainer,
                                 ),
                               ),
                             ),
@@ -2837,13 +3025,16 @@ class _TrackingPageState extends State<TrackingPage>
           maxHeight: MediaQuery.of(context).size.height * 0.8,
         ),
         child: Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [Color(0xFFD32F2F), Color(0xFFF44336)],
+              colors: [
+                Theme.of(context).colorScheme.error,
+                Theme.of(context).colorScheme.error.withOpacity(0.8)
+              ],
             ),
-            borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(25)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -2869,9 +3060,9 @@ class _TrackingPageState extends State<TrackingPage>
               Flexible(
                 child: Container(
                   margin: const EdgeInsets.only(top: 16),
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.vertical(
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    borderRadius: const BorderRadius.vertical(
                       top: Radius.circular(25),
                     ),
                   ),
@@ -2890,16 +3081,22 @@ class _TrackingPageState extends State<TrackingPage>
                             Container(
                               padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
-                                gradient: const LinearGradient(
+                                gradient: LinearGradient(
                                   colors: [
-                                    Color(0xFFF44336),
-                                    Color(0xFFD32F2F),
+                                    Theme.of(context).colorScheme.error,
+                                    Theme.of(context)
+                                        .colorScheme
+                                        .error
+                                        .withOpacity(0.8),
                                   ],
                                 ),
                                 borderRadius: BorderRadius.circular(12),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.red.withOpacity(0.3),
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .error
+                                        .withOpacity(0.3),
                                     blurRadius: 8,
                                     offset: const Offset(0, 3),
                                   ),
@@ -2921,14 +3118,18 @@ class _TrackingPageState extends State<TrackingPage>
                                     style: GoogleFonts.poppins(
                                       fontSize: 18,
                                       fontWeight: FontWeight.w700,
-                                      color: Colors.black87,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface,
                                     ),
                                   ),
                                   Text(
                                     'Cancel Order Fee',
                                     style: GoogleFonts.poppins(
                                       fontSize: 12,
-                                      color: Colors.grey[600],
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant,
                                       fontWeight: FontWeight.w400,
                                     ),
                                   ),
@@ -2944,20 +3145,26 @@ class _TrackingPageState extends State<TrackingPage>
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            gradient: const LinearGradient(
+                            gradient: LinearGradient(
                               colors: [
-                                Color(0xFFFFEBEE),
-                                Color(0xFFFFCDD2),
+                                Theme.of(context).colorScheme.errorContainer,
+                                Theme.of(context)
+                                    .colorScheme
+                                    .errorContainer
+                                    .withOpacity(0.8),
                               ],
                             ),
                             borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: Colors.red[200]!),
+                            border: Border.all(
+                                color: Theme.of(context).colorScheme.error),
                           ),
                           child: Row(
                             children: [
                               Icon(
                                 Icons.warning,
-                                color: Colors.red[700],
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onErrorContainer,
                                 size: 20,
                               ),
                               const SizedBox(width: 12),
@@ -2969,7 +3176,9 @@ class _TrackingPageState extends State<TrackingPage>
                                       'Biaya Cancel Order',
                                       style: GoogleFonts.poppins(
                                         fontSize: 13,
-                                        color: Colors.red[700],
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onErrorContainer,
                                         fontWeight: FontWeight.w500,
                                       ),
                                     ),
@@ -2978,14 +3187,19 @@ class _TrackingPageState extends State<TrackingPage>
                                       style: GoogleFonts.poppins(
                                         fontSize: 18,
                                         fontWeight: FontWeight.w700,
-                                        color: Colors.red[900],
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onErrorContainer,
                                       ),
                                     ),
                                     Text(
                                       'Biaya jasa pengecekan yang telah dilakukan',
                                       style: GoogleFonts.poppins(
                                         fontSize: 11,
-                                        color: Colors.red[600],
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onErrorContainer
+                                            .withOpacity(0.8),
                                       ),
                                     ),
                                   ],
@@ -3013,7 +3227,7 @@ class _TrackingPageState extends State<TrackingPage>
                           "QRIS",
                           "Scan QR code untuk pembayaran cepat",
                           Icons.qr_code_2,
-                          Colors.green,
+                          Theme.of(context).colorScheme.primary,
                           false,
                           () {
                             Navigator.pop(context);
@@ -3033,7 +3247,7 @@ class _TrackingPageState extends State<TrackingPage>
                           "Transfer Bank",
                           "Transfer ke rekening bank",
                           Icons.account_balance,
-                          Colors.grey,
+                          Theme.of(context).colorScheme.surfaceContainerHighest,
                           false,
                           null,
                           available: false,
@@ -3046,7 +3260,7 @@ class _TrackingPageState extends State<TrackingPage>
                           "E-wallet",
                           "GoPay, OVO, Dana, LinkAja",
                           Icons.account_balance_wallet,
-                          Colors.grey,
+                          Theme.of(context).colorScheme.surfaceContainerHighest,
                           false,
                           null,
                           available: false,
@@ -3058,15 +3272,19 @@ class _TrackingPageState extends State<TrackingPage>
                         Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: Colors.orange[50],
+                            color:
+                                Theme.of(context).colorScheme.tertiaryContainer,
                             borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: Colors.orange[200]!),
+                            border: Border.all(
+                                color: Theme.of(context).colorScheme.tertiary),
                           ),
                           child: Row(
                             children: [
                               Icon(
                                 Icons.info_outline,
-                                color: Colors.orange[600],
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onTertiaryContainer,
                                 size: 18,
                               ),
                               const SizedBox(width: 6),
@@ -3075,7 +3293,9 @@ class _TrackingPageState extends State<TrackingPage>
                                   'Pembayaran ini akan membatalkan order Anda',
                                   style: GoogleFonts.poppins(
                                     fontSize: 11,
-                                    color: Colors.orange[700],
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onTertiaryContainer,
                                   ),
                                 ),
                               ),
@@ -3153,7 +3373,7 @@ class _TrackingPageState extends State<TrackingPage>
         title: Image.asset('assets/image/logo.png', width: 95, height: 30),
         actions: [
           IconButton(
-            icon: Icon(Icons.chat_bubble_outline, color: Colors.white),
+            icon: const Icon(Icons.chat_bubble_outline, color: Colors.white),
             onPressed: () {
               Navigator.push(
                 context,
@@ -3246,7 +3466,7 @@ class _TrackingPageState extends State<TrackingPage>
                     BoxShadow(
                       color: Theme.of(
                         context,
-                      ).colorScheme.shadow.withOpacity(0.1),
+                      ).colorScheme.shadow.withValues(alpha: 25),
                       blurRadius: 6,
                       offset: const Offset(0, 3),
                     ),
@@ -3260,7 +3480,7 @@ class _TrackingPageState extends State<TrackingPage>
                       style: GoogleFonts.poppins(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -3272,7 +3492,7 @@ class _TrackingPageState extends State<TrackingPage>
                               children: [
                                 Icon(
                                   Icons.check_circle,
-                                  color: Colors.green,
+                                  color: Theme.of(context).colorScheme.primary,
                                   size: 16,
                                 ),
                                 const SizedBox(width: 8),
@@ -3286,14 +3506,18 @@ class _TrackingPageState extends State<TrackingPage>
                                         style: GoogleFonts.poppins(
                                           fontSize: 14,
                                           fontWeight: FontWeight.w600,
-                                          color: Colors.white,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface,
                                         ),
                                       ),
                                       Text(
                                         _fmt(item.time),
                                         style: GoogleFonts.poppins(
                                           fontSize: 11,
-                                          color: Colors.white,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurfaceVariant,
                                         ),
                                       ),
                                     ],
@@ -3303,7 +3527,7 @@ class _TrackingPageState extends State<TrackingPage>
                             ),
                           ),
                         )
-                        .toList(),
+                        ,
                   ],
                 ),
               ),
@@ -3332,9 +3556,10 @@ class _TrackingPageState extends State<TrackingPage>
                           ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: _isPaymentProcessing
-                                ? Colors.grey
-                                : Colors.orange,
-                            foregroundColor: Colors.white,
+                                ? Theme.of(context).colorScheme.surfaceContainerHighest
+                                : Theme.of(context).colorScheme.tertiary,
+                            foregroundColor:
+                                Theme.of(context).colorScheme.onTertiary,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
@@ -3359,9 +3584,10 @@ class _TrackingPageState extends State<TrackingPage>
                           ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: _isPaymentProcessing
-                                ? Colors.grey
-                                : const Color(0xFF0041c3),
-                            foregroundColor: Colors.white,
+                                ? Theme.of(context).colorScheme.surfaceContainerHighest
+                                : Theme.of(context).colorScheme.primary,
+                            foregroundColor:
+                                Theme.of(context).colorScheme.onPrimary,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
@@ -3386,9 +3612,10 @@ class _TrackingPageState extends State<TrackingPage>
                         ),
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            _isPaymentProcessing ? Colors.grey : Colors.red,
-                        foregroundColor: Colors.white,
+                        backgroundColor: _isPaymentProcessing
+                            ? Theme.of(context).colorScheme.surfaceContainerHighest
+                            : Theme.of(context).colorScheme.error,
+                        foregroundColor: Theme.of(context).colorScheme.onError,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -3423,7 +3650,7 @@ class _TrackingPageState extends State<TrackingPage>
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0041c3),
+                    backgroundColor: Theme.of(context).colorScheme.primary,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -3432,7 +3659,7 @@ class _TrackingPageState extends State<TrackingPage>
                   child: Text(
                     'Lanjutkan Pembayaran',
                     style: GoogleFonts.poppins(
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.onPrimary,
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                     ),
@@ -3445,7 +3672,6 @@ class _TrackingPageState extends State<TrackingPage>
       ),
     );
   }
-
 
   Widget _bottomNavBar() {
     return BottomNavigationBar(

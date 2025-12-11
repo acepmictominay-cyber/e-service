@@ -1,4 +1,4 @@
-import 'package:azza_service/Service/Service.dart';
+import 'package:azza_service/Service/service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -406,21 +406,19 @@ class _DetailServiceMidtransPageState extends State<DetailServiceMidtransPage> {
         customerName: widget.nama,
         customerEmail:
             '${widget.nama.replaceAll(' ', '').toLowerCase()}@example.com',
-        customerPhone:
-            selectedAddress != null
-                ? selectedAddress!['hp'] ?? '08123456789'
-                : '08123456789',
-        itemDetails:
-            widget.items
-                .map(
-                  (item) => {
-                    'id': '34GM',
-                    'price': 1,
-                    'quantity': 1,
-                    'name': 'Service ${item['merek']} ${item['device']}',
-                  },
-                )
-                .toList(),
+        customerPhone: selectedAddress != null
+            ? selectedAddress!['hp'] ?? '08123456789'
+            : '08123456789',
+        itemDetails: widget.items
+            .map(
+              (item) => {
+                'id': '34GM',
+                'price': 1,
+                'quantity': 1,
+                'name': 'Service ${item['merek']} ${item['device']}',
+              },
+            )
+            .toList(),
         serviceData: serviceData,
         onSuccess: (orderId) {
           // Close loading
@@ -461,10 +459,9 @@ class _DetailServiceMidtransPageState extends State<DetailServiceMidtransPage> {
           });
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor:
-              selectedDiscount == discount
-                  ? const Color(0xFF0041c3)
-                  : Colors.grey[300],
+          backgroundColor: selectedDiscount == discount
+              ? const Color(0xFF0041c3)
+              : Colors.grey[300],
           foregroundColor:
               selectedDiscount == discount ? Colors.white : Colors.black,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -498,6 +495,7 @@ class _DetailServiceMidtransPageState extends State<DetailServiceMidtransPage> {
                 Icons.account_balance_rounded,
                 "Transfer Bank Mandiri",
               ),
+              _paymentItem(Icons.account_balance, "Transfer Bank Online"),
               _paymentItem(Icons.payment, "Midtrans Payment"),
               _paymentItem(Icons.payment, "Manual Payment"),
               const SizedBox(height: 10),
@@ -513,7 +511,18 @@ class _DetailServiceMidtransPageState extends State<DetailServiceMidtransPage> {
       leading: Icon(icon, color: Colors.white),
       title: Text(label, style: const TextStyle(fontSize: 15)),
       onTap: () async {
-        if (label == "Midtrans Payment") {
+        if (label == "Transfer Bank Online") {
+          // Handle online bank transfer for services
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                  'Transfer Bank Online akan segera tersedia untuk layanan service'),
+              backgroundColor: Colors.blue,
+            ),
+          );
+          return;
+        } else if (label == "Midtrans Payment") {
           // Close bottom sheet dulu
           Navigator.pop(context);
 
@@ -521,8 +530,8 @@ class _DetailServiceMidtransPageState extends State<DetailServiceMidtransPage> {
           showDialog(
             context: context,
             barrierDismissible: false,
-            builder:
-                (context) => const Center(child: CircularProgressIndicator()),
+            builder: (context) =>
+                const Center(child: CircularProgressIndicator()),
           );
 
           try {
@@ -558,21 +567,19 @@ class _DetailServiceMidtransPageState extends State<DetailServiceMidtransPage> {
               customerName: widget.nama,
               customerEmail:
                   '${widget.nama.replaceAll(' ', '').toLowerCase()}@example.com',
-              customerPhone:
-                  selectedAddress != null
-                      ? selectedAddress!['hp'] ?? '08123456789'
-                      : '08123456789',
-              itemDetails:
-                  widget.items
-                      .map(
-                        (item) => {
-                          'id': '34GM',
-                          'price': 1,
-                          'quantity': 1,
-                          'name': 'Service ${item['merek']} ${item['device']}',
-                        },
-                      )
-                      .toList(),
+              customerPhone: selectedAddress != null
+                  ? selectedAddress!['hp'] ?? '08123456789'
+                  : '08123456789',
+              itemDetails: widget.items
+                  .map(
+                    (item) => {
+                      'id': '34GM',
+                      'price': 1,
+                      'quantity': 1,
+                      'name': 'Service ${item['merek']} ${item['device']}',
+                    },
+                  )
+                  .toList(),
               serviceData: serviceData,
               onSuccess: (orderId) {
                 // Close loading
@@ -635,9 +642,9 @@ class _DetailServiceMidtransPageState extends State<DetailServiceMidtransPage> {
       try {
         int subtotal = widget.jumlahBarang * 1;
         String currentDate = DateTime.now().toIso8601String().substring(
-          0,
-          10,
-        ); // YYYY-MM-DD format
+              0,
+              10,
+            ); // YYYY-MM-DD format
 
         // Extract details from the first item (assuming single item per transaction)
         String merek =
@@ -646,16 +653,14 @@ class _DetailServiceMidtransPageState extends State<DetailServiceMidtransPage> {
             widget.items.isNotEmpty ? widget.items[0]['device'] ?? '' : '';
         String seri =
             widget.items.isNotEmpty ? widget.items[0]['seri'] ?? '' : '';
-        String ketKeluhan =
-            (widget.serviceType == 'repair' &&
-                    widget.items.isNotEmpty &&
-                    widget.items[0]['part'] != null)
-                ? widget.items[0]['part']!
-                : '';
-        String statusGaransi =
-            widget.items.isNotEmpty
-                ? widget.items[0]['status'] ?? 'Tidak Ada Garansi'
-                : 'Tidak Ada Garansi'; // Assuming status indicates warranty
+        String ketKeluhan = (widget.serviceType == 'repair' &&
+                widget.items.isNotEmpty &&
+                widget.items[0]['part'] != null)
+            ? widget.items[0]['part']!
+            : '';
+        String statusGaransi = widget.items.isNotEmpty
+            ? widget.items[0]['status'] ?? 'Tidak Ada Garansi'
+            : 'Tidak Ada Garansi'; // Assuming status indicates warranty
 
         final response = await ApiService.createTransaksi({
           'cos_kode': customerId,
@@ -711,6 +716,8 @@ class _DetailServiceMidtransPageState extends State<DetailServiceMidtransPage> {
         return Icons.account_balance_wallet;
       case "Transfer Bank Mandiri":
         return Icons.account_balance_rounded;
+      case "Transfer Bank Online":
+        return Icons.account_balance;
       default:
         return Icons.account_balance;
     }
@@ -734,9 +741,9 @@ class _DetailServiceMidtransPageState extends State<DetailServiceMidtransPage> {
     try {
       int subtotal = widget.jumlahBarang * 1;
       String currentDate = DateTime.now().toIso8601String().substring(
-        0,
-        10,
-      ); // YYYY-MM-DD format
+            0,
+            10,
+          ); // YYYY-MM-DD format
 
       // Extract details from the first item (assuming single item per transaction)
       String merek =
@@ -745,16 +752,14 @@ class _DetailServiceMidtransPageState extends State<DetailServiceMidtransPage> {
           widget.items.isNotEmpty ? widget.items[0]['device'] ?? '' : '';
       String seri =
           widget.items.isNotEmpty ? widget.items[0]['seri'] ?? '' : '';
-      String ketKeluhan =
-          (widget.serviceType == 'repair' &&
-                  widget.items.isNotEmpty &&
-                  widget.items[0]['part'] != null)
-              ? widget.items[0]['part']!
-              : '';
-      String statusGaransi =
-          widget.items.isNotEmpty
-              ? widget.items[0]['status'] ?? 'Tidak Ada Garansi'
-              : 'Tidak Ada Garansi'; // Assuming status indicates warranty
+      String ketKeluhan = (widget.serviceType == 'repair' &&
+              widget.items.isNotEmpty &&
+              widget.items[0]['part'] != null)
+          ? widget.items[0]['part']!
+          : '';
+      String statusGaransi = widget.items.isNotEmpty
+          ? widget.items[0]['status'] ?? 'Tidak Ada Garansi'
+          : 'Tidak Ada Garansi'; // Assuming status indicates warranty
 
       final response = await ApiService.createTransaksi({
         'cos_kode': customerId,
@@ -991,9 +996,8 @@ class _DetailServiceMidtransPageState extends State<DetailServiceMidtransPage> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder:
-                                    (context) =>
-                                        TrackingPage(queueCode: queueCode),
+                                builder: (context) =>
+                                    TrackingPage(queueCode: queueCode),
                               ),
                             );
                           },

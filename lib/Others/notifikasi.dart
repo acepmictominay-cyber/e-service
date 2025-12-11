@@ -55,7 +55,8 @@ class _NotificationPageState extends State<NotificationPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Konfirmasi Hapus'),
-        content: Text('Hapus ${selectedIndices.length} notifikasi yang dipilih?'),
+        content:
+            Text('Hapus ${selectedIndices.length} notifikasi yang dipilih?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -113,9 +114,10 @@ class _NotificationPageState extends State<NotificationPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0041c3),
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor ??
+            const Color(0xFF0041c3),
         elevation: 0,
         automaticallyImplyLeading: false,
         title: Row(
@@ -125,14 +127,14 @@ class _NotificationPageState extends State<NotificationPage> {
               'assets/image/logo.png', // ganti sesuai logo kamu
               height: 40,
             ),
-            const Icon(Icons.chat_bubble_outline, color: Colors.white),
+            Icon(Icons.chat_bubble_outline, color: Theme.of(context).appBarTheme.foregroundColor ?? Colors.white),
           ],
         ),
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox( height: 10),
+          const SizedBox(height: 10),
           // Action buttons
           if (notifications.isNotEmpty)
             Padding(
@@ -141,9 +143,11 @@ class _NotificationPageState extends State<NotificationPage> {
                 children: [
                   TextButton.icon(
                     onPressed: _toggleSelectionMode,
-                    icon: Icon(isSelectionMode ? Icons.cancel : Icons.check_box),
+                    icon:
+                        Icon(isSelectionMode ? Icons.cancel : Icons.check_box),
                     label: Text(isSelectionMode ? 'Batal' : 'Pilih'),
-                    style: TextButton.styleFrom(foregroundColor: const Color(0xFF0041c3)),
+                    style: TextButton.styleFrom(
+                        foregroundColor: const Color(0xFF0041c3)),
                   ),
                   if (isSelectionMode && selectedIndices.isNotEmpty)
                     TextButton.icon(
@@ -194,8 +198,10 @@ class _NotificationPageState extends State<NotificationPage> {
                           decoration: BoxDecoration(
                             color: item.color,
                             borderRadius: BorderRadius.circular(15),
-                            border: isSelectionMode && selectedIndices.contains(index)
-                                ? Border.all(color: const Color(0xFF0041c3), width: 2)
+                            border: isSelectionMode &&
+                                    selectedIndices.contains(index)
+                                ? Border.all(
+                                    color: const Color(0xFF0041c3), width: 2)
                                 : null,
                           ),
                           child: ListTile(
@@ -205,12 +211,15 @@ class _NotificationPageState extends State<NotificationPage> {
                                 if (isSelectionMode)
                                   Checkbox(
                                     value: selectedIndices.contains(index),
-                                    onChanged: (value) => _toggleSelection(index),
+                                    onChanged: (value) =>
+                                        _toggleSelection(index),
                                     activeColor: const Color(0xFF0041c3),
                                   ),
                                 Icon(
                                   item.icon,
-                                  color: item.textColor,
+                                  color: Theme.of(context).brightness == Brightness.dark
+                                      ? Colors.white
+                                      : item.textColor,
                                 ),
                               ],
                             ),
@@ -220,14 +229,19 @@ class _NotificationPageState extends State<NotificationPage> {
                                 Text(
                                   item.title,
                                   style: GoogleFonts.poppins(
-                                    color: item.textColor,
+                                    color: Theme.of(context).brightness == Brightness.dark
+                                        ? Colors.white
+                                        : item.textColor,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
                                 Text(
-                                  TimeFormatter.formatRelativeTime(item.timestamp),
+                                  TimeFormatter.formatRelativeTime(
+                                      item.timestamp),
                                   style: GoogleFonts.poppins(
-                                    color: item.textColor.withOpacity(0.6),
+                                    color: Theme.of(context).brightness == Brightness.dark
+                                        ? Colors.white70
+                                        : item.textColor.withOpacity(0.6),
                                     fontSize: 10,
                                   ),
                                 ),
@@ -236,7 +250,9 @@ class _NotificationPageState extends State<NotificationPage> {
                             subtitle: Text(
                               item.subtitle,
                               style: GoogleFonts.poppins(
-                                color: item.textColor.withOpacity(0.8),
+                                color: Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.white70
+                                    : item.textColor.withOpacity(0.8),
                                 fontSize: 12,
                               ),
                             ),
@@ -246,7 +262,8 @@ class _NotificationPageState extends State<NotificationPage> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => NotificationDetailPage(
+                                        builder: (context) =>
+                                            NotificationDetailPage(
                                           title: item.title,
                                           subtitle: item.subtitle,
                                           icon: item.icon,

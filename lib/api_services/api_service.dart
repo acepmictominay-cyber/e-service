@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:azza_service/models/technician_order_model.dart';
 import 'package:azza_service/config/api_config.dart';
+import 'package:azza_service/utils/error_handler.dart' as error_handler;
 
 class ApiService {
   // Base URL is now configurable in ApiConfig
@@ -23,18 +23,28 @@ class ApiService {
 
   // GET data costomer berdasarkan ID
   static Future<Map<String, dynamic>> getCostomerById(String id) async {
-  final response = await http.get(Uri.parse('$baseUrl/costomers/$id'));
-  if (response.statusCode == 200) {
-    final data = jsonDecode(response.body);
-    // kalau response API langsung user
-    return data;
-    // kalau response API pakai format { "success": true, "data": { ... } }
-    // return data['data'];
-  } else {
-    throw Exception('Gagal mengambil data costomer');
-  }
-}
+    try {
+      final url = '$baseUrl/costomers/$id';
 
+      final response = await http.get(Uri.parse(url));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        // kalau response API langsung user
+        return data;
+        // kalau response API pakai format { "success": true, "data": { ... } }
+        // return data['data'];
+      } else {
+        throw Exception('Gagal memuat data, periksa internet anda');
+      }
+    } catch (e) {
+      final userMessage = error_handler.ErrorHandler.handleApiError(
+        e,
+        context: 'ApiService.getCostomerById',
+      );
+      throw Exception(userMessage);
+    }
+  }
 
   //  POST - Tambah costomer
   static Future<void> addCostomer(Map<String, dynamic> data) async {
@@ -48,151 +58,164 @@ class ApiService {
       throw Exception('Gagal menambahkan costomer');
     }
   }
+
   // Upload foto profil
-    static Future<Map<String, String>> uploadProfile(File file) async {
-      var request = http.MultipartRequest(
-        'POST',
-        Uri.parse('$baseUrl/upload-profile'), 
-      );
-      request.files.add(await http.MultipartFile.fromPath('file', file.path));
+  static Future<Map<String, String>> uploadProfile(File file) async {
+    var request = http.MultipartRequest(
+      'POST',
+      Uri.parse('$baseUrl/upload-profile'),
+    );
+    request.files.add(await http.MultipartFile.fromPath('file', file.path));
 
-      var response = await request.send();
+    var response = await request.send();
+    final resBody = await response.stream.bytesToString();
 
-      if (response.statusCode == 200) {
-        final resBody = await response.stream.bytesToString();
+    if (response.statusCode == 200) {
+      try {
         final data = json.decode(resBody);
-        return {
-          'url': data['url'],
-          'path': data['path'],
+
+        final result = {
+          'url': (data['url'] ?? '').toString(),
+          'path': (data['path'] ?? '').toString(),
         };
-      } else {
+
+        return result;
+      } catch (e) {
         throw Exception('Gagal upload foto profil');
       }
+    } else {
+      throw Exception('Gagal upload foto profil');
     }
+  }
 
-    // Update data costomer
-    static Future<void> updateCostomer(String id, Map<String, dynamic> data) async {
-      var uri = Uri.parse('$baseUrl/costomers/$id');
+  // Update data costomer
+  static Future<void> updateCostomer(
+      String id, Map<String, dynamic> data) async {
+    var uri = Uri.parse('$baseUrl/costomers/$id');
 
-      var response = await http.put(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: json.encode(data),
-      );
+    var response = await http.put(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: json.encode(data),
+    );
 
-      debugPrint('Update customer response: ${response.statusCode} - ${response.body}');
-
-      if (response.statusCode != 200 && response.statusCode != 201) {
-        throw Exception('Gagal memperbarui profil: ${response.statusCode} - ${response.body}');
-      }
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw Exception('Gagal memperbarui profil');
     }
+  }
 
-    // Upload bukti pembayaran
-       static Future<Map<String, String>> uploadPaymentProof(File file) async {
-         var request = http.MultipartRequest(
-           'POST',
-           Uri.parse('$baseUrl/checkout/upload-payment-proof'),
-         );
-         request.files.add(await http.MultipartFile.fromPath('file', file.path));
-     
-         var response = await request.send();
-     
-         if (response.statusCode == 200) {
-           final resBody = await response.stream.bytesToString();
-           final data = json.decode(resBody);
-           return {
-             'url': data['url'],
-             'path': data['path'],
-           };
-         } else {
-           throw Exception('Gagal upload bukti pembayaran');
-         }
-       }
+  // Upload bukti pembayaran
+  static Future<Map<String, String>> uploadPaymentProof(File file) async {
+    var request = http.MultipartRequest(
+      'POST',
+      Uri.parse('$baseUrl/checkout/upload-payment-proof'),
+    );
+    request.files.add(await http.MultipartFile.fromPath('file', file.path));
 
+    var response = await request.send();
 
-
+    if (response.statusCode == 200) {
+      final resBody = await response.stream.bytesToString();
+      final data = json.decode(resBody);
+      return {
+        'url': data['url'],
+        'path': data['path'],
+      };
+    } else {
+      throw Exception('Gagal upload bukti pembayaran');
+    }
+  }
 
   //  DELETE - Hapus costomer
-    static Future<void> deleteCostomer(int id) async {
-      final response = await http.delete(
-        Uri.parse('$baseUrl/costomers/$id'),
-      );
+  static Future<void> deleteCostomer(int id) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/costomers/$id'),
+    );
 
-      if (response.statusCode != 200) {
-        throw Exception('Gagal menghapus costomer');
-      }
+    if (response.statusCode != 200) {
+      throw Exception('Gagal menghapus costomer');
     }
+  }
 
 //Produk
-    // GET semua produk dengan error handling
-   static Future<List<dynamic>> getProduk() async {
-     try {
-       final response = await http.get(
-         Uri.parse('$baseUrl/produk'),
-         headers: {
-           'Accept': 'application/json',
-         },
-       ).timeout(const Duration(seconds: 30));
+  // GET semua produk dengan error handling
+  static Future<List<dynamic>> getProduk() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/produk'),
+        headers: {
+          'Accept': 'application/json',
+        },
+      ).timeout(const Duration(seconds: 30));
 
-       if (response.statusCode == 200) {
-         final data = json.decode(response.body);
-         return data;
-       } else {
-         throw Exception('Gagal memuat data produk: ${response.statusCode}');
-       }
-     } catch (e) {
-       throw Exception('Gagal memuat data produk: $e');
-     }
-   }
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return data;
+      } else {
+        throw Exception('Gagal memuat data produk');
+      }
+    } catch (e) {
+      final userMessage = error_handler.ErrorHandler.handleApiError(
+        e,
+        context: 'ApiService.getProduk',
+      );
+      throw Exception(userMessage);
+    }
+  }
 
-   // GET produk dengan pagination (lazy loading)
-   static Future<Map<String, dynamic>> getProdukPaginated({
-     int limit = 20,
-     int offset = 0,
-   }) async {
-     try {
-       final uri = Uri.parse('$baseUrl/produk').replace(queryParameters: {
-         'limit': limit.toString(),
-         'offset': offset.toString(),
-       });
+  // GET produk dengan pagination (lazy loading)
+  static Future<Map<String, dynamic>> getProdukPaginated({
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    try {
+      final uri = Uri.parse('$baseUrl/produk').replace(queryParameters: {
+        'limit': limit.toString(),
+        'offset': offset.toString(),
+      });
 
-       final response = await http.get(
-         uri,
-         headers: {
-           'Accept': 'application/json',
-         },
-       ).timeout(const Duration(seconds: 30));
+      final response = await http.get(
+        uri,
+        headers: {
+          'Accept': 'application/json',
+        },
+      ).timeout(const Duration(seconds: 30));
 
-       if (response.statusCode == 200) {
-         final data = json.decode(response.body);
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
 
-         // Handle if response is wrapped in success/data format
-         if (data is Map<String, dynamic> && data.containsKey('data')) {
-           return {
-             'data': data['data'] ?? [],
-             'total': data['total'] ?? 0,
-             'hasMore': data['has_more'] ?? false,
-           };
-         }
+        // Handle if response is wrapped in success/data format
+        if (data is Map<String, dynamic> && data.containsKey('data')) {
+          return {
+            'data': data['data'] ?? [],
+            'total': data['total'] ?? 0,
+            'hasMore': data['has_more'] ?? false,
+          };
+        }
 
-         // Assume direct array response - check if we got exactly the limit amount
-         final products = data is List ? data : [];
-         return {
-           'data': products,
-           'total': products.length,
-           'hasMore': products.length == limit, // If we got exactly the limit, there might be more
-         };
-       } else {
-         throw Exception('Gagal memuat data produk: ${response.statusCode}');
-       }
-     } catch (e) {
-       throw Exception('Gagal memuat data produk: $e');
-     }
-   }
+        // Assume direct array response - check if we got exactly the limit amount
+        final products = data is List ? data : [];
+        return {
+          'data': products,
+          'total': products.length,
+          'hasMore': products.length ==
+              limit, // If we got exactly the limit, there might be more
+        };
+      } else {
+        throw Exception('Gagal memuat data produk');
+      }
+    } catch (e) {
+      final userMessage = error_handler.ErrorHandler.handleApiError(
+        e,
+        context: 'ApiService.getProdukPaginated',
+      );
+      throw Exception(userMessage);
+    }
+  }
 
-   // PROMO
+  // PROMO
   static Future<List<dynamic>> getPromo() async {
     final response = await http.get(Uri.parse('$baseUrl/promo'));
 
@@ -202,61 +225,125 @@ class ApiService {
       throw Exception('Gagal memuat data promo');
     }
   }
-  
-  //AUTH    
-    // LOGIN USER
-    static Future<Map<String, dynamic>> login(String username, String password) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/login'),
+
+  //AUTH
+  // LOGIN USER
+  static Future<Map<String, dynamic>> login(
+      String username, String password) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/login'),
         headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
-      body: jsonEncode({'username': username, 'password': password}),
+        body: jsonEncode({'username': username, 'password': password}),
       );
 
       Map<String, dynamic> data = {};
-      try { data = response.body.isNotEmpty ? json.decode(response.body) : {}; } catch (_) {
-      data = {'success': false, 'message': 'Non-JSON response', 'raw': response.body};
+      try {
+        data = response.body.isNotEmpty ? json.decode(response.body) : {};
+      } catch (_) {
+        data = {
+          'success': false,
+          'message': 'Non-JSON response',
+          'raw': response.body
+        };
       }
 
       if (response.statusCode == 200) {
-      if (data['success'] == true && data.containsKey('role')) return data;
-      return {
-      'success': data['success'] ?? true,
-      'message': data['message'] ?? 'Login berhasil',
-      'user': data['user'],
-      'role': 'customer',
-      };
+        if (data['success'] == true && data.containsKey('role')) return data;
+        return {
+          'success': data['success'] ?? true,
+          'message': data['message'] ?? 'Login berhasil',
+          'user': data['user'],
+          'role': 'customer',
+        };
       } else if (response.statusCode == 401) {
-      return data; // {success:false, message:'Username atau password salah'}
+        return data; // {success:false, message:'Username atau password salah'}
       } else {
+        return {
+          'success': false,
+          'message':
+              'HTTP ${response.statusCode}: ${data['message'] ?? response.body}',
+          'raw': response.body,
+        };
+      }
+    } catch (e) {
+      final userMessage = error_handler.ErrorHandler.handleApiError(
+        e,
+        context: 'ApiService.login',
+      );
       return {
-      'success': false,
-      'message': 'HTTP ${response.statusCode}: ${data['message'] ?? response.body}',
-      'raw': response.body,
+        'success': false,
+        'message': userMessage,
+        'raw': e.toString(),
       };
     }
   }
+
   //REGISTER
-  static Future<Map<String, dynamic>> registerUser(
-    String name, String username, String password, String nohp, String tglLahir) async {
-    // Convert phone number: replace leading '0' with '62'
-    String formattedNohp = nohp.startsWith('0') ? '62${nohp.substring(1)}' : nohp;
+  static Future<Map<String, dynamic>> registerUser(String name, String username,
+      String password, String nohp, String tglLahir) async {
+    try {
+      // Convert phone number: replace leading '0' with '62'
+      String formattedNohp =
+          nohp.startsWith('0') ? '62${nohp.substring(1)}' : nohp;
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/register'),
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'cos_nama': name,
+          'username': username,
+          'password': password,
+          'cos_hp': formattedNohp,
+          'cos_tgl_lahir': tglLahir,
+        }),
+      );
+
+      return json.decode(response.body);
+    } catch (e) {
+      final userMessage = error_handler.ErrorHandler.handleApiError(
+        e,
+        context: 'ApiService.registerUser',
+      );
+      return {
+        'success': false,
+        'message': userMessage,
+      };
+    }
+  }
+
+  // SEND OTP
+  static Future<Map<String, dynamic>> sendOtp(String phoneNumber) async {
+    String formattedPhone = phoneNumber.startsWith('0')
+        ? '62${phoneNumber.substring(1)}'
+        : phoneNumber;
 
     final response = await http.post(
-      Uri.parse('$baseUrl/register'),
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({
-        'cos_nama': name,
-        'username': username,
-        'password': password,
-        'cos_hp': formattedNohp,
-        'cos_tgl_lahir': tglLahir,
-      }),
+      Uri.parse('$baseUrl/send-otp'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'phone': formattedPhone}),
+    );
+
+    return json.decode(response.body);
+  }
+
+  // VERIFY OTP
+  static Future<Map<String, dynamic>> verifyOtp(
+      String phoneNumber, String otp) async {
+    String formattedPhone = phoneNumber.startsWith('0')
+        ? '62${phoneNumber.substring(1)}'
+        : phoneNumber;
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/verify-otp'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'phone': formattedPhone, 'otp': otp}),
     );
 
     return json.decode(response.body);
@@ -264,7 +351,8 @@ class ApiService {
 
 //Transaksi
   // POST - Tambah transaksi baru
-  static Future<Map<String, dynamic>> createTransaksi(Map<String, dynamic> data) async {
+  static Future<Map<String, dynamic>> createTransaksi(
+      Map<String, dynamic> data) async {
     final response = await http.post(
       Uri.parse('$baseUrl/transaksi'),
       headers: {'Content-Type': 'application/json'},
@@ -281,29 +369,28 @@ class ApiService {
         return decoded;
       } catch (e) {
         if (e is FormatException) {
-          throw Exception('Response is not valid JSON: ${response.body}');
+          throw Exception('Data tidak valid');
         } else {
           rethrow;
         }
       }
     } else {
-      throw Exception('Gagal membuat transaksi: ${response.body}');
+      throw Exception('Gagal membuat transaksi');
     }
   }
 
   // GET technician orders by kry_kode
-  
+
   static Future<List<TechnicianOrder>> getkry_kode(String kryKode) async {
     final response = await http.get(Uri.parse('$baseUrl/transaksi'));
 
     if (response.statusCode == 200) {
       final List<dynamic> data = json.decode(response.body);
 
-      final filteredData =
-          data.where((item) {
-            final itemKryKode = item['kry_kode']?.toString();
-            return itemKryKode == kryKode;
-          }).toList();
+      final filteredData = data.where((item) {
+        final itemKryKode = item['kry_kode']?.toString();
+        return itemKryKode == kryKode;
+      }).toList();
 
       if (filteredData.isEmpty) {
         return [];
@@ -341,10 +428,9 @@ class ApiService {
 
       return orders;
     } else {
-      throw Exception('Gagal memuat data pesanan teknisi: HTTP ${response.statusCode}');
+      throw Exception('Gagal memuat data pesanan teknisi');
     }
   }
-
 
   // GET semua transaksi
   static Future<List<dynamic>> getTransaksi() async {
@@ -358,7 +444,8 @@ class ApiService {
   }
 
   // GET transaksi by trans_kode
-  static Future<Map<String, dynamic>> getTransaksiByKode(String transKode) async {
+  static Future<Map<String, dynamic>> getTransaksiByKode(
+      String transKode) async {
     final response = await http.get(Uri.parse('$baseUrl/transaksi/$transKode'));
 
     if (response.statusCode == 200) {
@@ -373,8 +460,10 @@ class ApiService {
   }
 
   // GET pending transaksi by trans_kode
-  static Future<Map<String, dynamic>> getPendingTransaksiByKode(String transKode) async {
-    final response = await http.get(Uri.parse('$baseUrl/transaksi/pending/$transKode'));
+  static Future<Map<String, dynamic>> getPendingTransaksiByKode(
+      String transKode) async {
+    final response =
+        await http.get(Uri.parse('$baseUrl/transaksi/pending/$transKode'));
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
@@ -402,10 +491,10 @@ class ApiService {
     if (response.statusCode == 200 || response.statusCode == 201) {
       return json.decode(response.body);
     } else {
-      throw Exception('Gagal update status transaksi: ${response.body}');
+      throw Exception('Gagal update status transaksi');
     }
   }
-  
+
   // UPDATE ket_keluhan + trans_total (Tindakan)
   static Future<Map<String, dynamic>> updateTransaksiTemuan(
     String transKode,
@@ -431,12 +520,12 @@ class ApiService {
       final data = json.decode(res.body);
       return data is Map<String, dynamic> ? data : {'data': data};
     } else {
-      throw Exception('Gagal simpan temuan transaksi: ${res.body}');
+      throw Exception('Gagal simpan temuan transaksi');
     }
   }
 
   // DRIVER LOCATION TRACKING
-   static Future<void> updateDriverLocation({
+  static Future<void> updateDriverLocation({
     required String transKode,
     required String kryKode,
     required double latitude,
@@ -473,7 +562,8 @@ class ApiService {
   }
 
   // Fungsi untuk getDriverLocation juga perlu disesuaikan jika ingin dipakai
-  static Future<Map<String, dynamic>?> getDriverLocation(String transKode) async {
+  static Future<Map<String, dynamic>?> getDriverLocation(
+      String transKode) async {
     // Sesuaikan dengan route di Laravel untuk mengambil lokasi
     final url = '$baseUrl/get-driver-location/$transKode';
 
@@ -482,7 +572,8 @@ class ApiService {
 
       if (response.statusCode == 200) {
         final responseData = json.decode(response.body);
-        if (responseData is Map<String, dynamic> && responseData['success'] == true) {
+        if (responseData is Map<String, dynamic> &&
+            responseData['success'] == true) {
           final locationData = responseData['data'] as Map<String, dynamic>;
           // Merge icon from response if present, default to 'motorcycle'
           locationData['icon'] = responseData['icon'] ?? 'motorcycle';
@@ -495,10 +586,10 @@ class ApiService {
     }
   }
 
-
 // ORDER
   // POST - Tambah order_list
-  static Future<Map<String, dynamic>> createOrderList(Map<String, dynamic> data) async {
+  static Future<Map<String, dynamic>> createOrderList(
+      Map<String, dynamic> data) async {
     final response = await http.post(
       Uri.parse('$baseUrl/order-list'),
       headers: {'Content-Type': 'application/json'},
@@ -508,7 +599,7 @@ class ApiService {
     if (response.statusCode == 200 || response.statusCode == 201) {
       return json.decode(response.body);
     } else {
-      throw Exception('Gagal membuat order_list: ${response.body}');
+      throw Exception('Gagal membuat order_list');
     }
   }
 
@@ -537,14 +628,15 @@ class ApiService {
 
   // GET order_list by trans_kode
   static Future<List<dynamic>> getOrderListByTransKode(String transKode) async {
-    final response = await http.get(Uri.parse('$baseUrl/order-list/trans/$transKode'));
+    final response =
+        await http.get(Uri.parse('$baseUrl/order-list/trans/$transKode'));
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
       if (data['success'] == true) {
         return data['data'];
       } else {
-        throw Exception(data['message'] ?? 'Order list tidak ditemukan');
+        throw Exception('Order list tidak ditemukan');
       }
     } else {
       throw Exception('Gagal memuat order list');
@@ -553,14 +645,15 @@ class ApiService {
 
   // GET order_list by kry_kode (for technicians)
   static Future<List<dynamic>> getOrderListByKryKode(String kryKode) async {
-    final response = await http.get(Uri.parse('$baseUrl/order-list/kry/$kryKode'));
+    final response =
+        await http.get(Uri.parse('$baseUrl/order-list/kry/$kryKode'));
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
       if (data['success'] == true) {
         return data['data'];
       } else {
-        throw Exception(data['message'] ?? 'Order list tidak ditemukan untuk kry_kode tersebut');
+        throw Exception('Order list tidak ditemukan untuk kry_kode tersebut');
       }
     } else {
       throw Exception('Gagal memuat order list by kry_kode');
@@ -568,7 +661,8 @@ class ApiService {
   }
 
   // POST - Update order_list status
-  static Future<Map<String, dynamic>> updateOrderListStatus(String orderId, String newStatus) async {
+  static Future<Map<String, dynamic>> updateOrderListStatus(
+      String orderId, String newStatus) async {
     final response = await http.post(
       Uri.parse('$baseUrl/order-list/update-status'),
       headers: {'Content-Type': 'application/json'},
@@ -583,14 +677,12 @@ class ApiService {
       if (data['success'] == true) {
         return data;
       } else {
-        throw Exception(data['message'] ?? 'Gagal update status order_list');
+        throw Exception('Gagal update status order_list');
       }
     } else {
-      throw Exception('Gagal update status order_list: ${response.body}');
+      throw Exception('Gagal update status order_list');
     }
   }
-
-
 
   // Ambil DETAIL order_list:
   // 1) Coba GET /order-list/{orderId}
@@ -627,7 +719,8 @@ class ApiService {
   }
 
   // POST - Tambah tindakan baru
-  static Future<Map<String, dynamic>> createTindakan(Map<String, dynamic> data) async {
+  static Future<Map<String, dynamic>> createTindakan(
+      Map<String, dynamic> data) async {
     final response = await http.post(
       Uri.parse('$baseUrl/tindakan'),
       headers: {'Content-Type': 'application/json'},
@@ -637,11 +730,10 @@ class ApiService {
     if (response.statusCode == 200 || response.statusCode == 201) {
       return json.decode(response.body);
     } else {
-      throw Exception('Gagal membuat tindakan: ${response.body}');
+      throw Exception('Gagal membuat tindakan');
     }
   }
 
-  
   // ✅ GET tindakan by trans_kode - UNTUK MENAMPILKAN SUBTOTAL DP
   static Future<List<dynamic>?> getTindakanByTransKode(String transKode) async {
     try {
@@ -666,7 +758,7 @@ class ApiService {
       } else if (response.statusCode == 404) {
         return [];
       } else {
-        throw Exception('Gagal mengambil data tindakan: ${response.statusCode}');
+        throw Exception('Gagal mengambil data tindakan');
       }
     } catch (e) {
       // Return empty list instead of throwing, agar UI tidak crash
@@ -674,8 +766,7 @@ class ApiService {
     }
   }
 
-
-   // ========================
+  // ========================
   // CHECKOUT ENDPOINTS
   // ========================
 
@@ -699,13 +790,17 @@ class ApiService {
         if (data['success'] == true) {
           return data;
         } else {
-          throw Exception(data['message'] ?? 'Gagal menghitung ongkir');
+          throw Exception('Gagal menghitung ongkir');
         }
       } else {
-        throw Exception('HTTP Error: ${response.statusCode}');
+        throw Exception('HTTP Error');
       }
     } catch (e) {
-      rethrow;
+      final userMessage = error_handler.ErrorHandler.handleApiError(
+        e,
+        context: 'ApiService.estimateShipping',
+      );
+      throw Exception(userMessage);
     }
   }
 
@@ -736,8 +831,6 @@ class ApiService {
         'isPointExchange': isPointExchange,
       };
 
-      debugPrint('Create checkout order payload: $payload');
-
       final response = await http.post(
         Uri.parse('$baseUrl/checkout/create-order'),
         headers: {'Content-Type': 'application/json'},
@@ -749,12 +842,12 @@ class ApiService {
         if (data['success'] == true) {
           return data;
         } else {
-          throw Exception(data['message'] ?? 'Gagal membuat order');
+          throw Exception('Gagal membuat order');
         }
       } else {
         final errorData = json.decode(response.body);
         throw Exception(
-          errorData['message'] ?? 'HTTP Error: ${response.statusCode}',
+          'Data tidak valid',
         );
       }
     } catch (e) {
@@ -777,7 +870,7 @@ class ApiService {
       if (response.statusCode == 200) {
         return json.decode(response.body);
       } else {
-        throw Exception('Gagal update status pembayaran: ${response.body}');
+        throw Exception('Gagal update status pembayaran');
       }
     } catch (e) {
       rethrow;
@@ -799,7 +892,7 @@ class ApiService {
       if (response.statusCode == 200) {
         return json.decode(response.body);
       } else {
-        throw Exception('Gagal update status pengiriman: ${response.body}');
+        throw Exception('Gagal update status pengiriman');
       }
     } catch (e) {
       rethrow;
@@ -807,9 +900,9 @@ class ApiService {
   }
 
   /// Update checkout order
-  static Future<Map<String, dynamic>> updateCheckoutOrder(String orderCode, Map<String, dynamic> updates) async {
+  static Future<Map<String, dynamic>> updateCheckoutOrder(
+      String orderCode, Map<String, dynamic> updates) async {
     try {
-      debugPrint('Update checkout order payload: $updates');
       final response = await http.put(
         Uri.parse('$baseUrl/checkout/update-order/$orderCode'),
         headers: {'Content-Type': 'application/json'},
@@ -821,10 +914,10 @@ class ApiService {
         if (data['success'] == true) {
           return data;
         } else {
-          throw Exception(data['message'] ?? 'Gagal update order');
+          throw Exception('Gagal update order');
         }
       } else {
-        throw Exception('Gagal update checkout order: ${response.body}');
+        throw Exception('Gagal update checkout order');
       }
     } catch (e) {
       rethrow;
@@ -843,10 +936,10 @@ class ApiService {
         if (data['success'] == true) {
           return data['data'];
         } else {
-          throw Exception(data['message'] ?? 'Order tidak ditemukan');
+          throw Exception('Order tidak ditemukan');
         }
       } else {
-        throw Exception('Gagal mengambil data order: ${response.body}');
+        throw Exception('Gagal mengambil data order');
       }
     } catch (e) {
       rethrow;
@@ -865,13 +958,17 @@ class ApiService {
         if (data['success'] == true) {
           return data['data'];
         } else {
-          throw Exception(data['message'] ?? 'Gagal mengambil data orders');
+          throw Exception('Gagal mengambil data orders');
         }
       } else {
         throw Exception('Gagal mengambil data orders customer');
       }
     } catch (e) {
-      rethrow;
+      final userMessage = error_handler.ErrorHandler.handleApiError(
+        e,
+        context: 'ApiService.getCustomerOrders',
+      );
+      throw Exception(userMessage);
     }
   }
 
@@ -887,7 +984,7 @@ class ApiService {
         if (data['success'] == true) {
           return data['data'];
         } else {
-          throw Exception(data['message'] ?? 'Gagal mengambil data orders');
+          throw Exception('Gagal mengambil data orders');
         }
       } else {
         throw Exception('Gagal mengambil semua orders');
@@ -909,7 +1006,7 @@ class ApiService {
         if (data['success'] == true) {
           return data['data'];
         } else {
-          throw Exception(data['message'] ?? 'Gagal mengambil data zona');
+          throw Exception('Gagal mengambil data zona');
         }
       } else {
         throw Exception('Gagal mengambil data zona ekspedisi');
@@ -937,7 +1034,7 @@ class ApiService {
       if (response.statusCode == 200) {
         return json.decode(response.body);
       } else {
-        throw Exception('Gagal validasi voucher: ${response.body}');
+        throw Exception('Gagal validasi voucher');
       }
     } catch (e) {
       rethrow;
@@ -971,7 +1068,8 @@ class ApiService {
   }
 
   /// Mark voucher as used after successful payment
-  static Future<Map<String, dynamic>> markVoucherUsed(String voucherCode, String customerId) async {
+  static Future<Map<String, dynamic>> markVoucherUsed(
+      String voucherCode, String customerId) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/checkout/mark-voucher-used'),
@@ -985,14 +1083,15 @@ class ApiService {
       if (response.statusCode == 200) {
         return json.decode(response.body);
       } else {
-        throw Exception('Gagal menandai voucher sebagai digunakan: ${response.body}');
+        throw Exception('Gagal menandai voucher sebagai digunakan');
       }
     } catch (e) {
       rethrow;
     }
   }
 
-  static Future<Map<String, dynamic>> claimVoucher(String customerId, int voucherId) async {
+  static Future<Map<String, dynamic>> claimVoucher(
+      String customerId, int voucherId) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/user-voucher'),
@@ -1019,7 +1118,7 @@ class ApiService {
         } catch (_) {
           // If can't parse, use default
         }
-        throw Exception('HTTP ${response.statusCode}: $errorMessage');
+        throw Exception('Data tidak Valid');
       }
     } catch (e) {
       rethrow;
@@ -1027,17 +1126,27 @@ class ApiService {
   }
 
   static Future<List<dynamic>> getUserVouchers(String customerId) async {
-    final response = await http.get(Uri.parse('$baseUrl/user-vouchers/$customerId'));
+    try {
+      final response =
+          await http.get(Uri.parse('$baseUrl/user-vouchers/$customerId'));
 
-    if (response.statusCode == 200) {
-      return json.decode(response.body);
-    } else {
-      throw Exception('Gagal memuat voucher user');
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        throw Exception('Gagal memuat voucher user');
+      }
+    } catch (e) {
+      final userMessage = error_handler.ErrorHandler.handleApiError(
+        e,
+        context: 'ApiService.getUserVouchers',
+      );
+      throw Exception(userMessage);
     }
   }
 
   /// Update user voucher status (mark as used)
-  static Future<Map<String, dynamic>> updateUserVoucher(int userVoucherId, Map<String, dynamic> updates) async {
+  static Future<Map<String, dynamic>> updateUserVoucher(
+      int userVoucherId, Map<String, dynamic> updates) async {
     try {
       final response = await http.put(
         Uri.parse('$baseUrl/user-voucher/$userVoucherId'),
@@ -1050,10 +1159,10 @@ class ApiService {
         if (data['success'] == true) {
           return data;
         } else {
-          throw Exception(data['message'] ?? 'Gagal update user voucher');
+          throw Exception('Gagal update user voucher');
         }
       } else {
-        throw Exception('Gagal update user voucher: ${response.body}');
+        throw Exception('Gagal update user voucher');
       }
     } catch (e) {
       rethrow;
@@ -1084,10 +1193,10 @@ class ApiService {
         if (data['success'] == true) {
           return data;
         } else {
-          throw Exception(data['message'] ?? 'Validasi poin gagal');
+          throw Exception('Validasi poin gagal');
         }
       } else {
-        throw Exception('HTTP Error: ${response.statusCode}');
+        throw Exception('Data tidak valid');
       }
     } catch (e) {
       rethrow;
@@ -1107,8 +1216,6 @@ class ApiService {
         'orderData': orderData,
       };
 
-      debugPrint('Process point exchange payload: $payload');
-
       final response = await http.post(
         Uri.parse('$baseUrl/checkout/process-point-exchange'),
         headers: {'Content-Type': 'application/json'},
@@ -1120,12 +1227,12 @@ class ApiService {
         if (data['success'] == true) {
           return data;
         } else {
-          throw Exception(data['message'] ?? 'Gagal proses tukar poin');
+          throw Exception('Gagal proses tukar poin');
         }
       } else {
         final errorData = json.decode(response.body);
         throw Exception(
-          errorData['message'] ?? 'HTTP Error: ${response.statusCode}',
+          errorData['message'] ?? 'Data tidak valid',
         );
       }
     } catch (e) {
@@ -1155,10 +1262,10 @@ class ApiService {
         if (data['success'] == true) {
           return data;
         } else {
-          throw Exception(data['message'] ?? 'Gagal menambah poin');
+          throw Exception('Gagal menambah poin');
         }
       } else {
-        throw Exception('HTTP Error: ${response.statusCode}');
+        throw Exception('Data tidak valid');
       }
     } catch (e) {
       rethrow;
@@ -1177,13 +1284,17 @@ class ApiService {
         if (data['success'] == true) {
           return data['data'] ?? [];
         } else {
-          throw Exception(data['message'] ?? 'Gagal mengambil riwayat poin');
+          throw Exception('Gagal mengambil riwayat poin');
         }
       } else {
-        throw Exception('HTTP Error: ${response.statusCode}');
+        throw Exception('Data tidak valid');
       }
     } catch (e) {
-      rethrow;
+      final userMessage = error_handler.ErrorHandler.handleApiError(
+        e,
+        context: 'ApiService.getPointTransactions',
+      );
+      throw Exception(userMessage);
     }
   }
 }

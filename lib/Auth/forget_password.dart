@@ -76,7 +76,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
                 width: double.infinity,
                 decoration: BoxDecoration(
                   color: Theme.of(context).cardColor,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
                 ),
                 child: SingleChildScrollView(
                   padding: EdgeInsets.symmetric(

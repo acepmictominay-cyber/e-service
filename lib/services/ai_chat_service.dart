@@ -286,11 +286,37 @@ ${knowledgeContext.isNotEmpty ? knowledgeContext : 'Knowledge base sedang dimuat
 
           // Check for product type matches
           bool matchesType = true;
+          bool isGamingQuery =
+              queryLower.contains('gaming') || queryLower.contains('game');
+
           if (entities['product'] == 'laptop') {
+            // For laptop queries, accept products with laptop keywords or common laptop brands
             matchesType = productName.contains('laptop') ||
                 productName.contains('notebook') ||
                 productName.contains('komputer') ||
-                productName.contains('pc');
+                productName.contains('pc') ||
+                productName.contains('asus') ||
+                productName.contains('lenovo') ||
+                productName.contains('acer') ||
+                productName.contains('hp') ||
+                productName.contains('dell') ||
+                productName.contains('msi') ||
+                productName.contains('apple') ||
+                productName.contains('macbook') ||
+                productName.contains('thinkpad') ||
+                productName.contains('ideapad') ||
+                productName.contains('vivobook') ||
+                productName.contains('aspire') ||
+                productName.contains('inspiron') ||
+                productName.contains('latitude') ||
+                productName.contains('rog') ||
+                productName.contains('strix') ||
+                productName.contains('legion') ||
+                productName.contains('predator') ||
+                productName.contains('tuf') ||
+                productName.contains('nitro') ||
+                productName.contains('omen') ||
+                productName.contains('alienware');
           } else if (entities['product'] == 'printer') {
             matchesType = productName.contains('printer') ||
                 productName.contains('print');
@@ -311,10 +337,31 @@ ${knowledgeContext.isNotEmpty ? knowledgeContext : 'Knowledge base sedang dimuat
           // Check for usage type
           bool matchesUsage = true;
           if (queryLower.contains('gaming') || queryLower.contains('game')) {
+            // Expanded gaming keywords to include common gaming laptop brands/series
             matchesUsage = productName.contains('gaming') ||
                 description.contains('gaming') ||
                 productName.contains('game') ||
-                description.contains('game');
+                description.contains('game') ||
+                productName.contains('rog') ||
+                description.contains('rog') ||
+                productName.contains('strix') ||
+                description.contains('strix') ||
+                productName.contains('legion') ||
+                description.contains('legion') ||
+                productName.contains('predator') ||
+                description.contains('predator') ||
+                productName.contains('tuf gaming') ||
+                description.contains('tuf gaming') ||
+                productName.contains('nitro') ||
+                description.contains('nitro') ||
+                productName.contains('omen') ||
+                description.contains('omen') ||
+                productName.contains('alienware') ||
+                description.contains('alienware') ||
+                productName.contains('gs') && productName.contains('asus') ||
+                description.contains('gs') && description.contains('asus') ||
+                productName.contains('gf') && productName.contains('msi') ||
+                description.contains('gf') && description.contains('msi');
           } else if (queryLower.contains('kantor') ||
               queryLower.contains('office')) {
             matchesUsage = productName.contains('office') ||
@@ -337,9 +384,16 @@ ${knowledgeContext.isNotEmpty ? knowledgeContext : 'Knowledge base sedang dimuat
 
     // If no products match the strict criteria, return some products anyway
     // This ensures we always show something for product queries
+    // But for gaming queries, don't fallback to regular products
     if (filtered.isEmpty && products.isNotEmpty) {
-      // Return first few products as general recommendations
-      filtered = products.take(3).toList().cast<Map<String, dynamic>>();
+      if (queryLower.contains('gaming') || queryLower.contains('game')) {
+        // For gaming queries, don't show regular products as fallback
+        // Return empty list so the caller knows no gaming products found
+        filtered = [];
+      } else {
+        // Return first few products as general recommendations
+        filtered = products.take(3).toList().cast<Map<String, dynamic>>();
+      }
     }
 
     return filtered;

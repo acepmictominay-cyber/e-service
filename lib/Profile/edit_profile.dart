@@ -1,6 +1,7 @@
 import 'package:azza_service/Others/notifikasi.dart';
 import 'package:azza_service/api_services/api_service.dart';
 import 'package:azza_service/config/api_config.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
@@ -22,6 +23,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   File? _image;
   final ImagePicker _picker = ImagePicker();
+  bool isSaving = false;
 
   @override
   void initState() {
@@ -37,18 +39,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
   @override
   Widget build(BuildContext context) {
     final String? fotoPath = widget.userData['cos_gambar'];
-    final ImageProvider? profileImage;
-
-    if (_image != null) {
-      // Jika user baru saja memilih foto baru
-      profileImage = FileImage(_image!);
-    } else if (fotoPath != null && fotoPath.isNotEmpty) {
-      // Jika user punya foto dari database
-      profileImage = NetworkImage("${ApiConfig.storageBaseUrl}$fotoPath");
-    } else {
-      // Default foto
-      profileImage = null;
-    }
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -58,6 +48,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
         titleTextStyle: const TextStyle(color: Colors.white),
         title: const Text('Edit Profile'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.support_agent, color: Colors.white),
+            onPressed: () {},
+          ),
           IconButton(
             icon: const Icon(Icons.chat_bubble_outline, color: Colors.white),
             onPressed: () {
@@ -80,34 +74,60 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   // Foto profil
-                  CircleAvatar(
-                    radius: 45,
-                    backgroundColor:
-                        Theme.of(context).brightness == Brightness.dark
-                            ? Colors.grey[700]
-                            : Colors.black12,
-                    backgroundImage: profileImage,
-                    child:
-                        (_image == null &&
-                                (fotoPath == null || fotoPath.isEmpty))
-                            ? Icon(
-                              Icons.person,
-                              size: 60,
-                              color:
-                                  Theme.of(context).brightness ==
+                  Container(
+                    width: 90,
+                    height: 90,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.grey[700]
+                          : Colors.black12,
+                    ),
+                    child: ClipOval(
+                      child: _image != null
+                          ? Image.file(_image!, fit: BoxFit.cover)
+                          : (fotoPath != null && fotoPath.isNotEmpty)
+                              ? CachedNetworkImage(
+                                  imageUrl:
+                                      "${ApiConfig.storageBaseUrl}$fotoPath",
+                                  fit: BoxFit.cover,
+                                  placeholder: (context, url) => Center(
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Theme.of(context).brightness ==
+                                                Brightness.dark
+                                            ? Colors.white
+                                            : Colors.blue,
+                                      ),
+                                    ),
+                                  ),
+                                  errorWidget: (context, url, error) => Icon(
+                                    Icons.person,
+                                    size: 60,
+                                    color: Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? Colors.white70
+                                        : Colors.black,
+                                  ),
+                                )
+                              : Icon(
+                                  Icons.person,
+                                  size: 60,
+                                  color: Theme.of(context).brightness ==
                                           Brightness.dark
                                       ? Colors.white70
                                       : Colors.black,
-                            )
-                            : null,
+                                ),
+                    ),
                   ),
                   const SizedBox(height: 8),
                   TextButton(
                     onPressed: _pickImage,
-                    child: Text(
+                    child: const Text(
                       "Edit Foto",
                       style: TextStyle(
-                        color: const Color(0xFF0041c3),
+                        color: Color(0xFF0041c3),
                         fontSize: 16,
                       ),
                     ),
@@ -123,10 +143,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       final updatedName = await Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder:
-                              (context) => EditNamaPage(
-                                currentName: namaController.text,
-                              ),
+                          builder: (context) => EditNamaPage(
+                            currentName: namaController.text,
+                          ),
                         ),
                       );
                       if (updatedName != null) {
@@ -145,10 +164,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       final updatedPhone = await Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder:
-                              (context) => EditNmtlpnPage(
-                                currentPhone: teleponController.text,
-                              ),
+                          builder: (context) => EditNmtlpnPage(
+                            currentPhone: teleponController.text,
+                          ),
                         ),
                       );
                       if (updatedPhone != null) {
@@ -176,73 +194,91 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     borderRadius: BorderRadius.circular(24),
                   ),
                 ),
-                onPressed: () async {
-                  try {
-                    String? imagePath;
+                onPressed: isSaving
+                    ? null
+                    : () async {
+                        setState(() => isSaving = true);
+                        try {
+                          String? imagePath;
 
-                    // Upload foto hanya jika user memilih foto baru
-                    if (_image != null) {
-                      final uploadResult = await ApiService.uploadProfile(
-                        _image!,
-                      );
-                      imagePath = uploadResult['path'];
+                          // Upload foto hanya jika user memilih foto baru
+                          if (_image != null) {
+                            final uploadResult =
+                                await ApiService.uploadProfile(_image!);
+                            imagePath = uploadResult['path'];
 
-                      if (mounted) {
-                        setState(() {
-                          widget.userData['cos_gambar'] =
-                              imagePath; // langsung update di UI
-                        });
-                      }
-                    }
+                            if (mounted) {
+                              setState(() {
+                                widget.userData['cos_gambar'] =
+                                    imagePath; // langsung update di UI
+                              });
+                            }
+                          }
 
-                    // Bangun map hanya dari field yang berubah
-                    final updatedData = <String, dynamic>{};
+                          // Bangun map hanya dari field yang berubah
+                          final updatedData = <String, dynamic>{};
 
-                    if (namaController.text.isNotEmpty &&
-                        namaController.text != widget.userData['cos_nama']) {
-                      updatedData['cos_nama'] = namaController.text;
-                    }
+                          if (namaController.text.isNotEmpty &&
+                              namaController.text !=
+                                  widget.userData['cos_nama']) {
+                            updatedData['cos_nama'] = namaController.text;
+                          }
 
-                    if (teleponController.text.isNotEmpty &&
-                        teleponController.text != widget.userData['cos_hp']) {
-                      updatedData['cos_hp'] = teleponController.text;
-                    }
+                          if (teleponController.text.isNotEmpty &&
+                              teleponController.text !=
+                                  widget.userData['cos_hp']) {
+                            updatedData['cos_hp'] = teleponController.text;
+                          }
 
-                    if (imagePath != null) {
-                      updatedData['cos_gambar'] = imagePath;
-                    }
+                          if (imagePath != null) {
+                            updatedData['cos_gambar'] = imagePath;
+                          }
 
-                    if (updatedData.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Tidak ada perubahan yang disimpan"),
+                          if (updatedData.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text(
+                                      "Tidak ada perubahan yang disimpan")),
+                            );
+                            return;
+                          }
+
+                          await ApiService.updateCostomer(
+                            widget.userData['id_costomer'],
+                            updatedData,
+                          );
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text("Profil berhasil diperbarui")),
+                          );
+
+                          Navigator.pop(context, updatedData);
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                                content: Text("Gagal menyimpan perubahan: $e")),
+                          );
+                        } finally {
+                          if (mounted) {
+                            setState(() => isSaving = false);
+                          }
+                        }
+                      },
+                child: isSaving
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.white),
                         ),
-                      );
-                      return;
-                    }
-
-                    await ApiService.updateCostomer(
-                      widget.userData['id_costomer'],
-                      updatedData,
-                    );
-
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text("Profil berhasil diperbarui"),
+                      )
+                    : const Text(
+                        "Simpan",
+                        style: TextStyle(fontSize: 16, color: Colors.white),
                       ),
-                    );
-
-                    Navigator.pop(context, updatedData);
-                  } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("Gagal menyimpan perubahan: $e")),
-                    );
-                  }
-                },
-                child: const Text(
-                  "Simpan",
-                  style: TextStyle(fontSize: 16, color: Colors.white),
-                ),
               ),
             ),
           ),
@@ -284,7 +320,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
           child: Row(
             children: [
-              Icon(icon, color: Colors.white),
+              Icon(icon, color: const Color(0xFF0041c3)),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -322,9 +358,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }
 
   Future<void> _pickImage() async {
-    final XFile? pickedFile = await _picker.pickImage(
-      source: ImageSource.gallery,
-    );
+    final XFile? pickedFile =
+        await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       setState(() {
         _image = File(pickedFile.path);

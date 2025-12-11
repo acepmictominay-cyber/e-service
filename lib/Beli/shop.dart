@@ -1,11 +1,11 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:azza_service/Beli/detail_produk.dart';
 import 'package:azza_service/Chat/chat_page.dart';
-import 'package:azza_service/Home/Home.dart';
+import 'package:azza_service/Home/home.dart';
 import 'package:azza_service/Others/notifikasi.dart';
 import 'package:azza_service/Profile/profile.dart';
 import 'package:azza_service/Promo/promo.dart';
-import 'package:azza_service/Service/Service.dart';
+import 'package:azza_service/Service/service.dart';
 import 'package:azza_service/api_services/api_service.dart';
 import 'package:azza_service/config/api_config.dart';
 import 'package:flutter/material.dart';
@@ -163,7 +163,6 @@ class _MarketplacePageState extends State<MarketplacePage>
           _hasError = true;
         });
       }
-      debugPrint('Kesalahan Server: $e');
     }
   }
 
@@ -266,7 +265,6 @@ class _MarketplacePageState extends State<MarketplacePage>
           _hasError = true;
         });
       }
-      debugPrint('Kesalahan Server: $e');
     }
   }
 
@@ -529,7 +527,9 @@ class _MarketplacePageState extends State<MarketplacePage>
             'No Image',
             style: GoogleFonts.poppins(
               fontSize: 10,
-              color: Colors.grey.shade500,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.grey.shade500
+                  : Colors.black,
             ),
           ),
         ],
@@ -633,7 +633,6 @@ class _MarketplacePageState extends State<MarketplacePage>
                               _hasError = true;
                             });
                           }
-                          debugPrint('Kesalahan Server: $e');
                         }
                       },
                       color: const Color(0xFF0041c3),
@@ -850,7 +849,11 @@ class _MarketplacePageState extends State<MarketplacePage>
       ),
       child: Row(
         children: [
-          Icon(Icons.search_rounded, color: Colors.grey.shade400, size: 24),
+          Icon(Icons.search_rounded,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.grey.shade400
+                  : Colors.grey.shade600,
+              size: 24),
           const SizedBox(width: 12),
           Expanded(
             child: TextField(
@@ -861,12 +864,16 @@ class _MarketplacePageState extends State<MarketplacePage>
               },
               style: GoogleFonts.poppins(
                 fontSize: 14,
-                color: Colors.grey.shade800,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white
+                    : Colors.black,
               ),
               decoration: InputDecoration(
                 hintText: 'Cari produk impianmu...',
                 hintStyle: GoogleFonts.poppins(
-                  color: Colors.grey.shade400,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.grey.shade400
+                      : Colors.grey.shade600,
                   fontSize: 14,
                 ),
                 border: InputBorder.none,
@@ -876,7 +883,10 @@ class _MarketplacePageState extends State<MarketplacePage>
           ),
           if (_searchQuery.isNotEmpty)
             IconButton(
-              icon: Icon(Icons.clear_rounded, color: Colors.grey.shade400),
+              icon: Icon(Icons.clear_rounded,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.grey.shade400
+                      : Colors.grey.shade600),
               onPressed: () {
                 _searchController.clear();
                 _searchQuery = '';
@@ -1004,7 +1014,9 @@ class _MarketplacePageState extends State<MarketplacePage>
                         : 'Tidak ada produk ditemukan',
                     style: GoogleFonts.poppins(
                       fontSize: 15,
-                      color: Colors.grey.shade500,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.grey.shade500
+                          : Colors.black,
                     ),
                   ),
                 ],
@@ -1050,7 +1062,9 @@ class _MarketplacePageState extends State<MarketplacePage>
                 'Tidak ditemukan untuk "$_searchQuery"',
                 style: GoogleFonts.poppins(
                   fontSize: 15,
-                  color: Colors.grey.shade500,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.grey.shade500
+                      : Colors.black,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -1197,7 +1211,7 @@ class _MarketplacePageState extends State<MarketplacePage>
                             color:
                                 Theme.of(context).brightness == Brightness.dark
                                     ? Colors.white
-                                    : Colors.grey.shade800,
+                                    : Colors.black,
                             height: 1.3,
                           ),
                         ),
@@ -1231,7 +1245,7 @@ class _MarketplacePageState extends State<MarketplacePage>
                                 color: Theme.of(context).brightness ==
                                         Brightness.dark
                                     ? Colors.white70
-                                    : Colors.grey.shade700,
+                                    : Colors.black,
                               ),
                             ),
                           ],
@@ -1360,7 +1374,9 @@ class _MarketplacePageState extends State<MarketplacePage>
               'Belum Ada Produk Dimuat',
               style: GoogleFonts.poppins(
                 fontSize: 18,
-                color: Colors.grey.shade500,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.grey.shade500
+                    : Colors.black,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -1370,7 +1386,9 @@ class _MarketplacePageState extends State<MarketplacePage>
               textAlign: TextAlign.center,
               style: GoogleFonts.poppins(
                 fontSize: 14,
-                color: Colors.grey.shade400,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.grey.shade400
+                    : Colors.black,
               ),
             ),
             const SizedBox(height: 24),
@@ -1412,20 +1430,24 @@ class _MarketplacePageState extends State<MarketplacePage>
             Icon(Icons.error_outline, size: 70, color: Colors.grey.shade300),
             const SizedBox(height: 16),
             Text(
-              'Kesalahan Server',
+              'Koneksi Internet Bermasalah',
               style: GoogleFonts.poppins(
                 fontSize: 18,
-                color: Colors.grey.shade500,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.grey.shade500
+                    : Colors.black,
                 fontWeight: FontWeight.w500,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              'Terjadi kesalahan saat memuat produk. Silakan coba lagi.',
+              'Periksa koneksi Anda dan coba lagi.',
               textAlign: TextAlign.center,
               style: GoogleFonts.poppins(
                 fontSize: 14,
-                color: Colors.grey.shade400,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.grey.shade400
+                    : Colors.black,
               ),
             ),
             const SizedBox(height: 24),

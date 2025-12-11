@@ -36,7 +36,8 @@ class UnifiedPaymentService {
         customerPhone: customerPhone,
         itemDetails: itemDetails,
         transKode: orderId, // Pass orderId as transKode
-        paymentType: serviceData?['paymentType'] ?? 'product', // Pass paymentType from serviceData or 'product'
+        paymentType: serviceData?['paymentType'] ??
+            'product', // Pass paymentType from serviceData or 'product'
         onTransactionFinished: (result) async {
           if (PaymentService.isTransactionSuccess(result)) {
             // Handle successful payment based on type
@@ -90,19 +91,21 @@ class UnifiedPaymentService {
       if (customerId == null) throw Exception('Customer ID not found');
 
       // Create transaction record for service
-        final response = await ApiService.createTransaksi({
-          'cos_kode': customerId,
-          'kry_kode': serviceData['technicianCode'] ?? 'KRY001',
-          'trans_total': serviceData['amount'] is int ? serviceData['amount'] : (serviceData['amount'] as num).toInt(),
-          'trans_discount': 0.0,
-          'trans_tanggal': DateTime.now().toIso8601String().substring(0, 10),
-          'trans_status': 'Waiting',
-          'merek': serviceData['brand'] ?? '',
-          'device': serviceData['device'] ?? '',
-          'seri': serviceData['serial'] ?? '',
-          'ket_keluhan': serviceData['complaint'] ?? '',
-          'status_garansi': serviceData['warrantyStatus'] ?? 'Tidak Ada Garansi',
-        });
+      final response = await ApiService.createTransaksi({
+        'cos_kode': customerId,
+        'kry_kode': serviceData['technicianCode'] ?? 'KRY001',
+        'trans_total': serviceData['amount'] is int
+            ? serviceData['amount']
+            : (serviceData['amount'] as num).toInt(),
+        'trans_discount': 0.0,
+        'trans_tanggal': DateTime.now().toIso8601String().substring(0, 10),
+        'trans_status': 'Waiting',
+        'merek': serviceData['brand'] ?? '',
+        'device': serviceData['device'] ?? '',
+        'seri': serviceData['serial'] ?? '',
+        'ket_keluhan': serviceData['complaint'] ?? '',
+        'status_garansi': serviceData['warrantyStatus'] ?? 'Tidak Ada Garansi',
+      });
 
       if (response['success'] != true) {
         throw Exception('Failed to create transaction: ${response['message']}');
@@ -135,8 +138,10 @@ class UnifiedPaymentService {
         final userId = session['id'];
         if (userId != null) {
           int userPoints = UserPointData.userPoints.value;
-          final newPoints = userPoints - ((productData['pointsUsed'] ?? 0) as int);
-          await ApiService.updateCostomer(userId, {'cos_poin': newPoints.toString()});
+          final newPoints =
+              userPoints - ((productData['pointsUsed'] ?? 0) as int);
+          await ApiService.updateCostomer(
+              userId, {'cos_poin': newPoints.toString()});
           UserPointData.setPoints(newPoints);
         }
       }

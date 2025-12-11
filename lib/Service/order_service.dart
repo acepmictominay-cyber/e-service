@@ -1,8 +1,8 @@
 import 'package:azza_service/Beli/shop.dart';
-import 'package:azza_service/Home/Home.dart';
+import 'package:azza_service/Home/home.dart';
 import 'package:azza_service/Profile/profile.dart';
 import 'package:azza_service/Promo/promo.dart';
-import 'package:azza_service/Service/Service.dart';
+import 'package:azza_service/Service/service.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -110,7 +110,6 @@ class _PesanServicePageState extends State<PesanServicePage> {
         alamatController.text = currentAddress ?? "";
       });
     } catch (e) {
-      debugPrint("Gagal mendapatkan alamat: $e");
     }
 
     if (mapController != null && moveCamera) {
@@ -414,7 +413,6 @@ body: Column(
                                     }
                                   }
                                 } catch (e) {
-                                  debugPrint("Gagal mendapatkan lokasi dari alamat: $e");
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(content: Text("Alamat tidak ditemukan. Coba alamat yang lebih spesifik.")),
                                   );

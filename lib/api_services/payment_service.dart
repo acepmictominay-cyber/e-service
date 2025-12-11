@@ -1,10 +1,11 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
+import '../Others/doku_webview.dart';
 import '../Others/midtrans_webview.dart';
 
 import 'package:azza_service/config/api_config.dart';
+import 'package:azza_service/utils/error_handler.dart' as error_handler;
 
 class PaymentService {
   // Environment Configuration
@@ -13,16 +14,117 @@ class PaymentService {
   // Public getter for environment check
   static bool get isProduction => _isProduction;
 
+  // Doku Configuration
+  static String get dokuBaseUrl => ApiConfig.dokuBaseUrl;
+  static String get dokuClientKey => ApiConfig.dokuClientKey;
+  static String get dokuSignature => ApiConfig.dokuSignature;
+  static String get dokuTokenEndpoint => ApiConfig.dokuTokenEndpoint;
+
   // Midtrans Configuration
-  static const String _devClientKey = 'Mid-client-yKTO-_jT2d60u3M1';
-  static const String _prodClientKey =
-      'YOUR_PRODUCTION_CLIENT_KEY'; // Update with production key
+  static String get midtransServerKey => ApiConfig.midtransServerKey;
+  static String get midtransClientKey => ApiConfig.midtransClientKey;
 
   // Dynamic URLs based on environment
   static String get baseUrl => ApiConfig.apiBaseUrl;
   static String get webhookUrl => ApiConfig.webhookBaseUrl;
-  static String get midtransClientKey =>
-      _isProduction ? _prodClientKey : _devClientKey;
+
+  /// 🔹 Get Doku Access Token
+  static Future<String> _getDokuAccessToken() async {
+    final timestamp =
+        DateTime.now().toUtc().toIso8601String().replaceAll('Z', '+00:00');
+
+    final url = Uri.parse('$dokuBaseUrl$dokuTokenEndpoint');
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {
+          'X-SIGNATURE': dokuSignature,
+          'X-TIMESTAMP': timestamp,
+          'X-CLIENT-KEY': dokuClientKey,
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(
+            {'grantType': 'client_credentials', 'additionalInfo': {}}),
+      );
+
+      final data = json.decode(response.body);
+
+      if (response.statusCode == 200 && data['accessToken'] != null) {
+        return data['accessToken'];
+      } else {
+        throw Exception(
+            'Failed to get Doku access token: ${data['responseMessage'] ?? 'Unknown error'}');
+      }
+    } catch (e) {
+      throw Exception('Error getting Doku access token: $e');
+    }
+  }
+
+  /// 🔹 Create Doku Payment
+  static Future<Map<String, dynamic>> _createDokuPayment({
+    required String accessToken,
+    required String orderId,
+    required int amount,
+    required String customerName,
+    required String customerEmail,
+    required String customerPhone,
+    List<Map<String, dynamic>>? itemDetails,
+  }) async {
+    final url = Uri.parse('$dokuBaseUrl/payment-api/v1.0/create-payment');
+
+    final orderData = <String, dynamic>{
+      'invoice_number': orderId,
+      'amount': amount,
+      'currency': 'IDR',
+      'callback_url': webhookUrl,
+      'auto_redirect': true,
+    };
+
+    if (itemDetails != null && itemDetails.isNotEmpty) {
+      orderData['line_items'] = itemDetails
+          .map((item) => {
+                'name': item['name'] ?? 'Item',
+                'price': item['price'] ?? item['amount'] ?? 0,
+                'quantity': item['quantity'] ?? 1,
+              })
+          .toList();
+    }
+
+    final requestBody = {
+      'order': orderData,
+      'customer': {
+        'name': customerName,
+        'email': customerEmail,
+        'phone': customerPhone,
+      },
+      'payment': {
+        'payment_due_date': 60, // 60 minutes
+      },
+    };
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {
+          'Authorization': 'Bearer $accessToken',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(requestBody),
+      );
+
+      final data = json.decode(response.body);
+
+      if (response.statusCode == 200 && data['order'] != null) {
+        return data;
+      } else {
+        throw Exception(
+            'Failed to create Doku payment: ${data['message'] ?? 'Unknown error'}');
+      }
+    } catch (e) {
+      throw Exception('Error creating Doku payment: $e');
+    }
+  }
 
   /// 🔹 Buat transaksi ke backend
   static Future<Map<String, dynamic>> createPayment({
@@ -104,8 +206,8 @@ class PaymentService {
     }
   }
 
-  /// 🔹 Jalankan UI pembayaran Midtrans menggunakan WebView
-  static Future<void> startMidtransPayment({
+  /// 🔹 Jalankan UI pembayaran Doku menggunakan WebView
+  static Future<void> startDokuPayment({
     required BuildContext context,
     required String orderId,
     required int amount,
@@ -118,34 +220,29 @@ class PaymentService {
     String? paymentType,
     required Function(String) onTransactionFinished,
   }) async {
-    debugPrint('=== STARTING MIDTRANS PAYMENT ===');
-    debugPrint('Order ID: $orderId, Amount: $amount, Customer: $customerId');
-    debugPrint('Payment Type: $paymentType, Trans Kode: $transKode');
     try {
-      // Dapatkan redirect_url dari backend
-      debugPrint('Creating payment via backend...');
-      final paymentData = await createPayment(
-        customerId: customerId,
-        amount: amount,
+      // Get Doku access token
+      final accessToken = await _getDokuAccessToken();
+
+      // Create Doku payment
+      final paymentData = await _createDokuPayment(
+        accessToken: accessToken,
         orderId: orderId,
+        amount: amount,
         customerName: customerName,
         customerEmail: customerEmail,
         customerPhone: customerPhone,
         itemDetails: itemDetails,
-        transKode: transKode,
-        paymentType: paymentType,
       );
-      debugPrint('Payment creation response: $paymentData');
 
-      final redirectUrl = paymentData['redirect_url'];
-      debugPrint('Redirect URL obtained: $redirectUrl');
+      final redirectUrl = paymentData['order']['url'];
 
       // Tampilkan WebView dialog
       if (context.mounted) {
         showDialog(
           context: context,
           barrierDismissible: false,
-          builder: (dialogContext) => MidtransWebView(
+          builder: (dialogContext) => DokuWebView(
             redirectUrl: redirectUrl,
             orderId: orderId,
             onTransactionFinished: (result) {
@@ -160,9 +257,13 @@ class PaymentService {
     } catch (e) {
       // Tampilkan error ke user
       if (context.mounted) {
+        final userMessage = error_handler.ErrorHandler.handlePaymentError(
+          e,
+          context: 'PaymentService.startDokuPayment',
+        );
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Gagal memulai pembayaran: $e'),
+            content: Text('Gagal memulai pembayaran: $userMessage'),
             backgroundColor: Colors.red,
           ),
         );
@@ -171,8 +272,104 @@ class PaymentService {
     }
   }
 
-  /// 🔹 Cek status pembayaran dari backend
+  /// 🔹 Jalankan UI pembayaran Midtrans menggunakan WebView
+  static Future<void> startMidtransPayment({
+    required BuildContext context,
+    required String orderId,
+    required int amount,
+    required String customerId,
+    required String customerName,
+    required String customerEmail,
+    required String customerPhone,
+    List<Map<String, dynamic>>? itemDetails,
+    String? transKode,
+    String? paymentType,
+    required Function(String) onTransactionFinished,
+  }) async {
+    try {
+      // Create payment via backend API
+      final paymentData = await createPayment(
+        customerId: customerId,
+        amount: amount,
+        customerName: customerName,
+        customerEmail: customerEmail,
+        customerPhone: customerPhone,
+        orderId: orderId,
+        itemDetails: itemDetails,
+        transKode: transKode,
+        paymentType: paymentType,
+      );
+
+      if (paymentData['success'] == true) {
+        final redirectUrl = paymentData['redirect_url'];
+
+        // Tampilkan WebView dialog
+        if (context.mounted) {
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (dialogContext) => MidtransWebView(
+              redirectUrl: redirectUrl,
+              orderId: orderId,
+              onTransactionFinished: (result) {
+                if (Navigator.of(dialogContext).canPop()) {
+                  Navigator.of(dialogContext).pop(); // Close dialog
+                }
+                onTransactionFinished(result);
+              },
+            ),
+          );
+        }
+      } else {
+        throw Exception(
+            paymentData['message'] ?? 'Gagal membuat pembayaran Midtrans');
+      }
+    } catch (e) {
+      // Tampilkan error ke user
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal memulai pembayaran Midtrans: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      rethrow;
+    }
+  }
+
+  /// 🔹 Cek status pembayaran Doku
+  static Future<Map<String, dynamic>> _getDokuPaymentStatus(
+      String orderId) async {
+    try {
+      final accessToken = await _getDokuAccessToken();
+      final url = Uri.parse(
+          '$dokuBaseUrl/payment-api/v1.0/check-status?invoice_number=$orderId');
+
+      final response = await http.get(
+        url,
+        headers: {
+          'Authorization': 'Bearer $accessToken',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      final data = json.decode(response.body);
+
+      if (response.statusCode == 200 && data['order'] != null) {
+        return data['order'];
+      } else {
+        throw Exception(
+            'Failed to get Doku payment status: ${data['message'] ?? 'Unknown error'}');
+      }
+    } catch (e) {
+      throw Exception('Error getting Doku payment status: $e');
+    }
+  }
+
+  /// 🔹 Cek status pembayaran dari backend (fallback to Doku if needed)
   static Future<Map<String, dynamic>> getPaymentStatus(String orderId) async {
+    // Try backend first
     final url = Uri.parse('$baseUrl/payment/status/$orderId');
 
     try {
@@ -182,11 +379,16 @@ class PaymentService {
       if (response.statusCode == 200 && data['success'] == true) {
         return data['data'];
       } else {
-        throw Exception(
-            data['message'] ?? 'Gagal mendapatkan status pembayaran');
+        // Fallback to Doku direct check
+        return await _getDokuPaymentStatus(orderId);
       }
     } catch (e) {
-      throw Exception('Error getting payment status: $e');
+      // Fallback to Doku direct check
+      try {
+        return await _getDokuPaymentStatus(orderId);
+      } catch (dokuError) {
+        throw Exception('Error getting payment status: $e');
+      }
     }
   }
 
@@ -211,23 +413,27 @@ class PaymentService {
 
   /// 🔹 Helper untuk mengecek apakah transaksi sukses
   static bool isTransactionSuccess(String status) {
-    // Status yang valid dari Midtrans:
-    // - "capture" atau "settlement" = sukses
-    // - "pending" = menunggu
-    // - "deny" atau "cancel" atau "expire" = gagal
+    // Status yang valid dari Doku:
+    // - "SUCCESS" atau "COMPLETED" = sukses
+    // - "PENDING" = menunggu
+    // - "FAILED" atau "CANCELLED" atau "EXPIRED" = gagal
+    // Also support Midtrans statuses for backward compatibility
 
     final statusLower = status.toLowerCase();
 
-    // Jika status kosong atau cancel, berarti gagal/dibatalkan
+    // Jika status kosong atau cancel/failed, berarti gagal/dibatalkan
     if (statusLower.isEmpty ||
         statusLower == 'cancel' ||
-        statusLower == 'failure') {
+        statusLower == 'cancelled' ||
+        statusLower == 'failure' ||
+        statusLower == 'failed') {
       return false;
     }
 
-    return statusLower == 'capture' ||
-        statusLower == 'settlement' ||
-        statusLower == 'success';
+    return statusLower == 'success' ||
+        statusLower == 'completed' ||
+        statusLower == 'capture' ||
+        statusLower == 'settlement';
   }
 
   /// 🔹 Helper untuk mendapatkan pesan status yang user-friendly
@@ -239,18 +445,22 @@ class PaymentService {
     }
 
     switch (statusLower) {
+      case 'success':
+      case 'completed':
       case 'capture':
       case 'settlement':
-      case 'success':
         return 'Pembayaran berhasil';
       case 'pending':
         return 'Menunggu pembayaran';
+      case 'failed':
+      case 'failure':
       case 'deny':
         return 'Pembayaran ditolak';
+      case 'expired':
       case 'expire':
         return 'Pembayaran kadaluarsa';
       case 'cancel':
-      case 'failure':
+      case 'cancelled':
         return 'Pembayaran dibatalkan';
       default:
         return 'Status: $status';

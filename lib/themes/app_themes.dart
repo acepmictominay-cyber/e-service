@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 
 class AppThemes {
-  static final Color primaryBlue = const Color(
+  static const Color primaryBlue = Color(
     0xFF0041c3,
   ); // Biru terang primary
-  static final Color lightNavy = const Color.fromARGB(
+  static const Color lightNavy = Color.fromARGB(
     255,
     56,
     56,
     58,
   ); // NAVY untuk light mode
-  static final Color darkNavy = const Color.fromARGB(
+  static const Color darkNavy = Color.fromARGB(
     255,
     56,
     56,

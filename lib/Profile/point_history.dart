@@ -72,7 +72,7 @@ class _PointHistoryPageState extends State<PointHistoryPage> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.error_outline, size: 64, color: Colors.red),
+                      const Icon(Icons.error_outline, size: 64, color: Colors.red),
                       const SizedBox(height: 16),
                       Text(
                         errorMessage!,
@@ -92,7 +92,7 @@ class _PointHistoryPageState extends State<PointHistoryPage> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.history, size: 64, color: Colors.grey),
+                          const Icon(Icons.history, size: 64, color: Colors.grey),
                           const SizedBox(height: 16),
                           Text(
                             'Belum ada transaksi poin',

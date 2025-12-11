@@ -4,14 +4,12 @@ import '../themes/app_themes.dart';
 
 class ThemeProvider extends ChangeNotifier {
   static const String _themeKey = 'themeMode';
-  ThemeMode _themeMode = ThemeMode.system;
+  ThemeMode _themeMode = ThemeMode.light;
 
   ThemeMode get themeMode => _themeMode;
 
   ThemeData get themeData {
     if (_themeMode == ThemeMode.dark) return AppThemes.darkTheme;
-    if (_themeMode == ThemeMode.light) return AppThemes.lightTheme;
-    // For system, return light theme as default - MaterialApp will handle system detection
     return AppThemes.lightTheme;
   }
 
@@ -23,12 +21,18 @@ class ThemeProvider extends ChangeNotifier {
 
   Future<void> _loadThemeFromPrefs() async {
     final prefs = await SharedPreferences.getInstance();
-    final themeIndex = prefs.getInt(_themeKey) ?? ThemeMode.system.index;
+    final themeIndex = prefs.getInt(_themeKey) ?? ThemeMode.light.index;
     _themeMode = ThemeMode.values[themeIndex];
+    // Ensure only light or dark mode, default to light if invalid
+    if (_themeMode != ThemeMode.light && _themeMode != ThemeMode.dark) {
+      _themeMode = ThemeMode.light;
+    }
     notifyListeners();
   }
 
   Future<void> setThemeMode(ThemeMode mode) async {
+    assert(mode == ThemeMode.light || mode == ThemeMode.dark,
+        'Only light and dark modes are supported');
     _themeMode = mode;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_themeKey, mode.index);

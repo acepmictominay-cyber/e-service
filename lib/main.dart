@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:azza_service/Auth/login.dart';
-import 'package:azza_service/Home/Home.dart';
+import 'package:azza_service/Home/home.dart';
 import 'package:azza_service/Others/background_order_service.dart';
 import 'package:azza_service/Others/birthday_notification_service.dart';
 import 'package:azza_service/providers/theme_provider.dart';
@@ -79,8 +79,6 @@ void _handleFlutterError(FlutterErrorDetails details) {
 
 bool _handlePlatformError(Object error, StackTrace stack) {
   if (kDebugMode) {
-    debugPrint('Platform Error: $error');
-    debugPrint('Stack Trace: $stack');
   } else {
     // TODO: kirim ke crash reporting
     // FirebaseCrashlytics.instance.recordError(error, stack);
@@ -91,8 +89,6 @@ bool _handlePlatformError(Object error, StackTrace stack) {
 
 void _handleZoneError(Object error, StackTrace stack) {
   if (kDebugMode) {
-    debugPrint('Uncaught Error: $error');
-    debugPrint('Stack Trace: $stack');
   } else {
     // TODO: kirim ke crash reporting
     // FirebaseCrashlytics.instance.recordError(error, stack);
@@ -105,12 +101,9 @@ Future<void> _initServicesInBackground() async {
     await BirthdayNotificationService.initialize();
     await BackgroundOrderService.initialize();
     await BackgroundServiceManager.initialize();
-    if (kDebugMode) debugPrint('All background services initialized.');
-  } catch (e, st) {
-    if (kDebugMode) {
-      debugPrint('Service init error: $e');
-      debugPrint('$st');
-    }
+    if (kDebugMode) {}
+  } catch (e) {
+    if (kDebugMode) {}
   }
 }
 
@@ -326,19 +319,18 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body:
-          _isVideoInitialized
-              ? SizedBox.expand(
-                child: FittedBox(
-                  fit: BoxFit.cover,
-                  child: SizedBox(
-                    width: _controller.value.size.width,
-                    height: _controller.value.size.height,
-                    child: VideoPlayer(_controller),
-                  ),
+      body: _isVideoInitialized
+          ? SizedBox.expand(
+              child: FittedBox(
+                fit: BoxFit.cover,
+                child: SizedBox(
+                  width: _controller.value.size.width,
+                  height: _controller.value.size.height,
+                  child: VideoPlayer(_controller),
                 ),
-              )
-              : Container(color: Colors.white), // Placeholder while video loads
+              ),
+            )
+          : Container(color: Colors.white), // Placeholder while video loads
     );
   }
 }

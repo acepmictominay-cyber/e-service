@@ -1,4 +1,5 @@
 /// Utility class for handling and displaying errors safely
+library;
 import 'package:flutter/material.dart';
 
 class ErrorUtils {

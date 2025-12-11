@@ -1,5 +1,5 @@
 import 'package:azza_service/Beli/shop.dart';
-import 'package:azza_service/Home/Home.dart';
+import 'package:azza_service/Home/home.dart';
 import 'package:azza_service/Others/notifikasi.dart';
 import 'package:azza_service/Profile/profile.dart';
 import 'package:azza_service/Promo/promo.dart';
@@ -55,7 +55,7 @@ class _CekProgresServicePageState extends State<CekProgresServicePage> {
                     borderRadius: BorderRadius.circular(15),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.black.withValues(alpha: 0.1),
                         blurRadius: 5,
                       ),
                     ],
@@ -225,34 +225,34 @@ class _CekProgresServicePageState extends State<CekProgresServicePage> {
         selectedLabelStyle: GoogleFonts.poppins(fontSize: 12),
         unselectedLabelStyle: GoogleFonts.poppins(fontSize: 12),
         items: [
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(Icons.build_circle_outlined),
             label: 'Service',
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(Icons.shopping_cart_outlined),
             label: 'Beli',
           ),
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          const BottomNavigationBarItem(
+              icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(
-            icon:
-                currentIndex == 3
-                    ? Image.asset(
+            icon: currentIndex == 3
+                ? Image.asset(
+                    'assets/image/promo.png',
+                    width: 24,
+                    height: 24,
+                  )
+                : Opacity(
+                    opacity: 0.6,
+                    child: Image.asset(
                       'assets/image/promo.png',
                       width: 24,
                       height: 24,
-                    )
-                    : Opacity(
-                      opacity: 0.6,
-                      child: Image.asset(
-                        'assets/image/promo.png',
-                        width: 24,
-                        height: 24,
-                      ),
                     ),
+                  ),
             label: 'Promo',
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),
             label: 'Profile',
           ),
@@ -299,7 +299,7 @@ class _CekProgresServicePageState extends State<CekProgresServicePage> {
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 6,
                     offset: const Offset(0, 3),
                   ),
@@ -339,7 +339,7 @@ class _CekProgresServicePageState extends State<CekProgresServicePage> {
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 6,
                           offset: const Offset(0, 3),
                         ),
@@ -382,8 +382,8 @@ class _CekProgresServicePageState extends State<CekProgresServicePage> {
                         ],
                       ),
                       ElevatedButton(
-                        onPressed:
-                            () => _showPoinPopup(context), // ✅ tampilkan popup
+                        onPressed: () =>
+                            _showPoinPopup(context), // ✅ tampilkan popup
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,
                           side: const BorderSide(color: Colors.black26),

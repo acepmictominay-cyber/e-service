@@ -1,9 +1,12 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:azza_service/services/ai_chat_service.dart';
 import 'package:azza_service/services/context_manager.dart';
 import 'package:azza_service/Beli/detail_produk.dart';
+import 'package:azza_service/config/api_config.dart';
 
 class ChatPage extends StatefulWidget {
   const ChatPage({super.key});
@@ -56,7 +59,7 @@ class _ChatPageState extends State<ChatPage> {
 
     // Calculate remaining time to show typing indicator
     final elapsedTime = DateTime.now().difference(startTime);
-    final remainingTime = Duration(seconds: 1) - elapsedTime;
+    final remainingTime = const Duration(seconds: 1) - elapsedTime;
 
     if (remainingTime > Duration.zero) {
       await Future.delayed(const Duration(seconds: 1) - elapsedTime);
@@ -394,23 +397,14 @@ class _ChatPageState extends State<ChatPage> {
         child: Row(
           children: [
             // Product Image
-            Container(
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                color: Colors.grey[200],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: product['gambar'] != null
-                    ? Image.network(
-                        _getFirstImageUrl(product['gambar']),
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) =>
-                            const Icon(Icons.image),
-                      )
-                    : const Icon(Icons.image),
+            SizedBox(
+              width: 80,
+              height: 80,
+              child: _buildImageWithFallback(
+                product['gambar'],
+                80,
+                BoxFit.cover,
+                BorderRadius.circular(8),
               ),
             ),
             const SizedBox(width: 12),
@@ -455,27 +449,6 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 
-  String _getFirstImageUrl(dynamic gambarField) {
-    if (gambarField == null) return '';
-
-    // Extract first image URL from the gambar field
-    if (gambarField is String) {
-      // If it's a string, try to parse it
-      final urls = gambarField
-          .split(',')
-          .map((s) => s.trim())
-          .where((s) => s.isNotEmpty)
-          .toList();
-      if (urls.isNotEmpty) {
-        return urls.first;
-      }
-    } else if (gambarField is List && gambarField.isNotEmpty) {
-      return gambarField.first.toString();
-    }
-
-    return '';
-  }
-
   String _formatRupiah(dynamic harga) {
     if (harga == null) return 'Rp 0';
     double number;
@@ -493,5 +466,176 @@ class _ChatPageState extends State<ChatPage> {
       decimalDigits: 0,
     );
     return formatter.format(correctedNumber);
+  }
+
+  Widget _buildImageWithFallback(
+    dynamic gambarField,
+    double height,
+    BoxFit fit,
+    BorderRadius borderRadius, {
+    int currentIndex = 0,
+  }) {
+    // Cek apakah gambarField null atau empty
+    if (gambarField == null || (gambarField is String && gambarField.isEmpty)) {
+      return _buildFallbackImageContainer(height, borderRadius);
+    }
+
+    // Extract all available image URLs from the product
+    List<String> allImageUrls = _extractAllImageUrls(gambarField);
+
+    // If no URLs found, show fallback
+    if (allImageUrls.isEmpty) {
+      return _buildFallbackImageContainer(height, borderRadius);
+    }
+
+    // Ensure currentIndex is within bounds
+    if (currentIndex >= allImageUrls.length) {
+      currentIndex = 0;
+    }
+
+    String imageUrl = allImageUrls[currentIndex];
+
+    // Process the URL (add base URL if needed)
+    imageUrl = _processImageUrl(imageUrl);
+
+    return ClipRRect(
+      borderRadius: borderRadius,
+      child: CachedNetworkImage(
+        imageUrl: imageUrl,
+        fit: fit,
+        height: height,
+        width: double.infinity,
+        placeholder: (context, url) => Container(
+          height: height,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Colors.grey.shade100, Colors.grey.shade200],
+            ),
+          ),
+          child: Center(
+            child: Shimmer.fromColors(
+              baseColor: Colors.grey.shade200,
+              highlightColor: Colors.grey.shade50,
+              child: Container(
+                height: height,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade200,
+                  borderRadius: borderRadius,
+                ),
+              ),
+            ),
+          ),
+        ),
+        errorWidget: (context, error, stackTrace) {
+          // Try next image URL if available
+          if (currentIndex + 1 < allImageUrls.length) {
+            return _buildImageWithFallback(
+              gambarField,
+              height,
+              fit,
+              borderRadius,
+              currentIndex: currentIndex + 1,
+            );
+          }
+
+          // All image URLs failed, show fallback
+          return _buildFallbackImageContainer(height, borderRadius);
+        },
+      ),
+    );
+  }
+
+  // Extract all image URLs from various formats
+  List<String> _extractAllImageUrls(dynamic gambarField) {
+    List<String> urls = [];
+
+    if (gambarField is Map && gambarField.containsKey('gambar_url')) {
+      final gambarUrlField = gambarField['gambar_url'];
+
+      if (gambarUrlField is List && gambarUrlField.isNotEmpty) {
+        urls.addAll(gambarUrlField.map((url) => url.toString().trim()));
+      } else if (gambarUrlField is String && gambarUrlField.isNotEmpty) {
+        urls.add(gambarUrlField.trim());
+      } else {
+        // Fallback to regular gambar field
+        final gambarBiasa = gambarField['gambar'];
+        if (gambarBiasa != null) {
+          urls.addAll(_extractAllImageUrls(gambarBiasa));
+        }
+      }
+    } else if (gambarField is List && gambarField.isNotEmpty) {
+      urls.addAll(gambarField.map((url) => url.toString().trim()));
+    } else if (gambarField is String && gambarField.isNotEmpty) {
+      // Split by comma to get multiple URLs
+      final urlList = gambarField
+          .split(',')
+          .map((s) => s.trim())
+          .where((s) => s.isNotEmpty)
+          .toList();
+      urls.addAll(urlList);
+    }
+
+    return urls.where((url) => url.isNotEmpty).toList();
+  }
+
+  // Process image URL to add base URL if needed
+  String _processImageUrl(String imageUrl) {
+    imageUrl = imageUrl.trim();
+
+    // If already a full URL, return as is
+    if (imageUrl.startsWith('http')) {
+      return imageUrl;
+    }
+
+    String baseUrl = ApiConfig.storageBaseUrl;
+
+    // If path already contains assets/image/, just prepend base URL
+    if (imageUrl.contains('assets/image/')) {
+      return baseUrl + imageUrl;
+    } else {
+      // Add assets/image/ path
+      return '${baseUrl}assets/image/$imageUrl';
+    }
+  }
+
+  Widget _buildFallbackImageContainer(
+    double height,
+    BorderRadius borderRadius,
+  ) {
+    return Container(
+      height: height,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Colors.grey.shade200, Colors.grey.shade300],
+        ),
+        borderRadius: borderRadius,
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.image_not_supported_outlined,
+            color: Colors.grey.shade400,
+            size: 24,
+          ),
+          const SizedBox(height: 2),
+          Text(
+            'No Image',
+            style: GoogleFonts.poppins(
+              fontSize: 8,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.grey.shade500
+                  : Colors.black,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

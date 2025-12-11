@@ -4,10 +4,10 @@ import 'package:intl/intl.dart';
 
 // Import your existing files
 import 'package:azza_service/Beli/shop.dart';
-import 'package:azza_service/Home/Home.dart';
+import 'package:azza_service/Home/home.dart';
 import 'package:azza_service/Others/session_manager.dart';
 import 'package:azza_service/Promo/promo.dart';
-import 'package:azza_service/Service/Service.dart';
+import 'package:azza_service/Service/service.dart';
 import 'package:azza_service/Service/tracking_driver.dart';
 import 'package:azza_service/api_services/api_service.dart';
 import 'package:azza_service/api_services/payment_service.dart';
@@ -50,7 +50,7 @@ class _RiwayatPageState extends State<RiwayatPage>
   // Status definitions
   final List<String> serviceStatuses = [
     'pending',
-    'approved',
+    'confirm',
     'in_progress',
     'on_the_way',
     'completed',
@@ -153,9 +153,7 @@ class _RiwayatPageState extends State<RiwayatPage>
         purchaseTransactions = tempPurchase;
         isLoading = false;
       });
-    } catch (e, stackTrace) {
-      debugPrint('Error loading transactions: $e');
-      debugPrint('Stack trace: $stackTrace');
+    } catch (e) {
       if (mounted) _setEmptyState();
     }
   }
@@ -203,7 +201,7 @@ class _RiwayatPageState extends State<RiwayatPage>
   String _getStatusLabel(String status) {
     final labels = {
       'pending': 'Menunggu',
-      'approved': 'Disetujui',
+      'confirm': 'Disetujui',
       'in_progress': 'Diproses',
       'on_the_way': 'Dalam Perjalanan',
       'completed': 'Selesai',
@@ -221,7 +219,7 @@ class _RiwayatPageState extends State<RiwayatPage>
   Color _getStatusColor(String status) {
     final colors = {
       'pending': Colors.orange,
-      'approved': Colors.blue,
+      'confirm': Colors.blue,
       'in_progress': Colors.indigo,
       'on_the_way': Colors.purple,
       'completed': Colors.green,
@@ -239,7 +237,7 @@ class _RiwayatPageState extends State<RiwayatPage>
   IconData _getStatusIcon(String status) {
     final icons = {
       'pending': Icons.hourglass_empty,
-      'approved': Icons.thumb_up_outlined,
+      'confirm': Icons.thumb_up_outlined,
       'in_progress': Icons.engineering,
       'on_the_way': Icons.local_shipping,
       'completed': Icons.check_circle,
@@ -364,7 +362,7 @@ class _RiwayatPageState extends State<RiwayatPage>
   Widget _buildLoading() {
     return Center(
       child: CircularProgressIndicator(
-        color: _getAdaptiveColor(Color(0xFF0041c3)),
+        color: _getAdaptiveColor(const Color(0xFF0041c3)),
       ),
     );
   }
@@ -395,7 +393,7 @@ class _RiwayatPageState extends State<RiwayatPage>
         color: Theme.of(context).colorScheme.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -410,7 +408,7 @@ class _RiwayatPageState extends State<RiwayatPage>
                 color: Theme.of(context).colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(12),
               ),
-              padding: const EdgeInsets.all(4),
+              padding: const EdgeInsets.all(10),
               child: Row(
                 children: [
                   // Service Tab
@@ -462,23 +460,21 @@ class _RiwayatPageState extends State<RiwayatPage>
         curve: Curves.easeInOut,
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
         decoration: BoxDecoration(
-          color:
-              isSelected
-                  ? _getAdaptiveColor(Color(0xFF0041c3))
-                  : Colors.transparent,
+          color: isSelected
+              ? _getAdaptiveColor(const Color(0xFF0041c3))
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
-          boxShadow:
-              isSelected
-                  ? [
-                    BoxShadow(
-                      color: _getAdaptiveColor(
-                        Color(0xFF0041c3),
-                      ).withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ]
-                  : [],
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: _getAdaptiveColor(
+                      const Color(0xFF0041c3),
+                    ).withValues(alpha: 0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : [],
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -486,10 +482,9 @@ class _RiwayatPageState extends State<RiwayatPage>
             Icon(
               icon,
               size: 20,
-              color:
-                  isSelected
-                      ? Theme.of(context).colorScheme.onPrimary
-                      : Theme.of(context).colorScheme.onSurfaceVariant,
+              color: isSelected
+                  ? Theme.of(context).colorScheme.onPrimary
+                  : Theme.of(context).colorScheme.onSurfaceVariant,
             ),
             const SizedBox(width: 8),
             Flexible(
@@ -498,10 +493,9 @@ class _RiwayatPageState extends State<RiwayatPage>
                 style: GoogleFonts.poppins(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color:
-                      isSelected
-                          ? Theme.of(context).colorScheme.onPrimary
-                          : Theme.of(context).colorScheme.onSurfaceVariant,
+                  color: isSelected
+                      ? Theme.of(context).colorScheme.onPrimary
+                      : Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
@@ -511,14 +505,13 @@ class _RiwayatPageState extends State<RiwayatPage>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
-                color:
-                    isSelected
-                        ? Theme.of(
-                          context,
-                        ).colorScheme.onPrimary.withOpacity(0.25)
-                        : _getAdaptiveColor(
-                          Color(0xFF0041c3),
-                        ).withOpacity(0.15),
+                color: isSelected
+                    ? Theme.of(
+                        context,
+                      ).colorScheme.onPrimary.withValues(alpha: 0.25)
+                    : _getAdaptiveColor(
+                        const Color(0xFF0041c3),
+                      ).withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
@@ -526,10 +519,9 @@ class _RiwayatPageState extends State<RiwayatPage>
                 style: GoogleFonts.poppins(
                   fontSize: 11,
                   fontWeight: FontWeight.bold,
-                  color:
-                      isSelected
-                          ? Theme.of(context).colorScheme.onPrimary
-                          : _getAdaptiveColor(Color(0xFF0041c3)),
+                  color: isSelected
+                      ? Theme.of(context).colorScheme.onPrimary
+                      : _getAdaptiveColor(const Color(0xFF0041c3)),
                 ),
               ),
             ),
@@ -557,10 +549,9 @@ class _RiwayatPageState extends State<RiwayatPage>
 
         // Transaction List
         Expanded(
-          child:
-              _selectedServiceStatus == null
-                  ? _buildSelectStatusHint()
-                  : _buildServiceList(),
+          child: _selectedServiceStatus == null
+              ? _buildSelectStatusHint()
+              : _buildServiceList(),
         ),
       ],
     );
@@ -599,7 +590,7 @@ class _RiwayatPageState extends State<RiwayatPage>
 
     final isTrackable = [
       'pending',
-      'approved',
+      'confirm',
       'in_progress',
       'on_the_way',
     ].contains(status);
@@ -610,12 +601,12 @@ class _RiwayatPageState extends State<RiwayatPage>
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.5),
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -626,15 +617,14 @@ class _RiwayatPageState extends State<RiwayatPage>
         borderRadius: BorderRadius.circular(16),
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          onTap:
-              isTrackable
-                  ? () => Navigator.push(
+          onTap: isTrackable
+              ? () => Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => TrackingPage(queueCode: kode),
                     ),
                   )
-                  : null,
+              : null,
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -651,14 +641,14 @@ class _RiwayatPageState extends State<RiwayatPage>
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
                               color: _getAdaptiveColor(
-                                Color(0xFF0041c3),
-                              ).withOpacity(0.1),
+                                const Color(0xFF0041c3),
+                              ).withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Icon(
                               Icons.build,
                               size: 18,
-                              color: _getAdaptiveColor(Color(0xFF0041c3)),
+                              color: _getAdaptiveColor(const Color(0xFF0041c3)),
                             ),
                           ),
                           const SizedBox(width: 10),
@@ -668,7 +658,8 @@ class _RiwayatPageState extends State<RiwayatPage>
                               style: GoogleFonts.poppins(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
-                                color: _getAdaptiveColor(Color(0xFF0041c3)),
+                                color:
+                                    _getAdaptiveColor(const Color(0xFF0041c3)),
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -711,12 +702,15 @@ class _RiwayatPageState extends State<RiwayatPage>
                   decoration: BoxDecoration(
                     color: Theme.of(
                       context,
-                    ).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                    )
+                        .colorScheme
+                        .surfaceContainerHighest
+                        .withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
                       color: Theme.of(
                         context,
-                      ).colorScheme.outline.withOpacity(0.5),
+                      ).colorScheme.outline.withValues(alpha: 0.5),
                       width: 1,
                     ),
                   ),
@@ -751,10 +745,10 @@ class _RiwayatPageState extends State<RiwayatPage>
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
+                      gradient: const LinearGradient(
                         colors: [
-                          _getAdaptiveColor(Color(0xFF0041c3)),
-                          _getAdaptiveColor(Color(0xFF0052E0)),
+                          Color(0xFF0041c3),
+                          Color(0xFF0052E0),
                         ],
                       ),
                       borderRadius: BorderRadius.circular(10),
@@ -812,10 +806,9 @@ class _RiwayatPageState extends State<RiwayatPage>
 
         // Transaction List
         Expanded(
-          child:
-              _selectedPurchaseStatus == null
-                  ? _buildSelectStatusHint()
-                  : _buildPurchaseList(),
+          child: _selectedPurchaseStatus == null
+              ? _buildSelectStatusHint()
+              : _buildPurchaseList(),
         ),
       ],
     );
@@ -835,7 +828,7 @@ class _RiwayatPageState extends State<RiwayatPage>
 
     return RefreshIndicator(
       onRefresh: _loadTransactionHistory,
-      color: _getAdaptiveColor(Color(0xFF0041c3)),
+      color: _getAdaptiveColor(const Color(0xFF0041c3)),
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: filtered.length,
@@ -874,12 +867,12 @@ class _RiwayatPageState extends State<RiwayatPage>
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.5),
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -900,7 +893,7 @@ class _RiwayatPageState extends State<RiwayatPage>
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: Colors.green.withOpacity(0.1),
+                          color: Colors.green.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Icon(
@@ -916,7 +909,7 @@ class _RiwayatPageState extends State<RiwayatPage>
                           style: GoogleFonts.poppins(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            color: _getAdaptiveColor(Color(0xFF0041c3)),
+                            color: _getAdaptiveColor(const Color(0xFF0041c3)),
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -928,10 +921,10 @@ class _RiwayatPageState extends State<RiwayatPage>
                   paymentStatus == 'cancelled'
                       ? 'cancelled'
                       : deliveryStatus == 'cancelled'
-                      ? 'cancelled'
-                      : isPendingShippingPayment
-                      ? 'pending_shipping_payment'
-                      : deliveryStatus,
+                          ? 'cancelled'
+                          : isPendingShippingPayment
+                              ? 'pending_shipping_payment'
+                              : deliveryStatus,
                 ),
               ],
             ),
@@ -948,10 +941,12 @@ class _RiwayatPageState extends State<RiwayatPage>
               width: double.infinity,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: _getAdaptiveColor(Color(0xFF0041c3)).withOpacity(0.1),
+                color: _getAdaptiveColor(const Color(0xFF0041c3))
+                    .withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                  color: _getAdaptiveColor(Color(0xFF0041c3)).withOpacity(0.2),
+                  color: _getAdaptiveColor(const Color(0xFF0041c3))
+                      .withValues(alpha: 0.2),
                   width: 1,
                 ),
               ),
@@ -960,7 +955,7 @@ class _RiwayatPageState extends State<RiwayatPage>
                   Icon(
                     Icons.inventory_2_outlined,
                     size: 18,
-                    color: _getAdaptiveColor(Color(0xFF0041c3)),
+                    color: _getAdaptiveColor(const Color(0xFF0041c3)),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
@@ -1023,10 +1018,10 @@ class _RiwayatPageState extends State<RiwayatPage>
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
+                  gradient: const LinearGradient(
                     colors: [
-                      const Color(0xFF0041c3),
-                      const Color(0xFF0052E0),
+                      Color(0xFF0041c3),
+                      Color(0xFF0052E0),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(10),
@@ -1073,9 +1068,15 @@ class _RiwayatPageState extends State<RiwayatPage>
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.error.withOpacity(0.1),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .error
+                      .withValues(alpha: 0.1),
                   border: Border.all(
-                    color: Theme.of(context).colorScheme.error.withOpacity(0.5),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .error
+                        .withValues(alpha: 0.5),
                     width: 1,
                   ),
                   borderRadius: BorderRadius.circular(10),
@@ -1141,14 +1142,14 @@ class _RiwayatPageState extends State<RiwayatPage>
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
                     color: _getAdaptiveColor(
-                      Color(0xFF0041c3),
-                    ).withOpacity(0.1),
+                      const Color(0xFF0041c3),
+                    ).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Icon(
                     Icons.filter_list,
                     size: 16,
-                    color: _getAdaptiveColor(Color(0xFF0041c3)),
+                    color: _getAdaptiveColor(const Color(0xFF0041c3)),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -1180,12 +1181,12 @@ class _RiwayatPageState extends State<RiwayatPage>
                       decoration: BoxDecoration(
                         color: Theme.of(
                           context,
-                        ).colorScheme.error.withOpacity(0.1),
+                        ).colorScheme.error.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: Theme.of(
                             context,
-                          ).colorScheme.error.withOpacity(0.5),
+                          ).colorScheme.error.withValues(alpha: 0.5),
                           width: 1,
                         ),
                       ),
@@ -1218,38 +1219,32 @@ class _RiwayatPageState extends State<RiwayatPage>
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
             child: Row(
-              children:
-                  statuses.asMap().entries.map((entry) {
-                    final index = entry.key;
-                    final status = entry.value;
-                    final count =
-                        isService
-                            ? _getServiceCountByStatus(status)
-                            : _getPurchaseCountByStatus(status);
-                    final isSelected = selectedStatus == status;
+              children: statuses.asMap().entries.map((entry) {
+                final index = entry.key;
+                final status = entry.value;
+                final count = isService
+                    ? _getServiceCountByStatus(status)
+                    : _getPurchaseCountByStatus(status);
+                final isSelected = selectedStatus == status;
 
-                    return Padding(
-                      padding: EdgeInsets.only(
-                        right: index < statuses.length - 1 ? 10 : 0,
-                      ),
-                      child: _buildStatusFilterChip(
-                        status: status,
-                        count: count,
-                        isSelected: isSelected,
-                        onTap: () {
-                          setState(() {
-                            if (isService) {
-                              _selectedServiceStatus =
-                                  isSelected ? null : status;
-                            } else {
-                              _selectedPurchaseStatus =
-                                  isSelected ? null : status;
-                            }
-                          });
-                        },
-                      ),
-                    );
-                  }).toList(),
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: _buildStatusFilterChip(
+                    status: status,
+                    count: count,
+                    isSelected: isSelected,
+                    onTap: () {
+                      setState(() {
+                        if (isService) {
+                          _selectedServiceStatus = isSelected ? null : status;
+                        } else {
+                          _selectedPurchaseStatus = isSelected ? null : status;
+                        }
+                      });
+                    },
+                  ),
+                );
+              }).toList(),
             ),
           ),
         ],
@@ -1270,77 +1265,88 @@ class _RiwayatPageState extends State<RiwayatPage>
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(14),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          decoration: BoxDecoration(
-            color: isSelected ? color : Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: isSelected ? color : Theme.of(context).colorScheme.outline,
-              width: isSelected ? 2 : 1,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Card with icon and badge
+            Stack(
+              clipBehavior: Clip.hardEdge,
+              children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: 70,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? color
+                        : Theme.of(context).colorScheme.surface,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: isSelected
+                          ? color
+                          : Theme.of(context).colorScheme.outline,
+                      width: isSelected ? 2 : 1,
+                    ),
+                    boxShadow: isSelected
+                        ? [
+                            BoxShadow(
+                              color: color.withValues(alpha: 0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ]
+                        : [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.03),
+                              blurRadius: 4,
+                              offset: const Offset(0, 1),
+                            ),
+                          ],
+                  ),
+                  child: Icon(
+                    _getStatusIcon(status),
+                    size: 24,
+                    color: isSelected ? Colors.white : color,
+                  ),
+                ),
+                // Notification badge
+                if (count > 0)
+                  Positioned(
+                    top: 4,
+                    right: 4,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        count.toString(),
+                        style: GoogleFonts.poppins(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
-            boxShadow:
-                isSelected
-                    ? [
-                      BoxShadow(
-                        color: color.withOpacity(0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ]
-                    : [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.03),
-                        blurRadius: 4,
-                        offset: const Offset(0, 1),
-                      ),
-                    ],
-          ),
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color:
-                      isSelected
-                          ? Colors.white.withOpacity(0.2)
-                          : color.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  _getStatusIcon(status),
-                  size: 20,
-                  color: isSelected ? Colors.white : color,
-                ),
+            const SizedBox(height: 8),
+            // Label below the card
+            Text(
+              _getStatusLabel(status),
+              style: GoogleFonts.poppins(
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
+                color: isSelected
+                    ? color
+                    : Theme.of(context).colorScheme.onSurfaceVariant,
               ),
-              const SizedBox(height: 6),
-              Text(
-                count.toString(),
-                style: GoogleFonts.poppins(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color:
-                      isSelected
-                          ? Theme.of(context).colorScheme.onPrimary
-                          : color,
-                ),
-              ),
-              Text(
-                _getStatusLabel(status),
-                style: GoogleFonts.poppins(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w500,
-                  color:
-                      isSelected
-                          ? Theme.of(
-                            context,
-                          ).colorScheme.onPrimary.withOpacity(0.9)
-                          : Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ),
+              textAlign: TextAlign.center,
+            ),
+          ],
         ),
       ),
     );
@@ -1351,9 +1357,9 @@ class _RiwayatPageState extends State<RiwayatPage>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.5), width: 1),
+        border: Border.all(color: color.withValues(alpha: 0.5), width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1407,16 +1413,16 @@ class _RiwayatPageState extends State<RiwayatPage>
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withOpacity(0.2), width: 1),
+        border: Border.all(color: color.withValues(alpha: 0.2), width: 1),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.15),
+              color: color.withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, size: 12, color: color),
@@ -1460,13 +1466,15 @@ class _RiwayatPageState extends State<RiwayatPage>
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: _getAdaptiveColor(Color(0xFF0041c3)).withOpacity(0.1),
+                color: _getAdaptiveColor(const Color(0xFF0041c3))
+                    .withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.touch_app,
                 size: 48,
-                color: _getAdaptiveColor(Color(0xFF0041c3)).withOpacity(0.5),
+                color: _getAdaptiveColor(const Color(0xFF0041c3))
+                    .withValues(alpha: 0.5),
               ),
             ),
             const SizedBox(height: 20),
@@ -1565,69 +1573,77 @@ class _RiwayatPageState extends State<RiwayatPage>
       final customerId = session['id']?.toString();
 
       if (customerId == null || customerId.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Session user tidak ditemukan')),
-        );
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Session user tidak ditemukan')),
+          );
+        }
         return;
       }
 
       // Get customer data for payment
       final customerData = await ApiService.getCostomerById(customerId);
       final customerName = customerData['cos_nama'] ?? 'Customer';
-      final customerEmail = 'test@example.com'; // Use fixed email for testing
+      const customerEmail = 'test@example.com'; // Use fixed email for testing
       final customerPhone = customerData['cos_hp'] ?? '08123456789';
 
       // Start Midtrans payment directly
-      await PaymentService.startMidtransPayment(
-        context: context,
-        orderId: orderCode,
-        amount: totalPayment.toInt(),
-        customerId: customerId,
-        customerName: customerName,
-        customerEmail: customerEmail,
-        customerPhone: customerPhone,
-        itemDetails: [
-          {
-            'id': 'SHIPPING_RESUME',
-            'price': totalPayment.toInt(),
-            'quantity': 1,
-            'name': 'Pembayaran Ongkir (Resume)',
-          },
-        ],
-        onTransactionFinished: (result) async {
-          if (PaymentService.isTransactionSuccess(result)) {
-            // Update payment status
-            await ApiService.updatePaymentStatus(
-              orderCode: orderCode,
-              paymentStatus: 'paid',
-            );
+      if (context.mounted) {
+        await PaymentService.startMidtransPayment(
+          context: context,
+          orderId: orderCode,
+          amount: totalPayment.toInt(),
+          customerId: customerId,
+          customerName: customerName,
+          customerEmail: customerEmail,
+          customerPhone: customerPhone,
+          itemDetails: [
+            {
+              'id': 'SHIPPING_RESUME',
+              'price': totalPayment.toInt(),
+              'quantity': 1,
+              'name': 'Pembayaran Ongkir (Resume)',
+            },
+          ],
+          onTransactionFinished: (result) async {
+            if (PaymentService.isTransactionSuccess(result)) {
+              // Update payment status
+              await ApiService.updatePaymentStatus(
+                orderCode: orderCode,
+                paymentStatus: 'paid',
+              );
 
-            // Navigate back to refresh the list
-            if (Navigator.canPop(context)) {
-              Navigator.pop(context);
+              if (context.mounted) {
+                // Navigate back to refresh the list
+                if (Navigator.canPop(context)) {
+                  Navigator.pop(context);
+                }
+                _loadTransactionHistory();
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Pembayaran ongkir berhasil!')),
+                );
+              }
+            } else {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Pembayaran gagal: ${PaymentService.getStatusMessage(result)}',
+                    ),
+                  ),
+                );
+              }
             }
-            _loadTransactionHistory();
-
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Pembayaran ongkir berhasil!')),
-            );
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'Pembayaran gagal: ${PaymentService.getStatusMessage(result)}',
-                ),
-              ),
-            );
-          }
-        },
-      );
-    } catch (e, stackTrace) {
-      debugPrint('Error resuming shipping payment: $e');
-      debugPrint('Stack trace: $stackTrace');
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+          },
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
     }
   }
 
@@ -1649,24 +1665,23 @@ class _RiwayatPageState extends State<RiwayatPage>
     // Show confirmation dialog
     final shouldCancel = await showDialog<bool>(
       context: context,
-      builder:
-          (dialogContext) => AlertDialog(
-            title: const Text('Batalkan Pesanan'),
-            content: const Text(
-              'Apakah Anda yakin ingin membatalkan pesanan ini?',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(dialogContext).pop(false),
-                child: const Text('Tidak'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.of(dialogContext).pop(true),
-                style: TextButton.styleFrom(foregroundColor: Colors.red),
-                child: const Text('Ya, Batalkan'),
-              ),
-            ],
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Batalkan Pesanan'),
+        content: const Text(
+          'Apakah Anda yakin ingin membatalkan pesanan ini?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Tidak'),
           ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Ya, Batalkan'),
+          ),
+        ],
+      ),
     );
 
     if (shouldCancel != true) return;
@@ -1687,15 +1702,18 @@ class _RiwayatPageState extends State<RiwayatPage>
       // Refresh the list
       _loadTransactionHistory();
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Pesanan berhasil dibatalkan')),
-      );
-    } catch (e, stackTrace) {
-      debugPrint('Error cancelling order: $e');
-      debugPrint('Stack trace: $stackTrace');
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Gagal membatalkan pesanan: $e')));
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Pesanan berhasil dibatalkan')),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(
+            SnackBar(content: Text('Gagal membatalkan pesanan: $e')));
+      }
     }
   }
 
@@ -1706,7 +1724,7 @@ class _RiwayatPageState extends State<RiwayatPage>
       decoration: BoxDecoration(
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -1765,21 +1783,20 @@ class _RiwayatPageState extends State<RiwayatPage>
           ),
           const BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(
-            icon:
-                currentIndex == 3
-                    ? Image.asset(
+            icon: currentIndex == 3
+                ? Image.asset(
+                    'assets/image/promo.png',
+                    width: 24,
+                    height: 24,
+                  )
+                : Opacity(
+                    opacity: 0.6,
+                    child: Image.asset(
                       'assets/image/promo.png',
                       width: 24,
                       height: 24,
-                    )
-                    : Opacity(
-                      opacity: 0.6,
-                      child: Image.asset(
-                        'assets/image/promo.png',
-                        width: 24,
-                        height: 24,
-                      ),
                     ),
+                  ),
             label: 'Promo',
           ),
           const BottomNavigationBarItem(

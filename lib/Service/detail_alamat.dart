@@ -375,15 +375,18 @@ class _DetailAlamatPageState extends State<DetailAlamatPage> {
 
         if (p.name != null && p.name!.isNotEmpty) components.add(p.name!);
         if (p.street != null && p.street!.isNotEmpty) components.add(p.street!);
-        if (p.subLocality != null && p.subLocality!.isNotEmpty)
+        if (p.subLocality != null && p.subLocality!.isNotEmpty) {
           components.add(p.subLocality!);
-        if (p.locality != null && p.locality!.isNotEmpty)
+        }
+        if (p.locality != null && p.locality!.isNotEmpty) {
           components.add(p.locality!);
+        }
         if (p.administrativeArea != null && p.administrativeArea!.isNotEmpty) {
           components.add(p.administrativeArea!);
         }
-        if (p.postalCode != null && p.postalCode!.isNotEmpty)
+        if (p.postalCode != null && p.postalCode!.isNotEmpty) {
           components.add(p.postalCode!);
+        }
 
         bestAddress = components.join(', ');
         if (bestAddress.isNotEmpty) return bestAddress;
@@ -419,13 +422,15 @@ class _DetailAlamatPageState extends State<DetailAlamatPage> {
         final address = data['address'] ?? {};
         final List<String> components = [];
 
-        if (address['house_number'] != null)
+        if (address['house_number'] != null) {
           components.add(address['house_number']);
+        }
         if (address['road'] != null) components.add(address['road']);
         if (address['village'] != null) components.add(address['village']);
         if (address['hamlet'] != null) components.add(address['hamlet']);
-        if (address['neighbourhood'] != null)
+        if (address['neighbourhood'] != null) {
           components.add(address['neighbourhood']);
+        }
         if (address['suburb'] != null) components.add(address['suburb']);
         if (address['city'] != null) components.add(address['city']);
         if (address['state'] != null) components.add(address['state']);
@@ -443,7 +448,7 @@ class _DetailAlamatPageState extends State<DetailAlamatPage> {
       debugPrint("Nominatim error: $e");
     }
 
-    final apiKey = ApiConfig.googleMapsApiKey;
+    const apiKey = ApiConfig.googleMapsApiKey;
     if (apiKey.isNotEmpty) {
       try {
         final googleUrl = Uri.parse(
@@ -755,8 +760,9 @@ class _DetailAlamatPageState extends State<DetailAlamatPage> {
                         onMapEvent: (event) {
                           if (event is MapEventMove ||
                               event is MapEventMoveEnd) {
-                            if (_debounce?.isActive ?? false)
+                            if (_debounce?.isActive ?? false) {
                               _debounce!.cancel();
+                            }
                             _debounce = Timer(
                               const Duration(milliseconds: 300),
                               () {

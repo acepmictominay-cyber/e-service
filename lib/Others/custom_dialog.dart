@@ -62,7 +62,7 @@ class CustomDialog extends StatelessWidget {
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(20),
                   ),
-                  border: Border(
+                  border: const Border(
                     bottom: BorderSide(color: Colors.white24, width: 1),
                   ),
                 ),
@@ -218,7 +218,7 @@ class CustomModalBottomSheet extends StatelessWidget {
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(25),
                 ),
-                border: Border(
+                border: const Border(
                   bottom: BorderSide(color: Colors.white24, width: 1),
                 ),
               ),

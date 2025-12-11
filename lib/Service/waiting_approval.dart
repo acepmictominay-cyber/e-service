@@ -97,7 +97,7 @@ class _WaitingApprovalPageState extends State<WaitingApprovalPage> {
       Map<String, dynamic>? data;
 
       // Handle response - API returns List
-      if (result is List && result.isNotEmpty) {
+      if (result.isNotEmpty) {
         if (result.first is Map<String, dynamic>) {
           data = Map<String, dynamic>.from(result.first);
         }
@@ -174,7 +174,7 @@ class _WaitingApprovalPageState extends State<WaitingApprovalPage> {
         String status = 'pending';
 
         // Handle response - API returns List
-        if (result is List && result.isNotEmpty) {
+        if (result.isNotEmpty) {
           final firstItem = result.first;
           if (firstItem is Map) {
             status =

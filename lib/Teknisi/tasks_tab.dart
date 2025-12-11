@@ -969,7 +969,7 @@ class _TasksTabState extends State<TasksTab> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.check_circle, size: 64, color: Colors.green),
+              const Icon(Icons.check_circle, size: 64, color: Colors.green),
               const SizedBox(height: 16),
               Text(
                 'Konfirmasi Penyelesaian',

@@ -171,16 +171,19 @@ class ContextManager {
       final metadata = entry['metadata'] as Map<String, dynamic>? ?? {};
       if (metadata['topic'] != null) topics.add(metadata['topic']);
       if (metadata['product'] != null) products.add(metadata['product']);
-      if (metadata['service_type'] != null)
+      if (metadata['service_type'] != null) {
         services.add(metadata['service_type']);
+      }
     }
 
     final summary = <String>[];
     if (topics.isNotEmpty) summary.add('Topik: ${topics.toSet().join(', ')}');
-    if (products.isNotEmpty)
+    if (products.isNotEmpty) {
       summary.add('Produk: ${products.toSet().join(', ')}');
-    if (services.isNotEmpty)
+    }
+    if (services.isNotEmpty) {
       summary.add('Service: ${services.toSet().join(', ')}');
+    }
 
     return summary.isNotEmpty
         ? 'Percakapan sebelumnya: ${summary.join('. ')}.'

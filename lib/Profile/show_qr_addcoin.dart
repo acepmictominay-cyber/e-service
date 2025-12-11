@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'package:azza_service/Beli/shop.dart';
-import 'package:azza_service/Home/Home.dart';
+import 'package:azza_service/Home/home.dart';
 import 'package:azza_service/Others/sell.dart';
 import 'package:azza_service/Profile/profile.dart';
-import 'package:azza_service/Service/Service.dart';
+import 'package:azza_service/Service/service.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -17,9 +17,9 @@ class ShowQrToAddCoins extends StatefulWidget {
 
 class _ShowQrToAddCoinsState extends State<ShowQrToAddCoins> {
   int currentIndex = 4; // default di tengah (Home)
-  
+
   // 🔹 Nanti nilai ini bisa diganti otomatis dari hasil transaksi.
-  final int rewardPoints = 10; 
+  final int rewardPoints = 10;
 
   void _navigateWithAnimation(Widget page) {
     Navigator.pushReplacement(
@@ -31,7 +31,8 @@ class _ShowQrToAddCoinsState extends State<ShowQrToAddCoins> {
           const begin = Offset(0.5, 0.0);
           const end = Offset.zero;
           const curve = Curves.easeInOut;
-          var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+          var tween =
+              Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
           return SlideTransition(
             position: animation.drive(tween),
             child: FadeTransition(opacity: animation, child: child),
@@ -102,7 +103,8 @@ class _ShowQrToAddCoinsState extends State<ShowQrToAddCoins> {
               ),
               child: Column(
                 children: [
-                  const Icon(Icons.receipt_long, size: 60, color: Colors.black54),
+                  const Icon(Icons.receipt_long,
+                      size: 60, color: Colors.black54),
                   const SizedBox(height: 8),
                   const Text(
                     "Azzahra Mart",

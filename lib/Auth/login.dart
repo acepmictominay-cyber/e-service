@@ -1,5 +1,5 @@
 import 'package:azza_service/Auth/forget_password.dart';
-import 'package:azza_service/Home/Home.dart';
+import 'package:azza_service/Home/home.dart';
 import 'package:azza_service/Others/session_manager.dart';
 import 'package:azza_service/Others/user_point_data.dart';
 import 'package:azza_service/Teknisi/teknisi_home.dart';
@@ -120,7 +120,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     width: double.infinity,
                     decoration: BoxDecoration(
                       color: Theme.of(context).cardColor,
-                      borderRadius: BorderRadius.vertical(
+                      borderRadius: const BorderRadius.vertical(
                         top: Radius.circular(30),
                       ),
                     ),
@@ -306,8 +306,8 @@ class _LoginScreenState extends State<LoginScreen> {
   // Segmented switch ala saklar untuk Masuk/Daftar
   Widget _buildSegmentedSwitch(Size screenSize) {
     final double height = screenSize.height * 0.06;
-    final Color blue = const Color(0xFF0D47A1);
-    final Color light = const Color.fromARGB(255, 209, 224, 255);
+    const Color blue = Color(0xFF0D47A1);
+    const Color light = Color.fromARGB(255, 209, 224, 255);
 
     return Container(
       height: height,

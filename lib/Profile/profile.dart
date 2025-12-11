@@ -2,7 +2,7 @@ import 'package:azza_service/Auth/auth_service.dart';
 import 'package:azza_service/Auth/login.dart';
 import 'package:azza_service/Beli/shop.dart';
 import 'package:azza_service/Chat/chat_page.dart';
-import 'package:azza_service/Home/Home.dart';
+import 'package:azza_service/Home/home.dart';
 import 'package:azza_service/Others/notifikasi.dart';
 import 'package:azza_service/Others/notification_service.dart';
 import 'package:azza_service/Others/session_manager.dart';
@@ -13,7 +13,7 @@ import 'package:azza_service/Profile/edit_profile.dart';
 import 'package:azza_service/Profile/scan_qr.dart';
 import 'package:azza_service/Profile/show_qr_detail.dart';
 import 'package:azza_service/Promo/promo.dart';
-import 'package:azza_service/Service/Service.dart';
+import 'package:azza_service/Service/service.dart';
 import 'package:azza_service/api_services/api_service.dart';
 import 'package:azza_service/config/api_config.dart';
 import 'package:azza_service/models/voucher_model.dart';
@@ -39,6 +39,75 @@ class LoadingWrapper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return isLoading ? shimmer : child;
+  }
+}
+
+// Custom widget that tries multiple URLs for profile images
+class _ProfileImageWithFallback extends StatefulWidget {
+  final List<String> urls;
+  final double radius;
+
+  const _ProfileImageWithFallback({
+    required this.urls,
+    required this.radius,
+  });
+
+  @override
+  State<_ProfileImageWithFallback> createState() =>
+      _ProfileImageWithFallbackState();
+}
+
+class _ProfileImageWithFallbackState extends State<_ProfileImageWithFallback> {
+  int _currentUrlIndex = 0;
+  bool _hasError = false;
+
+  void _tryNextUrl() {
+    if (_currentUrlIndex < widget.urls.length - 1) {
+      setState(() {
+        _currentUrlIndex++;
+        _hasError = false;
+      });
+    } else {
+      setState(() {
+        _hasError = true;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_hasError || _currentUrlIndex >= widget.urls.length) {
+      return Icon(
+        Icons.person,
+        size: widget.radius * 2 * 0.4, // 40% of diameter
+        color: Theme.of(context).brightness == Brightness.dark
+            ? Colors.white70
+            : Colors.black.withValues(alpha: 0.7),
+      );
+    }
+
+    final currentUrl = widget.urls[_currentUrlIndex];
+
+    return SizedBox(
+      width: widget.radius * 2,
+      height: widget.radius * 2,
+      child: ClipOval(
+        child: Image.network(
+          currentUrl,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            _tryNextUrl();
+            return Container(); // Will be replaced by next attempt
+          },
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) {
+              return ClipOval(child: child);
+            }
+            return Container(); // Show nothing while loading
+          },
+        ),
+      ),
+    );
   }
 }
 
@@ -75,9 +144,10 @@ class _ProfilePageState extends State<ProfilePage> {
         });
       } catch (e) {
         setState(() => isLoading = false);
+        if (!mounted) return;
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Gagal memuat data: $e')));
+        ).showSnackBar(SnackBar(content: Text('Gagal memuat data:Periksa koneksi Anda dan coba lagi')));
       }
     } else {
       setState(() => isLoading = false);
@@ -95,9 +165,7 @@ class _ProfilePageState extends State<ProfilePage> {
         setState(() {
           voucherCount = userVouchers.where((uv) => uv.used == 'no').length;
         });
-      } catch (e) {
-        debugPrint('Error loading voucher count: $e');
-      }
+      } catch (e) {}
     }
   }
 
@@ -112,7 +180,6 @@ class _ProfilePageState extends State<ProfilePage> {
       await AuthService().signOut();
     } catch (e) {
       // Handle error gracefully, tidak perlu throw
-      debugPrint('Error signing out from Google: $e');
     }
 
     if (!mounted) return;
@@ -127,10 +194,9 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
     final nama = userData?['cos_nama'] ?? '-';
-    final id =
-        userData?['id_costomer'] != null
-            ? 'Id ${userData!['id_costomer']}'
-            : '-';
+    final id = userData?['id_costomer'] != null
+        ? 'Id ${userData!['id_costomer']}'
+        : '-';
     final nohp = userData?['cos_hp'] ?? '-';
     final displayNohp = nohp.startsWith('62') ? '0${nohp.substring(2)}' : nohp;
     final tglLahir = userData?['cos_tgl_lahir'] ?? '-';
@@ -149,7 +215,7 @@ class _ProfilePageState extends State<ProfilePage> {
               child: Container(
                 decoration: BoxDecoration(
                   color: Theme.of(context).appBarTheme.backgroundColor,
-                  borderRadius: BorderRadius.only(
+                  borderRadius: const BorderRadius.only(
                     bottomLeft: Radius.circular(20),
                     bottomRight: Radius.circular(20),
                   ),
@@ -182,7 +248,7 @@ class _ProfilePageState extends State<ProfilePage> {
               child: Container(
                 decoration: BoxDecoration(
                   color: Theme.of(context).appBarTheme.backgroundColor,
-                  borderRadius: BorderRadius.only(
+                  borderRadius: const BorderRadius.only(
                     bottomLeft: Radius.circular(20),
                     bottomRight: Radius.circular(20),
                   ),
@@ -266,7 +332,6 @@ class _ProfilePageState extends State<ProfilePage> {
                     const SizedBox(height: 12),
                     _themeToggleTile(context),
                     const SizedBox(height: 24),
-
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
@@ -278,8 +343,8 @@ class _ProfilePageState extends State<ProfilePage> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder:
-                                    (context) => const ShowQrCustomerData(),
+                                builder: (context) =>
+                                    const ShowQrCustomerData(),
                               ),
                             );
                           },
@@ -302,7 +367,10 @@ class _ProfilePageState extends State<ProfilePage> {
                     const SizedBox(height: 24),
                     _contactTile(
                       context,
-                      const Icon(Icons.support_agent, color: Colors.white),
+                      Icon(Icons.support_agent,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black),
                       '085942001720',
                       Icons.chat,
                       onTrailingTap: () async {
@@ -326,8 +394,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           'authorized_servicecenter.tegal',
                       Icons.chat,
                       onTrailingTap: () async {
-                        final username =
-                            userData?['cos_instagram'] ??
+                        final username = userData?['cos_instagram'] ??
                             'authorized_servicecenter.tegal';
                         final url = Uri.parse(
                           'instagram://user?username=$username',
@@ -338,7 +405,6 @@ class _ProfilePageState extends State<ProfilePage> {
                         );
                       },
                     ),
-
                     const SizedBox(height: 30),
                     Align(
                       alignment: Alignment.center,
@@ -386,25 +452,42 @@ class _ProfilePageState extends State<ProfilePage> {
                 alignment: Alignment.center,
                 children: [
                   // 🔹 Foto profil user
-                  CircleAvatar(
-                    radius: 45,
-                    backgroundColor: Colors.black.withOpacity(0.2),
-                    backgroundImage:
-                        (userData?['cos_gambar'] != null &&
-                                userData!['cos_gambar'].isNotEmpty)
-                            ? NetworkImage(
-                              "${ApiConfig.storageBaseUrl}${userData!['cos_gambar']}",
-                            )
-                            : null,
-                    child:
-                        (userData?['cos_gambar'] == null ||
-                                userData!['cos_gambar'].isEmpty)
-                            ? Icon(
+                  Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.5),
+                        width: 2,
+                      ),
+                    ),
+                    child: CircleAvatar(
+                      radius: 45,
+                      backgroundColor: Colors.black.withValues(alpha: 0.2),
+                      child: (userData?['cos_gambar'] != null &&
+                              userData!['cos_gambar'].isNotEmpty)
+                          ? (() {
+                              String rawPath = userData!['cos_gambar'];
+                              // Remove leading slash if present to avoid double slashes
+                              String cleanPath = rawPath.startsWith('/')
+                                  ? rawPath.substring(1)
+                                  : rawPath;
+
+                              // Try multiple URLs in case storage link is not working
+                              final possibleUrls = [
+                                "${ApiConfig.storageBaseUrl}$cleanPath", // Laravel storage link
+                                "${ApiConfig.serverIp}/storage/$cleanPath", // Direct storage access
+                                "${ApiConfig.serverIp}/$cleanPath", // Direct public access
+                              ];
+
+                              return _ProfileImageWithFallback(
+                                  urls: possibleUrls, radius: 45);
+                            })()
+                          : Icon(
                               Icons.person,
                               size: 50,
-                              color: tierInfo.textColor.withOpacity(0.7),
-                            )
-                            : null,
+                              color: tierInfo.textColor.withValues(alpha: 0.7),
+                            ),
+                    ),
                   ),
 
                   // 🔹 Tombol edit (pensil) di kanan atas
@@ -417,9 +500,8 @@ class _ProfilePageState extends State<ProfilePage> {
                         final result = await Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder:
-                                (context) =>
-                                    EditProfilePage(userData: userData ?? {}),
+                            builder: (context) =>
+                                EditProfilePage(userData: userData ?? {}),
                           ),
                         );
 
@@ -431,10 +513,10 @@ class _ProfilePageState extends State<ProfilePage> {
                       child: Container(
                         padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.3),
+                          color: Colors.white.withValues(alpha: 0.3),
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: Colors.white.withOpacity(0.5),
+                            color: Colors.white.withValues(alpha: 0.5),
                             width: 1,
                           ),
                         ),
@@ -463,7 +545,7 @@ class _ProfilePageState extends State<ProfilePage> {
               Text(
                 id,
                 style: GoogleFonts.poppins(
-                  color: tierInfo.textColor.withOpacity(0.8),
+                  color: tierInfo.textColor.withValues(alpha: 0.8),
                   fontSize: 12,
                 ),
               ),
@@ -476,10 +558,10 @@ class _ProfilePageState extends State<ProfilePage> {
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.15),
+                  color: Colors.white.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: Colors.white.withOpacity(0.3),
+                    color: Colors.white.withValues(alpha: 0.3),
                     width: 1,
                   ),
                 ),
@@ -490,7 +572,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       'Poin',
                       style: GoogleFonts.poppins(
                         fontWeight: FontWeight.w500,
-                        color: tierInfo.textColor.withOpacity(0.9),
+                        color: tierInfo.textColor.withValues(alpha: 0.9),
                         fontSize: 13,
                       ),
                     ),
@@ -515,33 +597,6 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildTierIcon(String label) {
-    switch (label) {
-      case 'Bronze':
-        return const Icon(
-          Icons.grade,
-          color: Color(0xFFD2B48C), // light brown
-          size: 16,
-        );
-      case 'Silver':
-        return const Icon(
-          Icons.star,
-          color: Color(0xFFC0C0C0), // silver
-          size: 16,
-        );
-      case 'Gold':
-        return const Icon(
-          Icons.workspace_premium,
-          color: Color(0xFFFFD700), // gold
-          size: 16,
-        );
-      case 'Diamond':
-        return const Icon(Icons.diamond, color: Colors.white, size: 16);
-      default:
-        return const SizedBox.shrink();
-    }
-  }
-
   Widget _qrBox(
     BuildContext context,
     IconData icon,
@@ -561,10 +616,9 @@ class _ProfilePageState extends State<ProfilePage> {
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color:
-                      isDark
-                          ? Colors.black.withOpacity(0.3)
-                          : Colors.black.withOpacity(0.1),
+                  color: isDark
+                      ? Colors.black.withValues(alpha: 0.3)
+                      : Colors.black.withValues(alpha: 0.1),
                   blurRadius: 5,
                   offset: const Offset(0, 3),
                 ),
@@ -604,10 +658,9 @@ class _ProfilePageState extends State<ProfilePage> {
         border: Border.all(color: Theme.of(context).dividerColor, width: 1),
         boxShadow: [
           BoxShadow(
-            color:
-                isDark
-                    ? Colors.black.withOpacity(0.2)
-                    : Colors.black.withOpacity(0.05),
+            color: isDark
+                ? Colors.black.withValues(alpha: 0.2)
+                : Colors.black.withValues(alpha: 0.05),
             blurRadius: 4,
             offset: const Offset(0, 3),
           ),
@@ -615,7 +668,11 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
       child: Row(
         children: [
-          Icon(icon, color: Colors.white),
+          Icon(icon,
+              color: Theme.of(context).iconTheme.color ??
+                  (Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white
+                      : Colors.black)),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -663,10 +720,9 @@ class _ProfilePageState extends State<ProfilePage> {
         borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
-            color:
-                isDark
-                    ? Colors.black.withOpacity(0.2)
-                    : Colors.black.withOpacity(0.05),
+            color: isDark
+                ? Colors.black.withValues(alpha: 0.2)
+                : Colors.black.withValues(alpha: 0.05),
             blurRadius: 4,
             offset: const Offset(0, 3),
           ),
@@ -707,10 +763,9 @@ class _ProfilePageState extends State<ProfilePage> {
             border: Border.all(color: Theme.of(context).dividerColor, width: 1),
             boxShadow: [
               BoxShadow(
-                color:
-                    isDark
-                        ? Colors.black.withOpacity(0.2)
-                        : Colors.black.withOpacity(0.05),
+                color: isDark
+                    ? Colors.black.withValues(alpha: 0.2)
+                    : Colors.black.withValues(alpha: 0.05),
                 blurRadius: 4,
                 offset: const Offset(0, 3),
               ),
@@ -718,7 +773,10 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           child: Row(
             children: [
-              Icon(Icons.brightness_6, color: Colors.white),
+              Icon(Icons.brightness_6,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white
+                      : Colors.black),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
@@ -730,33 +788,30 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                 ),
               ),
-              DropdownButton<ThemeMode>(
-                value: themeProvider.themeMode,
-                onChanged: (ThemeMode? newMode) {
-                  if (newMode != null) {
-                    themeProvider.setThemeMode(newMode);
-                  }
+              Switch(
+                value: themeProvider.themeMode == ThemeMode.dark,
+                onChanged: (bool value) {
+                  themeProvider
+                      .setThemeMode(value ? ThemeMode.dark : ThemeMode.light);
                 },
-                items: const [
-                  DropdownMenuItem(
-                    value: ThemeMode.system,
-                    child: Text('Otomatis'),
-                  ),
-                  DropdownMenuItem(
-                    value: ThemeMode.light,
-                    child: Text('Terang'),
-                  ),
-                  DropdownMenuItem(value: ThemeMode.dark, child: Text('Gelap')),
-                ],
-                underline: const SizedBox.shrink(),
-                icon: Icon(
-                  Icons.arrow_drop_down,
-                  color: Theme.of(context).iconTheme.color,
-                ),
-                dropdownColor: Theme.of(context).cardColor,
-                style: TextStyle(
-                  color: Theme.of(context).textTheme.bodyLarge?.color,
-                ),
+                activeThumbColor: Colors.white,
+                activeTrackColor: Colors.blueAccent,
+                inactiveThumbColor: Colors.grey.shade400,
+                inactiveTrackColor: Colors.grey.shade300,
+                thumbColor: WidgetStateProperty.resolveWith<Color>(
+                    (Set<WidgetState> states) {
+                  if (states.contains(WidgetState.selected)) {
+                    return Colors.white;
+                  }
+                  return Colors.grey.shade400;
+                }),
+                trackColor: WidgetStateProperty.resolveWith<Color>(
+                    (Set<WidgetState> states) {
+                  if (states.contains(WidgetState.selected)) {
+                    return Colors.blueAccent;
+                  }
+                  return Colors.grey.shade300;
+                }),
               ),
             ],
           ),
@@ -868,7 +923,8 @@ class _ProfilePageState extends State<ProfilePage> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: isDark ? Colors.black.withOpacity(0.3) : Colors.black12,
+              color:
+                  isDark ? Colors.black.withValues(alpha: 0.3) : Colors.black12,
               blurRadius: 8,
               offset: const Offset(0, 4),
             ),
