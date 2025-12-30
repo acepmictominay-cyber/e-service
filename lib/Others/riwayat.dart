@@ -1712,7 +1712,7 @@ class _RiwayatPageState extends State<RiwayatPage>
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(
-            SnackBar(content: Text('Gagal membatalkan pesanan: $e')));
+            SnackBar(content: Text('Gagal membatalkan pesanan: ')));
       }
     }
   }

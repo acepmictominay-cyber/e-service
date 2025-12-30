@@ -399,7 +399,7 @@ class _StruckPesananPageState extends State<StruckPesananPage> {
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
+        SnackBar(content: Text('Terjadi kesalahan')),
       );
     }
   }

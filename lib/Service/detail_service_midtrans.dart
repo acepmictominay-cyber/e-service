@@ -445,7 +445,8 @@ class _DetailServiceMidtransPageState extends State<DetailServiceMidtransPage> {
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        SnackBar(
+            content: Text('Terjadi kesalahan'), backgroundColor: Colors.red),
       );
     }
   }
@@ -606,7 +607,9 @@ class _DetailServiceMidtransPageState extends State<DetailServiceMidtransPage> {
             }
 
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+              SnackBar(
+                  content: Text('Terjadi kesalahan'),
+                  backgroundColor: Colors.red),
             );
           }
         } else {

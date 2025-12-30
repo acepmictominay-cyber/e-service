@@ -137,10 +137,9 @@ class _TeknisiHomePageState extends State<TeknisiHomePage>
         final fetchedOrdersRaw = await ApiService.getOrderListByKryKode(
           technicianId,
         );
-        final fetchedOrders =
-            fetchedOrdersRaw
-                .map((item) => TechnicianOrder.fromMap(item))
-                .toList();
+        final fetchedOrders = fetchedOrdersRaw
+            .map((item) => TechnicianOrder.fromMap(item))
+            .toList();
 
         if (mounted) {
           final newOrderIds = fetchedOrders.map((o) => o.orderId).toSet();
@@ -221,66 +220,65 @@ class _TeknisiHomePageState extends State<TeknisiHomePage>
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder:
-          (context) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.green.shade100,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.assignment_turned_in,
+                color: Colors.green.shade700,
+                size: 32,
+              ),
             ),
-            title: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.green.shade100,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.assignment_turned_in,
-                    color: Colors.green.shade700,
-                    size: 32,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Pesanan Baru!',
-                    style: GoogleFonts.poppins(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            content: Text(
-              'Anda mendapat $count pesanan baru. Segera cek dan terima pesanan!',
-              style: GoogleFonts.poppins(fontSize: 14),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(
-                  'Nanti',
-                  style: GoogleFonts.poppins(color: Colors.grey),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Pesanan Baru!',
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
                 ),
               ),
-              ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.pop(context);
-                  setState(() => currentIndex = 0);
-                },
-                icon: const Icon(Icons.visibility),
-                label: const Text('Lihat Sekarang'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-            ],
+            ),
+          ],
+        ),
+        content: Text(
+          'Anda mendapat $count pesanan baru. Segera cek dan terima pesanan!',
+          style: GoogleFonts.poppins(fontSize: 14),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Nanti',
+              style: GoogleFonts.poppins(color: Colors.grey),
+            ),
           ),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.pop(context);
+              setState(() => currentIndex = 0);
+            },
+            icon: const Icon(Icons.visibility),
+            label: const Text('Lihat Sekarang'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -294,10 +292,9 @@ class _TeknisiHomePageState extends State<TeknisiHomePage>
         final fetchedOrdersRaw = await ApiService.getOrderListByKryKode(
           technicianId,
         );
-        final fetchedOrders =
-            fetchedOrdersRaw
-                .map((item) => TechnicianOrder.fromMap(item))
-                .toList();
+        final fetchedOrders = fetchedOrdersRaw
+            .map((item) => TechnicianOrder.fromMap(item))
+            .toList();
 
         if (mounted) {
           final activeEnRouteOrders = fetchedOrders.where(
@@ -408,16 +405,16 @@ class _TeknisiHomePageState extends State<TeknisiHomePage>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(message),
-          backgroundColor:
-              newStatus == OrderStatus.waitingApproval
-                  ? Colors.orange
-                  : Colors.green,
+          backgroundColor: newStatus == OrderStatus.waitingApproval
+              ? Colors.orange
+              : Colors.green,
         ),
       );
 
       await _refreshData();
     } catch (e) {
-      ErrorUtils.showErrorSnackBar(context, e, customMessage: 'Gagal memperbarui status pesanan');
+      ErrorUtils.showErrorSnackBar(context, e,
+          customMessage: 'Gagal memperbarui status pesanan');
       setState(() {
         assignedOrders[orderIndex] = order.copyWith(status: oldStatus);
       });
@@ -489,210 +486,204 @@ class _TeknisiHomePageState extends State<TeknisiHomePage>
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder:
-          (context) => StatefulBuilder(
-            builder:
-                (context, setModalState) => Padding(
-                  padding: EdgeInsets.only(
-                    bottom: MediaQuery.of(context).viewInsets.bottom,
-                    left: 16,
-                    right: 16,
-                    top: 16,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+            left: 16,
+            right: 16,
+            top: 16,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Tindakan - ${order.orderId}',
+                  style: GoogleFonts.poppins(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
                   ),
-                  child: SingleChildScrollView(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'Tindakan - ${order.orderId}',
-                          style: GoogleFonts.poppins(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  initialValue: selectedAction,
+                  decoration: InputDecoration(
+                    labelText: 'Nama Tindakan',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  items: [
+                    ...standardActions.map(
+                      (action) => DropdownMenuItem(
+                        value: action,
+                        child: Text(action),
+                      ),
+                    ),
+                    const DropdownMenuItem(
+                      value: 'manual',
+                      child: Text('Manual (Input Sendiri)'),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    setModalState(() {
+                      selectedAction = value;
+                      isManual = value == 'manual';
+                      if (!isManual) {
+                        actionNameController.text = value ?? '';
+                      } else {
+                        actionNameController.clear();
+                      }
+                    });
+                  },
+                ),
+                const SizedBox(height: 16),
+                if (isManual)
+                  TextField(
+                    controller: actionNameController,
+                    decoration: InputDecoration(
+                      labelText: 'Nama Tindakan Manual',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: quantityController,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                  ],
+                  decoration: InputDecoration(
+                    labelText: 'Quantity',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onChanged: (value) {
+                    final num = int.tryParse(value);
+                    if (num != null && num <= 0) {
+                      quantityController.text = '1';
+                      quantityController.selection = TextSelection.fromPosition(
+                        TextPosition(
+                          offset: quantityController.text.length,
                         ),
-                        const SizedBox(height: 16),
-                        DropdownButtonFormField<String>(
-                          initialValue: selectedAction,
-                          decoration: InputDecoration(
-                            labelText: 'Nama Tindakan',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          items: [
-                            ...standardActions.map(
-                              (action) => DropdownMenuItem(
-                                value: action,
-                                child: Text(action),
-                              ),
-                            ),
-                            const DropdownMenuItem(
-                              value: 'manual',
-                              child: Text('Manual (Input Sendiri)'),
-                            ),
-                          ],
-                          onChanged: (value) {
-                            setModalState(() {
-                              selectedAction = value;
-                              isManual = value == 'manual';
-                              if (!isManual) {
-                                actionNameController.text = value ?? '';
-                              } else {
-                                actionNameController.clear();
-                              }
-                            });
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                        if (isManual)
-                          TextField(
-                            controller: actionNameController,
-                            decoration: InputDecoration(
-                              labelText: 'Nama Tindakan Manual',
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                          ),
-                        const SizedBox(height: 16),
-                        TextField(
-                          controller: quantityController,
-                          keyboardType: TextInputType.number,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                          ],
-                          decoration: InputDecoration(
-                            labelText: 'Quantity',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          onChanged: (value) {
-                            final num = int.tryParse(value);
-                            if (num != null && num <= 0) {
-                              quantityController.text = '1';
-                              quantityController
-                                  .selection = TextSelection.fromPosition(
-                                TextPosition(
-                                  offset: quantityController.text.length,
-                                ),
-                              );
-                            }
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                        TextField(
-                          controller: actionDetailController,
-                          maxLines: 3,
-                          decoration: InputDecoration(
-                            labelText:
-                                'Detail Tindakan (termasuk perkiraan harga suku cadang)',
-                            hintText:
-                                'Contoh: Ganti filter AC dengan estimasi harga Rp 150.000',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.orange.shade50,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.orange.shade300),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.info_outline,
-                                color: Colors.orange.shade700,
-                                size: 20,
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  'Tindakan ini akan dikirim ke admin untuk persetujuan',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 12,
-                                    color: Colors.orange.shade700,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: OutlinedButton(
-                                onPressed: () => Navigator.pop(context),
-                                child: const Text('Batal'),
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: ElevatedButton(
-                                onPressed: () async {
-                                  final actionName =
-                                      isManual
-                                          ? actionNameController.text.trim()
-                                          : selectedAction;
-                                  final quantity =
-                                      int.tryParse(
-                                        quantityController.text.trim(),
-                                      ) ??
-                                      1;
-                                  final actionDetail =
-                                      actionDetailController.text.trim();
-
-                                  if (actionName == null ||
-                                      actionName.isEmpty) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          'Pilih atau isi nama tindakan',
-                                        ),
-                                        backgroundColor: Colors.red,
-                                      ),
-                                    );
-                                    return;
-                                  }
-
-                                  if (actionDetail.isEmpty) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text('Isi detail tindakan'),
-                                        backgroundColor: Colors.red,
-                                      ),
-                                    );
-                                    return;
-                                  }
-
-                                  Navigator.pop(context);
-                                  await _saveTindakanAndUpdateStatus(
-                                    order,
-                                    actionName,
-                                    quantity,
-                                    actionDetail,
-                                  );
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.orange,
-                                  foregroundColor: Colors.white,
-                                ),
-                                child: const Text('Kirim ke Admin'),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                      ],
+                      );
+                    }
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: actionDetailController,
+                  maxLines: 3,
+                  decoration: InputDecoration(
+                    labelText:
+                        'Detail Tindakan (termasuk perkiraan harga suku cadang)',
+                    hintText:
+                        'Contoh: Ganti filter AC dengan estimasi harga Rp 150.000',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                 ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.orange.shade300),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.info_outline,
+                        color: Colors.orange.shade700,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Tindakan ini akan dikirim ke admin untuk persetujuan',
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            color: Colors.orange.shade700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Batal'),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          final actionName = isManual
+                              ? actionNameController.text.trim()
+                              : selectedAction;
+                          final quantity = int.tryParse(
+                                quantityController.text.trim(),
+                              ) ??
+                              1;
+                          final actionDetail =
+                              actionDetailController.text.trim();
+
+                          if (actionName == null || actionName.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Pilih atau isi nama tindakan',
+                                ),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                            return;
+                          }
+
+                          if (actionDetail.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Isi detail tindakan'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                            return;
+                          }
+
+                          Navigator.pop(context);
+                          await _saveTindakanAndUpdateStatus(
+                            order,
+                            actionName,
+                            quantity,
+                            actionDetail,
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.orange,
+                          foregroundColor: Colors.white,
+                        ),
+                        child: const Text('Kirim ke Admin'),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+              ],
+            ),
           ),
+        ),
+      ),
     );
   }
 
@@ -725,7 +716,8 @@ class _TeknisiHomePageState extends State<TeknisiHomePage>
       // Otomatis update status ke waitingApproval setelah input tindakan
       await _updateOrderStatus(order, OrderStatus.waitingApproval);
     } catch (e) {
-      ErrorUtils.showErrorSnackBar(context, e, customMessage: 'Gagal menyimpan tindakan');
+      ErrorUtils.showErrorSnackBar(context, e,
+          customMessage: 'Gagal menyimpan tindakan');
     }
   }
 
@@ -753,7 +745,7 @@ class _TeknisiHomePageState extends State<TeknisiHomePage>
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Gagal update status transaksi: $e'),
+          content: Text('Gagal update status transaksi'),
           backgroundColor: Colors.red,
         ),
       );
@@ -763,15 +755,14 @@ class _TeknisiHomePageState extends State<TeknisiHomePage>
 
   @override
   Widget build(BuildContext context) {
-    final activeOrders =
-        assignedOrders
-            .where(
-              (order) =>
-                  order.status != OrderStatus.completed &&
-                  order.status != OrderStatus.jobDone &&
-                  order.status != OrderStatus.waitingOrder,
-            )
-            .toList();
+    final activeOrders = assignedOrders
+        .where(
+          (order) =>
+              order.status != OrderStatus.completed &&
+              order.status != OrderStatus.jobDone &&
+              order.status != OrderStatus.waitingOrder,
+        )
+        .toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -790,20 +781,18 @@ class _TeknisiHomePageState extends State<TeknisiHomePage>
               color: Colors.white,
             ),
             onPressed: _toggleAutoRefresh,
-            tooltip:
-                _isAutoRefreshEnabled
-                    ? 'Nonaktifkan Auto-Refresh'
-                    : 'Aktifkan Auto-Refresh',
+            tooltip: _isAutoRefreshEnabled
+                ? 'Nonaktifkan Auto-Refresh'
+                : 'Aktifkan Auto-Refresh',
           ),
           IconButton(
             icon: const Icon(Icons.chat_bubble_outline, color: Colors.white),
-            onPressed:
-                () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const NotificationPage(),
-                  ),
-                ),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const NotificationPage(),
+              ),
+            ),
           ),
         ],
       ),
@@ -821,10 +810,9 @@ class _TeknisiHomePageState extends State<TeknisiHomePage>
             // Tidak ada onSimulateApproval karena data dari database
           ),
           TrackingTab(
-            customerAddress:
-                activeOrders.isNotEmpty
-                    ? activeOrders.first.customerAddress
-                    : '',
+            customerAddress: activeOrders.isNotEmpty
+                ? activeOrders.first.customerAddress
+                : '',
           ),
           WaitingTasksPage(isAutoRefreshEnabled: _isAutoRefreshEnabled),
           HistoryTab(

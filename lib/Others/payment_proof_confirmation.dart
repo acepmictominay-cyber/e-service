@@ -23,10 +23,12 @@ class PaymentProofConfirmationPage extends StatefulWidget {
   });
 
   @override
-  State<PaymentProofConfirmationPage> createState() => _PaymentProofConfirmationPageState();
+  State<PaymentProofConfirmationPage> createState() =>
+      _PaymentProofConfirmationPageState();
 }
 
-class _PaymentProofConfirmationPageState extends State<PaymentProofConfirmationPage> {
+class _PaymentProofConfirmationPageState
+    extends State<PaymentProofConfirmationPage> {
   File? _paymentProofImage;
   final ImagePicker _picker = ImagePicker();
   bool _isUploading = false;
@@ -48,7 +50,7 @@ class _PaymentProofConfirmationPageState extends State<PaymentProofConfirmationP
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error picking image: $e'),
+          content: Text('Error picking image'),
           backgroundColor: Colors.red,
         ),
       );
@@ -129,7 +131,7 @@ class _PaymentProofConfirmationPageState extends State<PaymentProofConfirmationP
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error uploading payment proof: $e'),
+          content: Text('Error uploading payment proof'),
           backgroundColor: Colors.red,
         ),
       );
@@ -188,7 +190,8 @@ class _PaymentProofConfirmationPageState extends State<PaymentProofConfirmationP
                     ),
                   ),
                   const SizedBox(height: 16),
-                  _buildPaymentDetail("Metode Pembayaran", widget.paymentMethod),
+                  _buildPaymentDetail(
+                      "Metode Pembayaran", widget.paymentMethod),
                   if (widget.selectedBank != null)
                     _buildPaymentDetail("Bank Tujuan", widget.selectedBank!),
                   _buildPaymentDetail(
@@ -296,7 +299,9 @@ class _PaymentProofConfirmationPageState extends State<PaymentProofConfirmationP
                     child: OutlinedButton.icon(
                       onPressed: _showImageSourceDialog,
                       icon: const Icon(Icons.camera_alt),
-                      label: Text(_paymentProofImage != null ? "Ganti Foto" : "Upload Foto"),
+                      label: Text(_paymentProofImage != null
+                          ? "Ganti Foto"
+                          : "Upload Foto"),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         side: const BorderSide(color: Color(0xFF0041c3)),
@@ -342,7 +347,8 @@ class _PaymentProofConfirmationPageState extends State<PaymentProofConfirmationP
                         width: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.white),
                         ),
                       )
                     : const Text(

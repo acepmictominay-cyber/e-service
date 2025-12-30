@@ -257,7 +257,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         } catch (e) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                                content: Text("Gagal menyimpan perubahan: $e")),
+                                content: Text("Gagal menyimpan perubahan")),
                           );
                         } finally {
                           if (mounted) {

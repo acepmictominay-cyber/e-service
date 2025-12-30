@@ -661,7 +661,7 @@ class _DetailAlamatPageState extends State<DetailAlamatPage> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text("Gagal menyimpan alamat utama: $e"),
+              content: Text("Gagal menyimpan alamat utama"),
               backgroundColor: Colors.red,
             ),
           );

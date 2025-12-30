@@ -180,7 +180,7 @@ class _TukarPoinPageState extends State<TukarPoinPage> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        ).showSnackBar(SnackBar(content: Text('Terjadi kesalahan')));
       }
     }
   }

@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:image_picker/image_picker.dart';
 
-
 class ScanQrPage extends StatefulWidget {
   const ScanQrPage({super.key});
 
@@ -45,7 +44,8 @@ class _ScanQrPageState extends State<ScanQrPage> {
                     bottomRight: Radius.circular(20),
                   ),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Row(
                   children: [
                     IconButton(
@@ -56,15 +56,18 @@ class _ScanQrPageState extends State<ScanQrPage> {
                     Image.asset('assets/image/logo.png', width: 95, height: 30),
                     const Spacer(),
                     IconButton(
-                      icon: const Icon(Icons.support_agent, color: Colors.white),
+                      icon:
+                          const Icon(Icons.support_agent, color: Colors.white),
                       onPressed: () {},
                     ),
                     IconButton(
-                      icon: const Icon(Icons.chat_bubble_outline, color: Colors.white),
+                      icon: const Icon(Icons.chat_bubble_outline,
+                          color: Colors.white),
                       onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => const NotificationPage()),
+                          MaterialPageRoute(
+                              builder: (context) => const NotificationPage()),
                         );
                       },
                     ),
@@ -112,7 +115,8 @@ class _ScanQrPageState extends State<ScanQrPage> {
                                   // Process QR code
                                   await _processQrCode(code, context);
 
-                                  Future.delayed(const Duration(seconds: 2), () {
+                                  Future.delayed(const Duration(seconds: 2),
+                                      () {
                                     if (mounted) {
                                       controller.start();
                                     }
@@ -141,9 +145,7 @@ class _ScanQrPageState extends State<ScanQrPage> {
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 40),
-
                   ElevatedButton.icon(
                     onPressed: _scanFromGallery,
                     icon: const Icon(Icons.photo_library, size: 18),
@@ -151,7 +153,8 @@ class _ScanQrPageState extends State<ScanQrPage> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF0041c3),
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -172,7 +175,8 @@ class _ScanQrPageState extends State<ScanQrPage> {
       final XFile? image = await picker.pickImage(source: ImageSource.gallery);
 
       if (image != null) {
-        final BarcodeCapture? capture = await controller.analyzeImage(image.path);
+        final BarcodeCapture? capture =
+            await controller.analyzeImage(image.path);
 
         if (capture != null && capture.barcodes.isNotEmpty) {
           for (final barcode in capture.barcodes) {
@@ -184,13 +188,14 @@ class _ScanQrPageState extends State<ScanQrPage> {
           }
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Tidak ada QR code yang terdeteksi di gambar')),
+            const SnackBar(
+                content: Text('Tidak ada QR code yang terdeteksi di gambar')),
           );
         }
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
+        SnackBar(content: Text('Terjadi kesalahan saat memproses gambar')),
       );
     }
   }
@@ -201,7 +206,8 @@ class _ScanQrPageState extends State<ScanQrPage> {
       final Map<String, dynamic> qrPayload = jsonDecode(qrData);
 
       // Check if it's a valid reward QR
-      if (qrPayload.containsKey('reward_points') && qrPayload.containsKey('transaction_id')) {
+      if (qrPayload.containsKey('reward_points') &&
+          qrPayload.containsKey('transaction_id')) {
         final int rewardPoints = qrPayload['reward_points'] ?? 0;
         final String transactionId = qrPayload['transaction_id'] ?? '';
 
@@ -288,11 +294,13 @@ class _ScanQrPageState extends State<ScanQrPage> {
           if (userId != null) {
             // Get current user data
             final userData = await ApiService.getCostomerById(userId);
-            final currentPoints = int.tryParse(userData['cos_poin']?.toString() ?? '0') ?? 0;
+            final currentPoints =
+                int.tryParse(userData['cos_poin']?.toString() ?? '0') ?? 0;
 
             // Update points in database
             final newPoints = currentPoints + rewardPoints;
-            await ApiService.updateCostomer(userId, {'cos_poin': newPoints.toString()});
+            await ApiService.updateCostomer(
+                userId, {'cos_poin': newPoints.toString()});
 
             // Update local points
             UserPointData.setPoints(newPoints);
@@ -373,12 +381,14 @@ class _ScanQrPageState extends State<ScanQrPage> {
             );
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('User tidak ditemukan. Silakan login ulang.')),
+              const SnackBar(
+                  content: Text('User tidak ditemukan. Silakan login ulang.')),
             );
           }
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('QR code tidak valid atau sudah kadaluarsa.')),
+            const SnackBar(
+                content: Text('QR code tidak valid atau sudah kadaluarsa.')),
           );
         }
       } else {
@@ -388,7 +398,7 @@ class _ScanQrPageState extends State<ScanQrPage> {
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error memproses QR: $e')),
+        SnackBar(content: Text('Error memproses QR')),
       );
     }
   }
