@@ -21,12 +21,12 @@ class NewOrderNotificationService {
 
     const InitializationSettings initializationSettings =
         InitializationSettings(
-          android: initializationSettingsAndroid,
-          iOS: initializationSettingsIOS,
-        );
+      android: initializationSettingsAndroid,
+      iOS: initializationSettingsIOS,
+    );
 
     await flutterLocalNotificationsPlugin.initialize(
-      initializationSettings,
+      settings: initializationSettings,
       onDidReceiveNotificationResponse: (NotificationResponse response) {
         // Handle notification tap
       },
@@ -47,14 +47,13 @@ class NewOrderNotificationService {
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>()
         ?.requestNotificationsPermission();
-    
   }
 
   static Future<void> checkAndSendNewOrderNotifications() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final kryKode = prefs.getString('kry_kode');
-      
+
       if (kryKode == null || kryKode.isEmpty) {
         return;
       }
@@ -72,18 +71,20 @@ class NewOrderNotificationService {
 
       final orders = allTransaksi.where((item) {
         final isForThisTechnician = item['kry_kode'] == kryKode;
-        final isWaiting = item['trans_status']?.toString().toLowerCase() == 'waiting';
+        final isWaiting =
+            item['trans_status']?.toString().toLowerCase() == 'waiting';
         return isForThisTechnician && isWaiting;
       }).toList();
 
-      final sentNotifications = prefs.getStringList(_newOrderNotificationKey) ?? [];
+      final sentNotifications =
+          prefs.getStringList(_newOrderNotificationKey) ?? [];
 
       int newOrderCount = 0;
       List<String> newOrderIds = [];
 
       for (var order in orders) {
         final orderId = order['trans_kode']?.toString() ?? '';
-        
+
         if (orderId.isEmpty) continue;
 
         if (!sentNotifications.contains(orderId)) {
@@ -98,9 +99,9 @@ class NewOrderNotificationService {
             (o) => o['trans_kode'] == orderId,
             orElse: () => {},
           );
-          
+
           final customerName = orderDetail['cos_nama'] ?? 'Customer';
-          
+
           await _sendNewOrderNotification(
             newOrderCount,
             orderId,
@@ -112,8 +113,7 @@ class NewOrderNotificationService {
 
         await prefs.setStringList(_newOrderNotificationKey, sentNotifications);
       }
-    } catch (e) {
-    }
+    } catch (e) {}
   }
 
   static Future<void> _sendNewOrderNotification(
@@ -143,19 +143,17 @@ class NewOrderNotificationService {
       iOS: iOSPlatformChannelSpecifics,
     );
 
-    final title = count == 1 
-        ? '📦 Ada pesanan baru!' 
-        : '📦 Ada $count pesanan baru!';
+    final title =
+        count == 1 ? '📦 Ada pesanan baru!' : '📦 Ada $count pesanan baru!';
     final body = 'Pesanan dari $customerName (ID: $orderId)';
 
     await flutterLocalNotificationsPlugin.show(
-      orderId.hashCode,
-      title,
-      body,
-      platformChannelSpecifics,
+      id: orderId.hashCode,
+      title: title,
+      body: body,
+      notificationDetails: platformChannelSpecifics,
       payload: 'new_order_$orderId',
     );
-
   }
 
   static Future<void> sendNewOrderNotification(
@@ -175,5 +173,4 @@ class NewOrderNotificationService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_newOrderNotificationKey);
   }
-
 }
