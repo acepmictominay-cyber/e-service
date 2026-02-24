@@ -336,12 +336,12 @@ class BackgroundServiceManager {
         android: androidPlatformChannelSpecifics,
       );
 
-// belum ada link untuk mendapat hadiah atau promo khusus
+      // Updated for flutter_local_notifications v17+ API
       await flutterLocalNotificationsPlugin.show(
-        customerId.hashCode, // Unique ID based on customer ID
-        'Selamat Ulang Tahun! 🎉',
-        'Halo $customerName, selamat ulang tahun! Semoga hari Anda menyenangkan.',
-        platformChannelSpecifics,
+        id: customerId.hashCode,
+        title: 'Selamat Ulang Tahun! 🎉',
+        body: 'Halo $customerName, selamat ulang tahun!',
+        notificationDetails: platformChannelSpecifics,
         payload: 'birthday_$customerId',
       );
     } catch (e) {}
