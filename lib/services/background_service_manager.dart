@@ -66,7 +66,7 @@ class BackgroundServiceManager {
       _notificationCleanupTask,
       frequency: const Duration(hours: 24),
       constraints: Constraints(
-        networkType: NetworkType.not_required,
+        networkType: NetworkType.connected,
         requiresBatteryNotLow: true,
       ),
       existingWorkPolicy: ExistingWorkPolicy.replace,

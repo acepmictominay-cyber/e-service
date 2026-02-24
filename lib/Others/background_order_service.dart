@@ -11,7 +11,6 @@ const String _backgroundTaskKey = 'background_order_check';
 const String _lastOrderIdsKey = 'background_last_order_ids';
 
 class BackgroundOrderService {
-
   /// Initialize WorkManager for background order checking
   static Future<void> initialize() async {
     await Workmanager().initialize(
@@ -29,7 +28,6 @@ class BackgroundOrderService {
         networkType: NetworkType.connected, // Only when network is available
       ),
     );
-
   }
 
   /// Stop background checking
@@ -52,8 +50,13 @@ void callbackDispatcher() {
       const InitializationSettings initializationSettings =
           InitializationSettings(android: initializationSettingsAndroid);
 
-      final FlutterLocalNotificationsPlugin localNotifications = FlutterLocalNotificationsPlugin();
-      await localNotifications.initialize(initializationSettings);
+      final FlutterLocalNotificationsPlugin localNotifications =
+          FlutterLocalNotificationsPlugin();
+      await localNotifications.initialize(
+        settings: const InitializationSettings(
+          android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+        ),
+      );
 
       // Check for new orders
       await _checkForNewOrders(localNotifications);
@@ -65,7 +68,8 @@ void callbackDispatcher() {
   });
 }
 
-Future<void> _checkForNewOrders(FlutterLocalNotificationsPlugin localNotifications) async {
+Future<void> _checkForNewOrders(
+    FlutterLocalNotificationsPlugin localNotifications) async {
   try {
     // Get stored technician kry_kode
     final prefs = await SharedPreferences.getInstance();
@@ -90,7 +94,8 @@ Future<void> _checkForNewOrders(FlutterLocalNotificationsPlugin localNotificatio
     // Filter orders for this technician with status 'waiting'
     final orders = allTransaksi.where((item) {
       final isForThisTechnician = item['kry_kode'] == kryKode;
-      final isWaiting = item['trans_status']?.toString().toLowerCase() == 'waiting';
+      final isWaiting =
+          item['trans_status']?.toString().toLowerCase() == 'waiting';
       return isForThisTechnician && isWaiting;
     }).toList();
 
@@ -105,19 +110,26 @@ Future<void> _checkForNewOrders(FlutterLocalNotificationsPlugin localNotificatio
 
     if (newOrders.isNotEmpty) {
       // Show notification for new orders
-      await _showNewOrderNotification(localNotifications, newOrders.length, newOrders.first);
+      await _showNewOrderNotification(
+          localNotifications, newOrders.length, newOrders.first);
 
       // Update stored order IDs
-      final currentOrderIds = orders.map((o) => o['trans_kode']?.toString()).where((id) => id != null).toList();
-      await prefs.setStringList(_lastOrderIdsKey, currentOrderIds.cast<String>());
+      final currentOrderIds = orders
+          .map((o) => o['trans_kode']?.toString())
+          .where((id) => id != null)
+          .toList();
+      await prefs.setStringList(
+          _lastOrderIdsKey, currentOrderIds.cast<String>());
     }
-
   } catch (e) {
     // Handle error silently
   }
 }
 
-Future<void> _showNewOrderNotification(FlutterLocalNotificationsPlugin localNotifications, int count, dynamic order) async {
+Future<void> _showNewOrderNotification(
+    FlutterLocalNotificationsPlugin localNotifications,
+    int count,
+    dynamic order) async {
   const AndroidNotificationDetails androidPlatformChannelSpecifics =
       AndroidNotificationDetails(
     'background_order_channel',
@@ -141,17 +153,14 @@ Future<void> _showNewOrderNotification(FlutterLocalNotificationsPlugin localNoti
   final customerName = order['cos_nama'] ?? 'Customer';
   final orderId = order['trans_kode'] ?? 'Unknown';
 
-  final title = count == 1
-      ? '📦 Pesanan Baru!'
-      : '📦 $count Pesanan Baru!';
+  final title = count == 1 ? '📦 Pesanan Baru!' : '📦 $count Pesanan Baru!';
   final body = 'Pesanan dari $customerName (ID: $orderId)';
 
   await localNotifications.show(
-    DateTime.now().millisecondsSinceEpoch ~/ 1000, // Unique ID
-    title,
-    body,
-    platformChannelSpecifics,
+    id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+    title: title,
+    body: body,
+    notificationDetails: platformChannelSpecifics,
     payload: 'background_new_order_$orderId',
   );
-
 }

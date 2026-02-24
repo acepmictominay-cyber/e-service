@@ -16,13 +16,14 @@ class BirthdayNotificationService {
     const DarwinInitializationSettings initializationSettingsIOS =
         DarwinInitializationSettings();
 
-    const InitializationSettings initializationSettings = InitializationSettings(
+    const InitializationSettings initializationSettings =
+        InitializationSettings(
       android: initializationSettingsAndroid,
       iOS: initializationSettingsIOS,
     );
 
     await flutterLocalNotificationsPlugin.initialize(
-      initializationSettings,
+      settings: initializationSettings,
       onDidReceiveNotificationResponse: (NotificationResponse response) {
         // Handle notification tap - could navigate to app
       },
@@ -50,7 +51,8 @@ class BirthdayNotificationService {
       final now = DateTime.now();
       final currentMonth = now.month;
       final currentDay = now.day;
-      final todayKey = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+      final todayKey =
+          '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
 
       // Use real API to get customer data
       final response = await http.get(
@@ -68,7 +70,9 @@ class BirthdayNotificationService {
 
         for (var customer in customers) {
           final cosTglLahir = customer['cos_tgl_lahir'];
-          if (cosTglLahir != null && cosTglLahir.toString().isNotEmpty && cosTglLahir != '0000-00-00') {
+          if (cosTglLahir != null &&
+              cosTglLahir.toString().isNotEmpty &&
+              cosTglLahir != '0000-00-00') {
             try {
               // Parse birth date
               final birthDate = DateTime.parse(cosTglLahir);
@@ -100,7 +104,8 @@ class BirthdayNotificationService {
     }
   }
 
-  static Future<void> _sendBirthdayNotification(String customerName, String customerId) async {
+  static Future<void> _sendBirthdayNotification(
+      String customerName, String customerId) async {
     const AndroidNotificationDetails androidPlatformChannelSpecifics =
         AndroidNotificationDetails(
       'birthday_channel',
@@ -122,17 +127,21 @@ class BirthdayNotificationService {
     );
 
     await flutterLocalNotificationsPlugin.show(
-      customerId.hashCode, // Unique ID based on customer ID
-      'Selamat Ulang Tahun! 🎉',
-      'Halo $customerName, selamat ulang tahun! Semoga hari Anda menyenangkan.',
-      platformChannelSpecifics,
+      id: customerId.hashCode,
+      title: 'Selamat Ulang Tahun! 🎉',
+      body:
+          'Halo $customerName, selamat ulang tahun! Semoga hari Anda menyenangkan.',
+      notificationDetails: platformChannelSpecifics,
       payload: 'birthday_$customerId',
     );
   }
 
   static Future<void> resetDailyNotifications() async {
     final prefs = await SharedPreferences.getInstance();
-    final allKeys = prefs.getKeys().where((key) => key.startsWith('birthday_notifications_sent_')).toList();
+    final allKeys = prefs
+        .getKeys()
+        .where((key) => key.startsWith('birthday_notifications_sent_'))
+        .toList();
     for (var key in allKeys) {
       await prefs.remove(key);
     }
