@@ -775,11 +775,13 @@ class _DetailAlamatPageState extends State<DetailAlamatPage> {
                       ),
                       children: [
                         TileLayer(
+                          // Using CartoDB positron tiles - free, no API key required, reliable
                           urlTemplate:
-                              "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-                          subdomains: const ["a", "b", "c"],
+                              'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+                          subdomains: const ['a', 'b', 'c', 'd'],
                           maxZoom: 22,
                           maxNativeZoom: 19,
+                          userAgentPackageName: 'com.azza_service.app',
                         ),
                         if (_currentPosition != null)
                           CircleLayer(

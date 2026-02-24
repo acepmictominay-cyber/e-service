@@ -14,6 +14,7 @@ import '../config/api_config.dart';
 import 'custom_dialog.dart';
 import '../main.dart';
 import 'riwayat.dart';
+import 'xendit_payment_page.dart';
 import '../utils/error_handler.dart' as error_handler;
 
 class PaymentModal extends StatefulWidget {
@@ -133,6 +134,7 @@ class _PaymentModalState extends State<PaymentModal> {
                     selectedPaymentMethod = "QRIS";
                     selectedBank = null;
                   }),
+                  available: false,
                 ),
                 const SizedBox(height: 8),
                 _buildPaymentMethodOption(
@@ -144,6 +146,7 @@ class _PaymentModalState extends State<PaymentModal> {
                     selectedPaymentMethod = "Transfer Bank";
                     selectedBank = null;
                   }),
+                  available: false,
                 ),
                 const SizedBox(height: 8),
                 _buildPaymentMethodOption(
@@ -155,6 +158,7 @@ class _PaymentModalState extends State<PaymentModal> {
                     selectedPaymentMethod = "E-wallet";
                     selectedBank = null;
                   }),
+                  available: false,
                 ),
                 const SizedBox(height: 8),
                 _buildPaymentMethodOption(
@@ -166,6 +170,7 @@ class _PaymentModalState extends State<PaymentModal> {
                     selectedPaymentMethod = "Transfer Bank Online";
                     selectedBank = null;
                   }),
+                  available: false,
                 ),
               ],
             ),
@@ -292,9 +297,11 @@ class _PaymentModalState extends State<PaymentModal> {
                       ),
                     ),
                     items: const [
-                      DropdownMenuItem(value: "GoPay", child: Text("GoPay")),
+                      DropdownMenuItem(
+                          value: "GoPay", child: Text("GoPay (Coming Soon)")),
                       DropdownMenuItem(value: "OVO", child: Text("OVO")),
-                      DropdownMenuItem(value: "DANA", child: Text("DANA")),
+                      DropdownMenuItem(
+                          value: "DANA", child: Text("DANA (Coming Soon)")),
                     ],
                     onChanged: (value) =>
                         stateSetter(() => selectedBank = value),
@@ -458,10 +465,11 @@ class _PaymentModalState extends State<PaymentModal> {
     String subtitle,
     IconData icon,
     bool isSelected,
-    VoidCallback onTap,
-  ) {
+    VoidCallback onTap, {
+    bool available = true,
+  }) {
     return InkWell(
-      onTap: onTap,
+      onTap: available ? onTap : null,
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
@@ -472,13 +480,15 @@ class _PaymentModalState extends State<PaymentModal> {
           borderRadius: BorderRadius.circular(8),
           color: isSelected
               ? const Color(0xFF0041c3).withOpacity(0.1)
-              : Colors.white,
+              : (available ? Colors.white : Colors.grey.shade50),
         ),
         child: Row(
           children: [
             Icon(
               icon,
-              color: isSelected ? const Color(0xFF0041c3) : Colors.grey,
+              color: isSelected
+                  ? const Color(0xFF0041c3)
+                  : (available ? Colors.grey : Colors.grey.shade400),
               size: 24,
             ),
             const SizedBox(width: 12),
@@ -486,17 +496,42 @@ class _PaymentModalState extends State<PaymentModal> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: isSelected
-                          ? const Color(0xFF0041c3)
-                          : (Theme.of(context).brightness == Brightness.dark
-                              ? Colors.white
-                              : Colors.black87),
-                    ),
+                  Row(
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: isSelected
+                              ? const Color(0xFF0041c3)
+                              : (Theme.of(context).brightness == Brightness.dark
+                                  ? Colors.white
+                                  : Colors.black87),
+                        ),
+                      ),
+                      if (!available) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.shade100,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: const Text(
+                            'Coming Soon',
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: Colors.orange,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                   // DEBUG: Log theme-adaptive color usage in payment option
                   if (!isSelected)
@@ -2049,8 +2084,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
               return;
             }
 
-            // Proceed with payment
-            _showPaymentModal();
+            // Proceed with payment - navigate directly to Xendit
+            _navigateToXenditPayment('QRIS', 0);
           },
           child: const Text(
             "Lakukan Pembayaran",
@@ -2827,7 +2862,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                             ),
                             const SizedBox(height: 20),
 
-                            // QRIS - Available with enhanced design
+                            // QRIS - Coming Soon
                             _buildModernPaymentOption(
                               "QRIS",
                               "Scan QR code untuk pembayaran cepat & instan",
@@ -2837,12 +2872,12 @@ class _CheckoutPageState extends State<CheckoutPage> {
                               () => setModalState(
                                 () => selectedPaymentMethod = "QRIS",
                               ),
-                              available: true,
+                              available: false,
                             ),
 
                             const SizedBox(height: 16),
 
-                            // Transfer Bank - Now Available
+                            // Transfer Bank - Coming Soon
                             _buildModernPaymentOption(
                               "Transfer Bank",
                               "Transfer ke rekening bank",
@@ -2852,19 +2887,21 @@ class _CheckoutPageState extends State<CheckoutPage> {
                               () => setModalState(
                                 () => selectedPaymentMethod = "Transfer Bank",
                               ),
-                              available: true,
+                              available: false,
                             ),
 
                             const SizedBox(height: 16),
 
-                            // E-wallet - Coming Soon with better design
+                            // E-wallet - Coming Soon (OVO only available internally)
                             _buildModernPaymentOption(
                               "E-wallet",
-                              "GoPay, OVO, Dana, LinkAja (Coming Soon)",
+                              "GoPay, OVO, Dana, LinkAja via Xendit",
                               Icons.account_balance_wallet,
-                              Colors.grey,
-                              false,
-                              null,
+                              Colors.purple,
+                              selectedPaymentMethod == "E-wallet",
+                              () => setModalState(
+                                () => selectedPaymentMethod = "E-wallet",
+                              ),
                               available: false,
                             ),
 
@@ -2935,10 +2972,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
                                   Navigator.pop(context);
 
-                                  // Bayar full amount - Direct to Midtrans for QRIS
-                                  if (selectedPaymentMethod == "QRIS") {
-                                    _processCheckout(context);
-                                  }
+                                  // Navigate to Xendit Payment Page for all payment methods
+                                  _navigateToXenditPayment(
+                                    selectedPaymentMethod!,
+                                    totalHarga,
+                                  );
                                 },
                                 icon: const Icon(
                                   Icons.rocket_launch,
@@ -3429,6 +3467,59 @@ class _CheckoutPageState extends State<CheckoutPage> {
         )
         .then((_) {})
         .catchError((e) {});
+  }
+
+  // Navigate to Xendit Payment Page
+  void _navigateToXenditPayment(String paymentMethod, double amount) async {
+    // Calculate final price
+    double totalHarga = _getTotalHarga();
+    double voucherDiscount = _getVoucherDiscount();
+    double finalShippingCost = _getFinalShippingCost();
+    double finalPrice = totalHarga - voucherDiscount + finalShippingCost;
+
+    // Generate order code
+    final orderCode = 'ORD_${DateTime.now().millisecondsSinceEpoch}';
+
+    // Get customer ID
+    String customerId = await SessionManager.getCustomerId() ?? '';
+    if (customerId.isEmpty) {
+      customerId = 'CUST_${DateTime.now().millisecondsSinceEpoch}';
+    }
+
+    // Prepare items
+    List<Map<String, dynamic>> items = [
+      {
+        'kode_barang': widget.produk['kode_barang'] ??
+            widget.produk['id_produk'] ??
+            'PROD001',
+        'nama_produk': namaProduk,
+        'quantity': quantity,
+        'price': (totalHarga / quantity).toInt(),
+      },
+    ];
+
+    // Navigate to Xendit Payment Page
+    if (!mounted) return;
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (ctx) => XenditPaymentPage(
+          orderId: orderCode,
+          amount: finalPrice.toInt(),
+          customerId: customerId,
+          customerName: selectedAddress?['nama'] ?? 'Customer',
+          customerPhone: selectedAddress?['hp'] ?? '08123456789',
+          customerEmail: 'customer@example.com',
+          items: items,
+          paymentType: 'product',
+          onPaymentComplete: (String orderId, String status) {
+            // Navigate to success page
+            Navigator.of(ctx).pop(); // Close XenditPaymentPage
+            _onPaymentSuccess(ctx, orderId);
+          },
+        ),
+      ),
+    );
   }
 
   void _showManualPaymentDialog(BuildContext context) {
@@ -4668,17 +4759,70 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 _buildEwalletOption(
                   'GoPay',
                   selectedEwallet == 'GoPay',
-                  () => setState(() => selectedEwallet = 'GoPay'),
+                  () {
+                    // Show coming soon message
+                    CustomDialog.show(
+                      context: context,
+                      icon: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withOpacity(0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.schedule,
+                          color: Colors.orange,
+                          size: 24,
+                        ),
+                      ),
+                      title: 'Coming Soon',
+                      content: const Text('GoPay akan segera tersedia'),
+                      actions: [
+                        ElevatedButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text('OK'),
+                        ),
+                      ],
+                    );
+                  },
+                  enabled: false,
                 ),
                 _buildEwalletOption(
                   'OVO',
                   selectedEwallet == 'OVO',
                   () => setState(() => selectedEwallet = 'OVO'),
+                  enabled: true,
                 ),
                 _buildEwalletOption(
                   'Dana',
                   selectedEwallet == 'Dana',
-                  () => setState(() => selectedEwallet = 'Dana'),
+                  () {
+                    // Show coming soon message
+                    CustomDialog.show(
+                      context: context,
+                      icon: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withOpacity(0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.schedule,
+                          color: Colors.orange,
+                          size: 24,
+                        ),
+                      ),
+                      title: 'Coming Soon',
+                      content: const Text('DANA akan segera tersedia'),
+                      actions: [
+                        ElevatedButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text('OK'),
+                        ),
+                      ],
+                    );
+                  },
+                  enabled: false,
                 ),
               ],
             ),
@@ -4845,31 +4989,49 @@ class _CheckoutPageState extends State<CheckoutPage> {
     );
   }
 
-  Widget _buildEwalletOption(String name, bool isSelected, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: isSelected ? const Color(0xFF0041c3) : Colors.grey.shade300,
-            width: isSelected ? 2 : 1,
-          ),
-          borderRadius: BorderRadius.circular(8),
-          color: isSelected
-              ? const Color(0xFF0041c3).withOpacity(0.1)
-              : Colors.white,
-        ),
-        child: Text(
-          name,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
+  Widget _buildEwalletOption(String name, bool isSelected, VoidCallback onTap, {bool enabled = true}) {
+    return Opacity(
+      opacity: enabled ? 1.0 : 0.5,
+      child: InkWell(
+        onTap: enabled ? onTap : null,
+        child: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: isSelected ? const Color(0xFF0041c3) : Colors.grey.shade300,
+              width: isSelected ? 2 : 1,
+            ),
+            borderRadius: BorderRadius.circular(8),
             color: isSelected
-                ? const Color(0xFF0041c3)
-                : (Theme.of(context).brightness == Brightness.dark
-                    ? Colors.white
-                    : Colors.black87),
+                ? const Color(0xFF0041c3).withOpacity(0.1)
+                : Colors.white,
+          ),
+          child: Column(
+            children: [
+              Text(
+                name,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: isSelected
+                      ? const Color(0xFF0041c3)
+                      : (Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : Colors.black87),
+                ),
+              ),
+              if (!enabled) ...[
+                const SizedBox(height: 2),
+                const Text(
+                  'Coming Soon',
+                  style: TextStyle(
+                    fontSize: 9,
+                    color: Colors.orange,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ],
           ),
         ),
       ),

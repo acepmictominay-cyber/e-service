@@ -47,14 +47,17 @@ class ApiService {
   }
 
   //  POST - Tambah costomer
-  static Future<void> addCostomer(Map<String, dynamic> data) async {
+  static Future<Map<String, dynamic>> addCostomer(
+      Map<String, dynamic> data) async {
     final response = await http.post(
       Uri.parse('$baseUrl/costomers'),
       headers: {'Content-Type': 'application/json'},
       body: json.encode(data),
     );
 
-    if (response.statusCode != 200 && response.statusCode != 201) {
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return json.decode(response.body);
+    } else {
       throw Exception('Gagal menambahkan costomer');
     }
   }
@@ -1293,6 +1296,37 @@ class ApiService {
       final userMessage = error_handler.ErrorHandler.handleApiError(
         e,
         context: 'ApiService.getPointTransactions',
+      );
+      throw Exception(userMessage);
+    }
+  }
+
+  // ========================
+  // PAYMENT TRANSACTIONS ENDPOINTS
+  // ========================
+
+  /// Get payment transactions by customer ID
+  /// Mengambil data transaksi pembayaran dari tabel payment_transactions
+  static Future<List<dynamic>> getPaymentTransactions(String customerId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/payment/xendit/payment-transactions/$customerId'),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true) {
+          return data['data'] ?? [];
+        } else {
+          throw Exception('Gagal mengambil data payment transactions');
+        }
+      } else {
+        throw Exception('Gagal mengambil data payment transactions');
+      }
+    } catch (e) {
+      final userMessage = error_handler.ErrorHandler.handleApiError(
+        e,
+        context: 'ApiService.getPaymentTransactions',
       );
       throw Exception(userMessage);
     }

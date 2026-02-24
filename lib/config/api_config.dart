@@ -1,8 +1,7 @@
 class ApiConfig {
   // Change this domain when your server domain changes
-  // Current: api.azzahracomputertegal.com - Update this to match your hosted API domain
+  // Production server
   static const String serverIp = 'https://api.azzahracomputertegal.com';
-  //static const String serverIp = 'http://192.168.1.19:8000';
 
   // API Base URLs
   static String get apiBaseUrl => '$serverIp/api';
@@ -18,6 +17,22 @@ class ApiConfig {
 
   // Webhook and other service URLs
   static String get webhookBaseUrl => '$serverIp/api/payment/webhook';
+
+  // Xendit Configuration
+  static String get xenditQrisUrl => '$serverIp/api/payment/xendit/qris';
+  static String get xenditVaUrl => '$serverIp/api/payment/xendit/va';
+  static String get xenditEwalletUrl => '$serverIp/api/payment/xendit/ewallet';
+  static String get xenditInvoiceUrl => '$serverIp/api/payment/xendit/invoice';
+  static String get xenditStatusUrl => '$serverIp/api/payment/xendit/status';
+  
+  // Xendit Supported Banks and E-Wallets
+  static const List<String> xenditSupportedBanks = [
+    'BCA', 'BNI', 'BRI', 'MANDIRI', 'BTN', 'BJB', 'BTPN', 'CIMB', 'DANAMON', 'GEodiscover'
+  ];
+  
+  static const List<String> xenditSupportedEWallets = [
+    'DANA', 'OVO', 'GOJEK', 'SHOPEEPAY', 'LINKAJA'
+  ];
 
   // Midtrans Configuration
   static const String midtransServerKey =

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
@@ -44,6 +45,7 @@ class _RiwayatPageState extends State<RiwayatPage>
   // Transaction data
   List<Map<String, dynamic>> serviceTransactions = [];
   List<Map<String, dynamic>> purchaseTransactions = [];
+  List<Map<String, dynamic>> paymentTransactions = [];
 
   bool isLoading = true;
 
@@ -77,6 +79,11 @@ class _RiwayatPageState extends State<RiwayatPage>
       }
     });
 
+    // Set default tab to Purchase and filter to 'pending' for purchases
+    _selectedMainTab = 1; // Start with Purchase tab
+    _mainTabController.index = 1; // Sync TabController
+    _selectedPurchaseStatus = 'pending';
+
     _loadTransactionHistory();
   }
 
@@ -95,6 +102,8 @@ class _RiwayatPageState extends State<RiwayatPage>
     try {
       final session = await SessionManager.getUserSession();
       final userCosKode = session['id']?.toString();
+      debugPrint('[Riwayat] User ID: $userCosKode');
+
       if (userCosKode == null || userCosKode.isEmpty) {
         _setEmptyState();
         return;
@@ -102,9 +111,33 @@ class _RiwayatPageState extends State<RiwayatPage>
 
       // Fetch service transactions
       final serviceData = await ApiService.getOrderList();
+      debugPrint('[Riwayat] Service data count: ${serviceData.length}');
 
       // Fetch purchase transactions
       final purchaseData = await ApiService.getCustomerOrders(userCosKode);
+      debugPrint('[Riwayat] Purchase data count: ${purchaseData.length}');
+
+      // Fetch payment transactions from payment_transactions table
+      try {
+        final paymentData = await ApiService.getPaymentTransactions(userCosKode);
+        debugPrint('[Riwayat] Payment transactions count: ${paymentData.length}');
+        
+        // Process payment transactions
+        for (final payment in paymentData) {
+          paymentTransactions.add({
+            'id': payment['id'],
+            'external_id': payment['external_id'] ?? '',
+            'transaction_id': payment['transaction_id'] ?? '',
+            'payment_method': payment['payment_method'] ?? 'N/A',
+            'amount': payment['amount'] ?? 0,
+            'status': payment['status'] ?? 'PENDING',
+            'created_at': payment['created_at'] ?? DateTime.now().toString(),
+            'updated_at': payment['updated_at'] ?? '',
+          });
+        }
+      } catch (e) {
+        debugPrint('[Riwayat] Error fetching payment transactions: $e');
+      }
 
       if (!mounted) return;
 
@@ -116,29 +149,59 @@ class _RiwayatPageState extends State<RiwayatPage>
           tempService.add(Map<String, dynamic>.from(transaksi));
         }
       }
+      debugPrint(
+          '[Riwayat] Filtered service transactions: ${tempService.length}');
 
       // Process purchase transactions
       final tempPurchase = <Map<String, dynamic>>[];
       for (final orderData in purchaseData) {
-        final order = orderData['order'];
+        // Handle both formats: direct order or nested in 'order' key
+        Map<String, dynamic>? order;
+        if (orderData is Map<String, dynamic>) {
+          if (orderData.containsKey('order') && orderData['order'] != null) {
+            order = orderData['order'] as Map<String, dynamic>;
+          } else {
+            order = orderData;
+          }
+        }
+
         if (order == null) continue;
 
         final orderCode = order['order_code']?.toString();
         if (orderCode == null || orderCode.isEmpty) continue;
 
+        // Get payment status - check multiple possible field names
+        final paymentStatus =
+            order['payment_status']?.toString().toLowerCase() ??
+                order['paymentStatus']?.toString().toLowerCase() ??
+                'pending';
+
+        // Get delivery status
+        final deliveryStatus =
+            order['delivery_status']?.toString().toLowerCase() ??
+                order['deliveryStatus']?.toString().toLowerCase() ??
+                'menunggu';
+
         tempPurchase.add({
           'order_code': orderCode,
-          'total_payment': order['total_payment'] ?? order['total_price'] ?? 0,
-          'created_at': order['created_at'],
-          'payment_status':
-              order['payment_status']?.toString().toLowerCase() ?? 'pending',
-          'delivery_status':
-              order['delivery_status']?.toString().toLowerCase() ?? 'menunggu',
-          'payment_method': order['payment_method'] ?? 'N/A',
-          'expedition_type': order['expedition_type'] ?? 'N/A',
-          'items': orderData['items'] ?? [],
+          'total_payment': order['total_payment'] ??
+              order['total_price'] ??
+              order['totalPrice'] ??
+              0,
+          'created_at': order['created_at'] ??
+              order['createdAt'] ??
+              DateTime.now().toString(),
+          'payment_status': paymentStatus,
+          'delivery_status': deliveryStatus,
+          'payment_method':
+              order['payment_method'] ?? order['paymentMethod'] ?? 'N/A',
+          'expedition_type':
+              order['expedition_type'] ?? order['expeditionType'] ?? 'N/A',
+          'items': orderData['items'] ?? order['items'] ?? [],
         });
       }
+      debugPrint(
+          '[Riwayat] Filtered purchase transactions: ${tempPurchase.length}');
 
       // Sort by date (newest first)
       tempService.sort(
@@ -147,13 +210,20 @@ class _RiwayatPageState extends State<RiwayatPage>
       tempPurchase.sort(
         (a, b) => _compareDate(b['created_at'], a['created_at']),
       );
+      paymentTransactions.sort(
+        (a, b) => _compareDate(b['created_at'], a['created_at']),
+      );
 
       setState(() {
         serviceTransactions = tempService;
         purchaseTransactions = tempPurchase;
         isLoading = false;
       });
-    } catch (e) {
+      debugPrint(
+          '[Riwayat] State updated - Service: ${tempService.length}, Purchase: ${tempPurchase.length}, Payment: ${paymentTransactions.length}');
+    } catch (e, stackTrace) {
+      debugPrint('[Riwayat] Error loading transactions: $e');
+      debugPrint('[Riwayat] Stack trace: $stackTrace');
       if (mounted) _setEmptyState();
     }
   }
@@ -804,11 +874,9 @@ class _RiwayatPageState extends State<RiwayatPage>
         // Status Grid
         _buildStatusGrid(isService: false),
 
-        // Transaction List
+        // Transaction List - show all if filter returns empty
         Expanded(
-          child: _selectedPurchaseStatus == null
-              ? _buildSelectStatusHint()
-              : _buildPurchaseList(),
+          child: _buildPurchaseList(),
         ),
       ],
     );
@@ -817,12 +885,20 @@ class _RiwayatPageState extends State<RiwayatPage>
   Widget _buildPurchaseList() {
     final filtered = _getFilteredPurchaseTransactions();
 
-    if (filtered.isEmpty) {
+    // If filter returns empty, show all purchases
+    final displayData = filtered.isEmpty && _selectedPurchaseStatus != null
+        ? purchaseTransactions
+        : filtered;
+
+    if (displayData.isEmpty) {
       return _buildEmptyState(
-        icon: _getStatusIcon(_selectedPurchaseStatus!),
-        title: 'Tidak Ada Pesanan',
-        subtitle:
-            'Tidak ada pesanan dengan status "${_getStatusLabel(_selectedPurchaseStatus!)}"',
+        icon: _getStatusIcon(_selectedPurchaseStatus ?? 'pending'),
+        title: _selectedPurchaseStatus != null
+            ? 'Tidak Ada Pesanan'
+            : 'Belum Ada Riwayat Pembelian',
+        subtitle: _selectedPurchaseStatus != null
+            ? 'Tidak ada pesanan dengan status "${_getStatusLabel(_selectedPurchaseStatus!)}"'
+            : 'Transaksi pembelian Anda akan muncul di sini',
       );
     }
 
@@ -831,8 +907,8 @@ class _RiwayatPageState extends State<RiwayatPage>
       color: _getAdaptiveColor(const Color(0xFF0041c3)),
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
-        itemCount: filtered.length,
-        itemBuilder: (context, index) => _buildPurchaseCard(filtered[index]),
+        itemCount: displayData.length,
+        itemBuilder: (context, index) => _buildPurchaseCard(displayData[index]),
       ),
     );
   }
@@ -1711,8 +1787,7 @@ class _RiwayatPageState extends State<RiwayatPage>
       if (context.mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(
-            SnackBar(content: Text('Gagal membatalkan pesanan: ')));
+        ).showSnackBar(SnackBar(content: Text('Gagal membatalkan pesanan: ')));
       }
     }
   }

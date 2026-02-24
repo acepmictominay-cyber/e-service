@@ -32,10 +32,17 @@ android {
 
     signingConfigs {
         create("release") {
-            keyAlias = localProperties.getProperty("MYAPP_UPLOAD_KEY_ALIAS")
-            keyPassword = localProperties.getProperty("MYAPP_UPLOAD_KEY_PASSWORD")
-            storeFile = file(localProperties.getProperty("MYAPP_UPLOAD_STORE_FILE"))
-            storePassword = localProperties.getProperty("MYAPP_UPLOAD_STORE_PASSWORD")
+            val releaseKeyAlias = localProperties.getProperty("MYAPP_UPLOAD_KEY_ALIAS")
+            val releaseKeyPassword = localProperties.getProperty("MYAPP_UPLOAD_KEY_PASSWORD")
+            val releaseStoreFile = localProperties.getProperty("MYAPP_UPLOAD_STORE_FILE")
+            val releaseStorePassword = localProperties.getProperty("MYAPP_UPLOAD_STORE_PASSWORD")
+            
+            if (releaseKeyAlias != null && releaseKeyPassword != null && releaseStoreFile != null && releaseStorePassword != null) {
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
+                storeFile = file(releaseStoreFile)
+                storePassword = releaseStorePassword
+            }
         }
     }
 
@@ -53,6 +60,9 @@ android {
     buildTypes {
         release {
             signingConfig = signingConfigs.getByName("release")
+            // Disable minification to speed up build and avoid file lock issues
+            isMinifyEnabled = false
+            isShrinkResources = false
         }
     }
 }
