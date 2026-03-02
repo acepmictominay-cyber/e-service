@@ -131,7 +131,9 @@ class KnowledgeService {
       KnowledgeItem(
         id: 'faq_payment',
         title: 'Metode Pembayaran',
-        content: 'Transfer bank, GoPay, OVO, Dana, kartu kredit, dan Midtrans.',
+        content:
+            'OVO (saat ini hanya OVO yang tersedia). Metode pembayaran lain '
+            '(QRIS, Transfer Bank, E-Wallet lainnya) akan segera tersedia.',
         category: 'FAQ',
         createdAt: now,
         updatedAt: now,
@@ -232,7 +234,7 @@ class KnowledgeService {
         id: 'faq_payment_methods',
         title: 'Metode Pembayaran Lengkap',
         content:
-            'Berbagai metode pembayaran di AzzaService:\n\n💳 CREDIT/DEBIT CARD:\n• Visa, Mastercard, JCB\n• Cicilan 0% hingga 12 bulan\n\n📱 E-WALLET:\n• GoPay, OVO, Dana, LinkAja\n• ShopeePay, Tokopedia\n\n🏦 TRANSFER BANK:\n• BCA, Mandiri, BNI, BRI\n• CIMB Niaga, Permata\n\n💰 CASH ON DELIVERY:\n• Area Jabodetabek\n• Biaya admin Rp 5.000\n\n📋 PEMBAYARAN CICILAN:\n• Indodana, Kredivo, Akulaku\n• Minimum Rp 500.000',
+            'Berbagai metode pembayaran di AzzaService:\n\n💳 CREDIT/DEBIT CARD:\n• Visa, Mastercard, JCB\n\n📱 E-WALLET:\n• OVO, DANA\n• ShopeePay, LinkAja\n\n🏦 TRANSFER BANK (Virtual Account):\n• BCA, BNI, BRI, Mandiri\n• CIMB Niaga, BTPN\n\n💰 QRIS:\n• Semua aplikasi pembayaran QRIS\n\n📋 Info:\n• Pembayaran diproses via Xendit\n• Konfirmasi otomatis setelah payment',
         category: 'Payment Methods',
         createdAt: now,
         updatedAt: now,
@@ -903,7 +905,7 @@ Untuk bantuan lebih spesifik, silakan tanyakan langsung apa yang Anda butuhkan!'
         q.contains('pembayaran') ||
         q.contains('cod') ||
         q.contains('transfer')) {
-      return 'Ya, menerima berbagai metode pembayaran: transfer bank, GoPay, OVO, Dana, kartu kredit, dan Midtrans.';
+      return 'Ya, menerima berbagai metode pembayaran: Transfer Bank (BCA, BNI, BRI, Mandiri), E-Wallet (OVO, DANA, ShopeePay, LinkAja), QRIS, dan Kartu Kredit.';
     }
 
     // Questions about availability

@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:azza_service/Auth/login.dart';
 import 'package:azza_service/Home/home.dart';
+import 'package:azza_service/Admin/admin_home.dart';
 import 'package:azza_service/Others/background_order_service.dart';
 import 'package:azza_service/Others/birthday_notification_service.dart';
 import 'package:azza_service/providers/theme_provider.dart';
@@ -296,6 +297,8 @@ class _SplashScreenState extends State<SplashScreen> {
         Widget nextPage;
         if (widget.role == 'karyawan') {
           nextPage = const TeknisiHomePage();
+        } else if (widget.role == 'admin') {
+          nextPage = const AdminHomePage();
         } else {
           nextPage = const HomePage();
         }

@@ -29,9 +29,9 @@ class XenditPaymentMethodDialog extends StatelessWidget {
               context,
               XenditPaymentMethodType.qris,
               Icons.qr_code_2,
-              'Scan QR Code',
-              'Pembayaran instan dengan QRIS',
-              available: false,
+              'QRIS',
+              'Scan QR Code - Pembayaran instan',
+              available: false, // Coming Soon
             ),
             _buildSectionHeader('Virtual Account'),
             ...ApiConfig.xenditSupportedBanks
@@ -54,7 +54,7 @@ class XenditPaymentMethodDialog extends StatelessWidget {
               Icons.credit_card,
               'Kartu Kredit/Debit',
               'Visa, Mastercard, JCB',
-              available: false,
+              available: false, // Coming Soon
             ),
           ],
         ),
@@ -156,7 +156,7 @@ class XenditPaymentMethodDialog extends StatelessWidget {
   }
 
   Widget _buildBankOption(BuildContext context, String bankCode) {
-    // All banks are coming soon except we keep them visible but disabled
+    // Banks are Coming Soon
     final bool available = false;
 
     IconData bankIcon;
@@ -251,7 +251,7 @@ class XenditPaymentMethodDialog extends StatelessWidget {
   }
 
   Widget _buildEWalletOption(BuildContext context, String ewalletType) {
-    // Only OVO is available, all others are coming soon
+    // Only OVO is available, others are Coming Soon
     final bool available = ewalletType.toUpperCase() == 'OVO';
 
     IconData walletIcon;

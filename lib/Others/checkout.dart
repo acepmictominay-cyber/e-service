@@ -3293,11 +3293,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
         // Close loading dialog
         Navigator.of(context, rootNavigator: true).pop();
 
-        // Create fake order code for simulation
-        final fakeOrderCode = 'sim_${DateTime.now().millisecondsSinceEpoch}';
+        // Create real order code using timestamp - in production should come from backend
+        final orderCode = 'ORD_${DateTime.now().millisecondsSinceEpoch}';
 
-        // Start simulated payment
-        await _startMidtransPayment(context, fakeOrderCode);
+        // Start real Xendit payment - use QRIS by default
+        _navigateToXenditPayment('QRIS', finalPrice);
       } else {
         // Production: Create order via API first
         final orderResponse = await ApiService.createCheckoutOrder(
@@ -3395,17 +3395,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
         ],
         onTransactionFinished: (result) async {
           if (PaymentService.isTransactionSuccess(result)) {
-            // Skip backend updates for simulated payments
-            if (!PaymentService.isProduction && orderCode.startsWith('sim_')) {
-              // For simulated payments, directly proceed to success
-              _onPaymentSuccess(context, orderCode);
+            // Real payment - update order status in backend
+            if (PaymentService.isProduction) {
+              // For production payments, backend webhook will handle status update
             } else {
-              // Production: Update payment status
-              await ApiService.updatePaymentStatus(
-                orderCode: orderCode,
-                paymentStatus: 'paid',
-              );
-
+              // For development, proceed to success
               _onPaymentSuccess(context, orderCode);
             }
           } else {

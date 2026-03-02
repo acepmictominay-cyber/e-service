@@ -6,6 +6,7 @@ import 'package:azza_service/Promo/promo.dart';
 import 'package:azza_service/Service/service.dart';
 import 'package:azza_service/Service/detail_service_midtrans.dart';
 import 'package:azza_service/api_services/api_service.dart';
+import 'package:azza_service/api_services/xendit_payment_service.dart';
 import 'package:azza_service/utils/error_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -1631,7 +1632,8 @@ class _TrackingPageState extends State<TrackingPage>
                   Theme.of(context).colorScheme.primary.withOpacity(0.8)
                 ],
               ),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(25)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(25)),
             ),
             constraints: BoxConstraints(
               maxHeight: MediaQuery.of(context).size.height * 0.85,
@@ -1800,28 +1802,32 @@ class _TrackingPageState extends State<TrackingPage>
 
                             const SizedBox(height: 12),
 
-                            // Transfer Bank - Coming Soon
+                            // Transfer Bank - Available
                             _buildModernPaymentOption(
                               "Transfer Bank",
                               "Transfer ke rekening bank",
                               Icons.account_balance,
-                              Theme.of(context).colorScheme.surfaceContainerHighest,
-                              false,
-                              null,
-                              available: false,
+                              Theme.of(context).colorScheme.primary,
+                              selectedPaymentMethod == "Bank Transfer",
+                              () => setModalState(
+                                () => selectedPaymentMethod = "Bank Transfer",
+                              ),
+                              available: true,
                             ),
 
                             const SizedBox(height: 12),
 
-                            // E-wallet - Coming Soon
+                            // E-wallet - Available
                             _buildModernPaymentOption(
                               "E-wallet",
                               "GoPay, OVO, Dana, LinkAja",
                               Icons.account_balance_wallet,
-                              Theme.of(context).colorScheme.surfaceContainerHighest,
-                              false,
-                              null,
-                              available: false,
+                              Theme.of(context).colorScheme.primary,
+                              selectedPaymentMethod == "E-wallet",
+                              () => setModalState(
+                                () => selectedPaymentMethod = "E-wallet",
+                              ),
+                              available: true,
                             ),
 
                             const SizedBox(height: 24),
@@ -2431,6 +2437,515 @@ class _TrackingPageState extends State<TrackingPage>
     );
   }
 
+  // Show Xendit payment method dialog
+  void _showXenditPaymentDialog(
+      BuildContext context, double amount, String paymentType,
+      {bool isCancel = false}) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Theme.of(context).colorScheme.primary,
+              Theme.of(context).colorScheme.primary.withOpacity(0.8)
+            ],
+          ),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(25)),
+        ),
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.85,
+        ),
+        child: Column(
+          children: [
+            Container(
+              margin: const EdgeInsets.only(top: 12),
+              width: 50,
+              height: 5,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(3),
+              ),
+            ),
+            Expanded(
+              child: Container(
+                margin: const EdgeInsets.only(top: 20),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface,
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(25)),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: ListView(
+                    children: [
+                      // Header
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  Theme.of(context).colorScheme.primary,
+                                  Theme.of(context)
+                                      .colorScheme
+                                      .primary
+                                      .withOpacity(0.8),
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                            child: Icon(
+                              paymentType == 'VA'
+                                  ? Icons.account_balance
+                                  : Icons.wallet,
+                              color: Colors.white,
+                              size: 28,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  paymentType == 'VA'
+                                      ? 'Transfer Bank'
+                                      : 'E-Wallet',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                Text(
+                                  'Pilih metode pembayaran',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 14,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Amount
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primaryContainer,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.payments,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onPrimaryContainer,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Total Pembayaran',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 12,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onPrimaryContainer,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Rp ${NumberFormat('#,###', 'id_ID').format(amount)}',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w700,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onPrimaryContainer,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Bank options
+                      if (paymentType == 'VA') ...[
+                        Text(
+                          'Pilih Bank',
+                          style: GoogleFonts.poppins(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        _buildBankOption(context, 'BCA', amount, isCancel),
+                        _buildBankOption(context, 'BNI', amount, isCancel),
+                        _buildBankOption(context, 'BRI', amount, isCancel),
+                        _buildBankOption(context, 'MANDIRI', amount, isCancel),
+                      ],
+
+                      // E-wallet options
+                      if (paymentType == 'EWALLET') ...[
+                        Text(
+                          'Pilih E-Wallet',
+                          style: GoogleFonts.poppins(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        _buildEWalletOption(context, 'OVO', amount, isCancel),
+                        _buildEWalletOption(context, 'DANA', amount, isCancel),
+                        _buildEWalletOption(
+                            context, 'SHOPEEPAY', amount, isCancel),
+                        _buildEWalletOption(
+                            context, 'LINKAJA', amount, isCancel),
+                      ],
+
+                      const SizedBox(height: 24),
+
+                      // Cancel button
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: Text('Batal', style: GoogleFonts.poppins()),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBankOption(
+      BuildContext context, String bankCode, double amount, bool isCancel) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.blue.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(Icons.account_balance, color: Colors.blue[700]),
+        ),
+        title: Text(_getBankName(bankCode),
+            style: GoogleFonts.poppins(fontWeight: FontWeight.w500)),
+        subtitle:
+            Text('Virtual Account', style: GoogleFonts.poppins(fontSize: 12)),
+        trailing: Icon(Icons.arrow_forward_ios, size: 16),
+        onTap: () async {
+          Navigator.pop(context);
+          await _createVirtualAccount(context, bankCode, amount, isCancel);
+        },
+      ),
+    );
+  }
+
+  Widget _buildEWalletOption(
+      BuildContext context, String ewalletType, double amount, bool isCancel) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: _getEWalletColor(ewalletType).withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(_getEWalletIcon(ewalletType),
+              color: _getEWalletColor(ewalletType)),
+        ),
+        title: Text(_getEWalletName(ewalletType),
+            style: GoogleFonts.poppins(fontWeight: FontWeight.w500)),
+        subtitle: Text('E-Wallet', style: GoogleFonts.poppins(fontSize: 12)),
+        trailing: Icon(Icons.arrow_forward_ios, size: 16),
+        onTap: () async {
+          Navigator.pop(context);
+          await _createEWalletPayment(context, ewalletType, amount, isCancel);
+        },
+      ),
+    );
+  }
+
+  String _getBankName(String code) {
+    switch (code) {
+      case 'BCA':
+        return 'Bank Central Asia (BCA)';
+      case 'BNI':
+        return 'Bank Negara Indonesia (BNI)';
+      case 'BRI':
+        return 'Bank Rakyat Indonesia (BRI)';
+      case 'MANDIRI':
+        return 'Bank Mandiri';
+      case 'CIMB':
+        return 'Bank CIMB Niaga';
+      default:
+        return code;
+    }
+  }
+
+  String _getEWalletName(String code) {
+    switch (code) {
+      case 'OVO':
+        return 'OVO';
+      case 'DANA':
+        return 'DANA';
+      case 'SHOPEEPAY':
+        return 'ShopeePay';
+      case 'LINKAJA':
+        return 'LinkAja';
+      default:
+        return code;
+    }
+  }
+
+  IconData _getEWalletIcon(String code) {
+    switch (code) {
+      case 'OVO':
+        return Icons.wallet;
+      case 'DANA':
+        return Icons.account_balance_wallet;
+      case 'SHOPEEPAY':
+        return Icons.shopping_bag;
+      case 'LINKAJA':
+        return Icons.link;
+      default:
+        return Icons.wallet;
+    }
+  }
+
+  Color _getEWalletColor(String code) {
+    switch (code) {
+      case 'OVO':
+        return Colors.purple;
+      case 'DANA':
+        return Colors.blue;
+      case 'SHOPEEPAY':
+        return Colors.orange;
+      case 'LINKAJA':
+        return Colors.red;
+      default:
+        return Colors.blue;
+    }
+  }
+
+  Future<void> _createVirtualAccount(BuildContext context, String bankCode,
+      double amount, bool isCancel) async {
+    try {
+      // Show loading
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => Center(child: CircularProgressIndicator()),
+      );
+
+      final orderCode = isCancel
+          ? 'CANCEL_${DateTime.now().millisecondsSinceEpoch}'
+          : widget.queueCode ??
+              'ORDER_${DateTime.now().millisecondsSinceEpoch}';
+
+      // Call Xendit VA API
+      final result = await XenditPaymentService.createVirtualAccount(
+        orderId: orderCode,
+        amount: amount.toInt(),
+        customerName: 'Customer',
+        customerId: '1',
+        bankCode: bankCode,
+      );
+
+      // Hide loading
+      if (context.mounted) Navigator.pop(context);
+
+      if (result['success'] == true) {
+        // Show VA dialog
+        if (context.mounted) {
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Text('Virtual Account ${_getBankName(bankCode)}',
+                  style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      children: [
+                        Text('Nomor VA',
+                            style: TextStyle(fontSize: 12, color: Colors.grey)),
+                        const SizedBox(height: 8),
+                        SelectableText(
+                          result['va_number'] ?? '',
+                          style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 2),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text('Rp ${NumberFormat('#,###', 'id_ID').format(amount)}',
+                      style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue)),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('Tutup'),
+                ),
+              ],
+            ),
+          );
+        }
+      } else {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content:
+                  Text(result['message'] ?? 'Gagal membuat Virtual Account'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _createEWalletPayment(BuildContext context, String ewalletType,
+      double amount, bool isCancel) async {
+    try {
+      // Show loading
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => Center(child: CircularProgressIndicator()),
+      );
+
+      final orderCode = isCancel
+          ? 'CANCEL_${DateTime.now().millisecondsSinceEpoch}'
+          : widget.queueCode ??
+              'ORDER_${DateTime.now().millisecondsSinceEpoch}';
+
+      // Call Xendit E-wallet API
+      final result = await XenditPaymentService.createEWalletPayment(
+        orderId: orderCode,
+        amount: amount.toInt(),
+        customerPhone: '081234567890',
+        customerId: '1',
+        ewalletType: ewalletType,
+      );
+
+      // Hide loading
+      if (context.mounted) Navigator.pop(context);
+
+      if (result['success'] == true) {
+        final checkoutUrl = result['checkout_url'] ?? '';
+        final deeplinkUrl = result['deeplink_url'] ?? '';
+
+        // Show e-wallet dialog
+        if (context.mounted) {
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Text('Pembayaran ${_getEWalletName(ewalletType)}',
+                  style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(_getEWalletIcon(ewalletType),
+                      size: 64, color: _getEWalletColor(ewalletType)),
+                  const SizedBox(height: 16),
+                  Text('Rp ${NumberFormat('#,###', 'id_ID').format(amount)}',
+                      style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue)),
+                  const SizedBox(height: 16),
+                  Text(
+                      'Klik tombol di bawah untuk membuka aplikasi ${_getEWalletName(ewalletType)}'),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('Tutup'),
+                ),
+                if (checkoutUrl.isNotEmpty || deeplinkUrl.isNotEmpty)
+                  ElevatedButton(
+                    onPressed: () {
+                      // Open e-wallet app
+                      Navigator.pop(context);
+                    },
+                    child: Text('Buka Aplikasi'),
+                  ),
+              ],
+            ),
+          );
+        }
+      } else {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result['message'] ?? 'Gagal membuat payment'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _processFullPayment() async {
     final fullAmount = _totalCost ?? 0.0;
     if (fullAmount <= 0) {
@@ -2656,28 +3171,35 @@ class _TrackingPageState extends State<TrackingPage>
 
                         const SizedBox(height: 10),
 
-                        // Transfer Bank - Coming Soon
+                        // Transfer Bank - Available - show Xendit dialog
                         _buildModernPaymentOption(
                           "Transfer Bank",
                           "Transfer ke rekening bank",
                           Icons.account_balance,
-                          Theme.of(context).colorScheme.surfaceContainerHighest,
+                          Theme.of(context).colorScheme.primary,
                           false,
-                          null,
-                          available: false,
+                          () {
+                            Navigator.pop(context);
+                            _showXenditPaymentDialog(context, fullAmount, 'VA');
+                          },
+                          available: true,
                         ),
 
                         const SizedBox(height: 10),
 
-                        // E-wallet - Coming Soon
+                        // E-wallet - Available - show Xendit dialog
                         _buildModernPaymentOption(
                           "E-wallet",
                           "GoPay, OVO, Dana, LinkAja",
                           Icons.account_balance_wallet,
-                          Theme.of(context).colorScheme.surfaceContainerHighest,
+                          Theme.of(context).colorScheme.primary,
                           false,
-                          null,
-                          available: false,
+                          () {
+                            Navigator.pop(context);
+                            _showXenditPaymentDialog(
+                                context, fullAmount, 'EWALLET');
+                          },
+                          available: true,
                         ),
 
                         const SizedBox(height: 16),
@@ -3242,28 +3764,38 @@ class _TrackingPageState extends State<TrackingPage>
 
                         const SizedBox(height: 10),
 
-                        // Transfer Bank - Coming Soon
+                        // Transfer Bank - Available
                         _buildModernPaymentOption(
                           "Transfer Bank",
                           "Transfer ke rekening bank",
                           Icons.account_balance,
-                          Theme.of(context).colorScheme.surfaceContainerHighest,
+                          Theme.of(context).colorScheme.primary,
                           false,
-                          null,
-                          available: false,
+                          () {
+                            Navigator.pop(context);
+                            _showXenditPaymentDialog(
+                                context, cancelAmount.toDouble(), 'VA',
+                                isCancel: true);
+                          },
+                          available: true,
                         ),
 
                         const SizedBox(height: 10),
 
-                        // E-wallet - Coming Soon
+                        // E-wallet - Available
                         _buildModernPaymentOption(
                           "E-wallet",
                           "GoPay, OVO, Dana, LinkAja",
                           Icons.account_balance_wallet,
-                          Theme.of(context).colorScheme.surfaceContainerHighest,
+                          Theme.of(context).colorScheme.primary,
                           false,
-                          null,
-                          available: false,
+                          () {
+                            Navigator.pop(context);
+                            _showXenditPaymentDialog(
+                                context, cancelAmount.toDouble(), 'EWALLET',
+                                isCancel: true);
+                          },
+                          available: true,
                         ),
 
                         const SizedBox(height: 16),
@@ -3484,50 +4016,47 @@ class _TrackingPageState extends State<TrackingPage>
                       ),
                     ),
                     const SizedBox(height: 8),
-                    ..._getCompletedStatuses()
-                        .map(
-                          (item) => Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.check_circle,
-                                  color: Theme.of(context).colorScheme.primary,
-                                  size: 16,
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        item.title,
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w600,
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .onSurface,
-                                        ),
-                                      ),
-                                      Text(
-                                        _fmt(item.time),
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 11,
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .onSurfaceVariant,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
+                    ..._getCompletedStatuses().map(
+                      (item) => Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.check_circle,
+                              color: Theme.of(context).colorScheme.primary,
+                              size: 16,
                             ),
-                          ),
-                        )
-                        ,
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    item.title,
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface,
+                                    ),
+                                  ),
+                                  Text(
+                                    _fmt(item.time),
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 11,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -3556,7 +4085,9 @@ class _TrackingPageState extends State<TrackingPage>
                           ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: _isPaymentProcessing
-                                ? Theme.of(context).colorScheme.surfaceContainerHighest
+                                ? Theme.of(context)
+                                    .colorScheme
+                                    .surfaceContainerHighest
                                 : Theme.of(context).colorScheme.tertiary,
                             foregroundColor:
                                 Theme.of(context).colorScheme.onTertiary,
@@ -3584,7 +4115,9 @@ class _TrackingPageState extends State<TrackingPage>
                           ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: _isPaymentProcessing
-                                ? Theme.of(context).colorScheme.surfaceContainerHighest
+                                ? Theme.of(context)
+                                    .colorScheme
+                                    .surfaceContainerHighest
                                 : Theme.of(context).colorScheme.primary,
                             foregroundColor:
                                 Theme.of(context).colorScheme.onPrimary,
@@ -3613,7 +4146,9 @@ class _TrackingPageState extends State<TrackingPage>
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: _isPaymentProcessing
-                            ? Theme.of(context).colorScheme.surfaceContainerHighest
+                            ? Theme.of(context)
+                                .colorScheme
+                                .surfaceContainerHighest
                             : Theme.of(context).colorScheme.error,
                         foregroundColor: Theme.of(context).colorScheme.onError,
                         shape: RoundedRectangleBorder(

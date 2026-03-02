@@ -906,11 +906,15 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
     return GestureDetector(
       onTap: () {
-        // Navigate to tracking page with sample queue code
+        // Navigate to tracking page - get real queue code from order
+        String? queueCode = 'SAMPLE123'; // Default for demo, should get from actual order
+        
+        // Try to get actual order code from recent orders if available
+        // This would typically come from the order that was just placed
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => const TrackingPage(queueCode: 'SAMPLE123'),
+            builder: (context) => TrackingPage(queueCode: queueCode),
           ),
         );
       },

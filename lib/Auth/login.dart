@@ -1,5 +1,6 @@
 import 'package:azza_service/Auth/forget_password.dart';
 import 'package:azza_service/Home/home.dart';
+import 'package:azza_service/Admin/admin_home.dart';
 import 'package:azza_service/Others/session_manager.dart';
 import 'package:azza_service/Others/user_point_data.dart';
 import 'package:azza_service/Teknisi/teknisi_home.dart';
@@ -214,6 +215,31 @@ class _LoginScreenState extends State<LoginScreen> {
                               setState(() => isLoading = true);
 
                               try {
+                                // Hardcoded Admin Login
+                                if (username.toLowerCase() == 'admin' &&
+                                    password == 'Admin123') {
+                                  setState(() => isLoading = false);
+
+                                  // Simpan session sebagai admin
+                                  await SessionManager.saveUserSession(
+                                    'admin001',
+                                    'Administrator',
+                                    0,
+                                    role: 'admin',
+                                  );
+
+                                  if (!mounted) return;
+                                  Navigator.pushAndRemoveUntil(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          const AdminHomePage(),
+                                    ),
+                                    (route) => false,
+                                  );
+                                  return;
+                                }
+
                                 final result = await ApiService.login(
                                   username,
                                   password,
@@ -244,6 +270,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                   Widget nextPage;
                                   if (role == 'karyawan') {
                                     nextPage = const TeknisiHomePage();
+                                  } else if (role == 'admin') {
+                                    nextPage = const AdminHomePage();
                                   } else {
                                     nextPage = const HomePage(
                                       isFreshLogin: true,

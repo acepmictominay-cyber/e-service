@@ -125,6 +125,9 @@ class BackgroundServiceManager {
         if (kryKode != null) {
           await ApiService.getkry_kode(kryKode);
         }
+      } else if (role == 'admin') {
+        // Admin doesn't need background order checking
+        return true;
       } else {
         // Check for order updates for customers
         await ApiService.getOrderList();
