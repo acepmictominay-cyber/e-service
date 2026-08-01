@@ -363,6 +363,14 @@ class _TeknisiHomePageState extends State<TeknisiHomePage>
     );
 
     if (orderIndex == -1) {
+      try {
+        await ApiService.updateOrderListStatus(order.orderId, newStatus.name);
+        await _refreshData();
+      } catch (e) {
+        if (!mounted) return;
+        ErrorUtils.showErrorSnackBar(context, e,
+            customMessage: 'Gagal memperbarui status pesanan');
+      }
       return;
     }
 
@@ -814,7 +822,12 @@ class _TeknisiHomePageState extends State<TeknisiHomePage>
                 ? activeOrders.first.customerAddress
                 : '',
           ),
-          WaitingTasksPage(isAutoRefreshEnabled: _isAutoRefreshEnabled),
+          WaitingTasksPage(
+            isAutoRefreshEnabled: _isAutoRefreshEnabled,
+            onUpdateStatus: _updateOrderStatus,
+            onShowDamageForm: _showTindakanForm,
+            onOpenMaps: _openMaps,
+          ),
           HistoryTab(
             transaksiList: transaksiList,
             isLoading: isLoading,
@@ -844,7 +857,7 @@ class _TeknisiHomePageState extends State<TeknisiHomePage>
           ),
           const BottomNavigationBarItem(
             icon: Icon(Icons.chat),
-            label: 'Order List',
+            label: 'Order Offline',
           ),
           const BottomNavigationBarItem(
             icon: Icon(Icons.history),

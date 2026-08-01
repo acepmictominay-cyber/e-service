@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:azza_service/models/technician_order_model.dart';
 import 'package:azza_service/config/api_config.dart';
@@ -30,10 +31,7 @@ class ApiService {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        // kalau response API langsung user
         return data;
-        // kalau response API pakai format { "success": true, "data": { ... } }
-        // return data['data'];
       } else {
         throw Exception('Gagal memuat data, periksa internet anda');
       }
@@ -43,6 +41,29 @@ class ApiService {
         context: 'ApiService.getCostomerById',
       );
       throw Exception(userMessage);
+    }
+  }
+
+  // GET 5 costomer terbaru untuk orderlist teknisi
+  static Future<List<dynamic>> getLatestCustomers() async {
+    final response = await http.get(Uri.parse('$baseUrl/costomer/latest'));
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      if (data is List) {
+        return data.take(5).toList();
+      } else if (data is Map && data['success'] == true) {
+        final dataList = data['data'];
+        if (dataList is List) {
+          return dataList.take(5).toList();
+        } else {
+          return [];
+        }
+      } else {
+        return [];
+      }
+    } else {
+      throw Exception('Gagal memuat data customer terbaru');
     }
   }
 
@@ -435,6 +456,92 @@ class ApiService {
     }
   }
 
+  // Ambil order offline dari endpoint order-list (bukan /transaksi/latest)
+  // karena order-list menyertakan field merek/device/seri di level atas,
+  // sedangkan /transaksi/latest tidak. Agar order yang belum diambil
+  // (kry_kode null / milik teknisi lain) ikut tampil, tidak difilter kry_kode.
+  static Future<List<TechnicianOrder>> getTeknisiTransaksi(String kryKode) async {
+    List<dynamic> data;
+    try {
+      data = await getOrderList(limit: 10);
+      if (data.isEmpty) {
+        data = await getOrderList();
+      }
+    } catch (e) {
+      debugPrint('[getTeknisiTransaksi] gagal memuat order-list dengan limit: $e');
+      try {
+        data = await getOrderList();
+        debugPrint('[getTeknisiTransaksi] fallback tanpa limit berhasil, jumlah: ${data.length}');
+      } catch (e2) {
+        debugPrint('[getTeknisiTransaksi] fallback tanpa limit juga gagal: $e2');
+        return [];
+      }
+    }
+
+    debugPrint('[getTeknisiTransaksi] jumlah data mentah: ${data.length}');
+
+    final List<TechnicianOrder> orders = [];
+    for (var item in data) {
+      if (item is! Map) continue;
+      try {
+        orders.add(TechnicianOrder.fromMap(Map<String, dynamic>.from(item)));
+      } catch (e) {
+        debugPrint('[getTeknisiTransaksi] gagal parse item: $e');
+        debugPrint('[getTeknisiTransaksi] item bermasalah: ${item.toString()}');
+      }
+    }
+
+    debugPrint('[getTeknisiTransaksi] jumlah order berhasil diparse: ${orders.length}');
+    return orders;
+  }
+
+  static Future<List<TechnicianOrder>> getAllTransaksiForWaitingPage() async {
+    final response = await http.get(Uri.parse('$baseUrl/transaksi'));
+
+    if (response.statusCode == 200) {
+      final decoded = json.decode(response.body);
+      List<dynamic> data;
+      if (decoded is List) {
+        data = decoded;
+      } else if (decoded is Map && decoded['data'] is List) {
+        data = decoded['data'];
+      } else {
+        return [];
+      }
+
+      final List<TechnicianOrder> orders = [];
+      for (var item in data) {
+        final cosKode = item['cos_kode'];
+        if (cosKode != null && cosKode.toString().isNotEmpty) {
+          try {
+            final customerResponse = await http.get(
+              Uri.parse('$baseUrl/costomers/$cosKode'),
+            );
+
+            if (customerResponse.statusCode == 200) {
+              final customerData = json.decode(customerResponse.body);
+              item['cos_nama'] = customerData['cos_nama'];
+              item['cos_alamat'] = customerData['cos_alamat'];
+              item['cos_hp'] = customerData['cos_hp'];
+            }
+          } catch (e) {
+            // continue without customer data
+          }
+        }
+
+        try {
+          orders.add(TechnicianOrder.fromMap(Map<String, dynamic>.from(item)));
+        } catch (e) {
+          // skip invalid item
+        }
+      }
+
+      return orders;
+    } else {
+      throw Exception('Gagal memuat data transaksi');
+    }
+  }
+
   // GET semua transaksi
   static Future<List<dynamic>> getTransaksi() async {
     final response = await http.get(Uri.parse('$baseUrl/transaksi'));
@@ -480,15 +587,21 @@ class ApiService {
     }
   }
 
-  // UPDATE status transaksi
+  // UPDATE status transaksi + opsional assign kry_kode
   static Future<Map<String, dynamic>> updateTransaksiStatus(
     String transKode,
-    String status,
-  ) async {
+    String status, {
+    String? alsoSetKryKode,
+  }) async {
+    final body = <String, dynamic>{'_method': 'PUT', 'trans_status': status};
+    if (alsoSetKryKode != null && alsoSetKryKode.isNotEmpty) {
+      body['kry_kode'] = alsoSetKryKode;
+    }
+
     final response = await http.post(
       Uri.parse('$baseUrl/transaksi/$transKode'),
       headers: {'Content-Type': 'application/json'},
-      body: json.encode({'_method': 'PUT', 'trans_status': status}),
+      body: json.encode(body),
     );
 
     if (response.statusCode == 200 || response.statusCode == 201) {
@@ -607,8 +720,16 @@ class ApiService {
   }
 
   // GET all order_list
-  static Future<List<dynamic>> getOrderList() async {
-    final response = await http.get(Uri.parse('$baseUrl/order-list'));
+  static Future<List<dynamic>> getOrderList({int? limit}) async {
+    final uri = limit != null
+        ? Uri.parse('$baseUrl/order-list').replace(queryParameters: {'limit': limit.toString()})
+        : Uri.parse('$baseUrl/order-list');
+    final response = await http.get(uri);
+
+    debugPrint('[getOrderList] ${uri.toString()} status=${response.statusCode}');
+    if (response.statusCode != 200) {
+      debugPrint('[getOrderList] body=${response.body}');
+    }
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
@@ -629,27 +750,12 @@ class ApiService {
     }
   }
 
-  // GET order_list by trans_kode
-  static Future<List<dynamic>> getOrderListByTransKode(String transKode) async {
-    final response =
-        await http.get(Uri.parse('$baseUrl/order-list/trans/$transKode'));
-
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      if (data['success'] == true) {
-        return data['data'];
-      } else {
-        throw Exception('Order list tidak ditemukan');
-      }
-    } else {
-      throw Exception('Gagal memuat order list');
-    }
-  }
-
   // GET order_list by kry_kode (for technicians)
-  static Future<List<dynamic>> getOrderListByKryKode(String kryKode) async {
-    final response =
-        await http.get(Uri.parse('$baseUrl/order-list/kry/$kryKode'));
+  static Future<List<dynamic>> getOrderListByKryKode(String kryKode, {int? limit}) async {
+    final uri = limit != null
+        ? Uri.parse('$baseUrl/order-list/kry/$kryKode').replace(queryParameters: {'limit': limit.toString()})
+        : Uri.parse('$baseUrl/order-list/kry/$kryKode');
+    final response = await http.get(uri);
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
@@ -684,6 +790,30 @@ class ApiService {
       }
     } else {
       throw Exception('Gagal update status order_list');
+    }
+  }
+
+  // POST - Assign technician to order_list
+  static Future<Map<String, dynamic>> assignTechnicianToOrderList(
+      String orderId, String kryKode) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/order-list/assign'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({
+        'trans_kode': orderId,
+        'kry_kode': kryKode,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      if (data['success'] == true) {
+        return data;
+      } else {
+        throw Exception('Gagal menugaskan teknisi');
+      }
+    } else {
+      throw Exception('Gagal menugaskan teknisi');
     }
   }
 

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
@@ -280,6 +279,9 @@ class _RiwayatPageState extends State<RiwayatPage>
       'dikirim': 'Dikirim',
       'selesai': 'Selesai',
       'menunggu': 'Menunggu',
+      'waiting': 'Baru',
+      'waitingapproval': 'Menunggu Persetujuan Admin',
+      'waitingorder': 'Menunggu Order Part',
       'pending_shipping_payment': 'Menunggu Pembayaran Ongkir',
       'cancelled': 'Dibatalkan',
     };
@@ -298,6 +300,9 @@ class _RiwayatPageState extends State<RiwayatPage>
       'dikirim': Colors.purple,
       'selesai': Colors.green,
       'menunggu': Colors.orange,
+      'waiting': Colors.orange,
+      'waitingapproval': Colors.amber,
+      'waitingorder': Colors.teal,
       'pending_shipping_payment': Colors.orange,
       'cancelled': Colors.red,
     };
@@ -316,6 +321,9 @@ class _RiwayatPageState extends State<RiwayatPage>
       'dikirim': Icons.local_shipping,
       'selesai': Icons.check_circle,
       'menunggu': Icons.hourglass_empty,
+      'waiting': Icons.fiber_new,
+      'waitingapproval': Icons.pending_actions,
+      'waitingorder': Icons.swap_horiz,
       'pending_shipping_payment': Icons.payment,
       'cancelled': Icons.cancel,
     };

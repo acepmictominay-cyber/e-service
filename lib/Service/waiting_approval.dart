@@ -92,26 +92,13 @@ class _WaitingApprovalPageState extends State<WaitingApprovalPage> {
     }
 
     try {
-      final result = await ApiService.getOrderListByTransKode(transKode);
+      final data = await ApiService.getTransaksiByKode(transKode);
 
-      Map<String, dynamic>? data;
-
-      // Handle response - API returns List
-      if (result.isNotEmpty) {
-        if (result.first is Map<String, dynamic>) {
-          data = Map<String, dynamic>.from(result.first);
-        }
-      }
-
-      if (data != null) {
-        setState(() {
-          orderData = data;
-          parsedItems = _parseCommaSeparatedData(data!);
-          isLoading = false;
-        });
-      } else {
-        setState(() => isLoading = false);
-      }
+      setState(() {
+        orderData = data;
+        parsedItems = _parseCommaSeparatedData(data);
+        isLoading = false;
+      });
     } catch (e) {
       print('Error loading order details: $e');
       setState(() => isLoading = false);
@@ -169,18 +156,12 @@ class _WaitingApprovalPageState extends State<WaitingApprovalPage> {
       timer,
     ) async {
       try {
-        final result = await ApiService.getOrderListByTransKode(transKode);
+        final data = await ApiService.getTransaksiByKode(transKode);
 
         String status = 'pending';
 
-        // Handle response - API returns List
-        if (result.isNotEmpty) {
-          final firstItem = result.first;
-          if (firstItem is Map) {
-            status =
-                firstItem['trans_status']?.toString().toLowerCase() ??
-                'pending';
-          }
+        if (data is Map<String, dynamic>) {
+          status = data['trans_status']?.toString().toLowerCase() ?? 'pending';
         }
 
         if (status == 'confirm' || status == 'confirmed') {

@@ -1,0 +1,389 @@
+@startuml
+' ============================================
+' E-SERVICE MAGANG - ENHANCED UML CLASS DIAGRAM
+' With Methods and Operations
+' ============================================
+
+' --------------------------------------------
+' CUSTOMER ENTITY
+' --------------------------------------------
+class "costomers" as Customer {
+  ' === ATTRIBUTES ===
+  + string cos_kode {PK}
+  + string cos_nama
+  + text cos_alamat
+  + string cos_hp
+  + date cos_tgl_lahir
+  + int cos_poin
+  + string username
+  + string email
+  + string password
+  + string role
+  + string cos_gambar
+  + datetime created_at
+  + datetime updated_at
+
+  ' === OPERATIONS (API Methods) ===
+  + getCostomers() : List<Customer>
+  + getCostomerById(id) : Customer
+  + addCostomer(data) : Customer
+  + updateCostomer(id, data) : void
+  + deleteCostomer(id) : void
+  + uploadProfile(file) : Map
+}
+
+' --------------------------------------------
+' TECHNICIAN ENTITY
+' --------------------------------------------
+class "karyawan" as Technician {
+  ' === ATTRIBUTES ===
+  + string kry_kode {PK}
+  + string kry_nama
+  + text kry_alamat
+  + string kry_hp
+  + string username
+  + string password
+  + string role
+  + datetime created_at
+  + datetime updated_at
+
+  ' === OPERATIONS (API Methods) ===
+  + getkry_kode(kryKode) : List<TechnicianOrder>
+  ' (Inherited from Customer base structure)
+}
+
+' --------------------------------------------
+' SERVICE ORDER ENTITY (MAIN)
+' --------------------------------------------
+class "transaksi" as ServiceOrder {
+  ' === ATTRIBUTES ===
+  + string trans_kode {PK}
+  + string order_id
+  + string cos_kode {FK → Customer}
+  + string kry_kode {FK → Technician}
+  + string device
+  + string merek
+  + string seri
+  + string brg_nama
+  + string brg_merk
+  + string brg_sn
+  + string status_garansi
+  + text ket_keluhan
+  + string trans_status {enums: waiting, accepted, enroute, arrived, waitingapproval, approved, pickingparts, repairing, completed, jobdone}
+  + decimal trans_total
+  + text alamat
+  + string service_type
+  + text approval_notes
+  + decimal biaya_ongkir
+  + decimal visit_cost
+  + datetime created_at
+  + datetime updated_at
+
+  ' === OPERATIONS (API Methods) ===
+  + createTransaksi(data) : ServiceOrder
+  + getTransaksi() : List<ServiceOrder>
+  + getTransaksiByKode(transKode) : ServiceOrder
+  + getPendingTransaksiByKode(transKode) : ServiceOrder
+  + updateTransaksiStatus(transKode, status) : void
+  + updateTransaksiTemuan(transKode, ketKeluhan, total, [alsoSetStatus]) : Map
+  + getOrderListByTransKode(transKode) : List<OrderItem>
+  + getTindakanByTransKode(transKode) : List<ServiceAction>
+
+  ' === BUSINESS LOGIC METHODS ===
+  + isApproved : bool {readOnly}
+  ' Returns: status == OrderStatus.approved
+
+  ' === DERIVED/COMPUTED ===
+  ' Status color for UI
+  + getStatusColor() : Color
+  ' Status display name
+  + getStatusDisplayName() : String
+  ' Status icon
+  + getStatusIcon() : IconData
+}
+
+' --------------------------------------------
+' ORDER ITEMS ENTITY
+' --------------------------------------------
+class "order_list" as OrderItem {
+  ' === ATTRIBUTES ===
+  + int id {PK}
+  + string order_id
+  + string trans_kode {FK → ServiceOrder}
+  + string brg_kode
+  + int jumlah
+  + decimal price
+  + decimal subtotal
+  + string trans_status
+  + datetime created_at
+  + datetime updated_at
+
+  ' === OPERATIONS (API Methods) ===
+  + createOrderList(data) : OrderItem
+  + getOrderList() : List<OrderItem>
+  + getOrderListByTransKode(transKode) : List<OrderItem>
+  + getOrderListByKryKode(kryKode) : List<OrderItem>
+  + updateOrderListStatus(orderId, newStatus) : void
+  + getOrderDetail(orderId) : OrderItem
+}
+
+' --------------------------------------------
+' SERVICE ACTION ENTITY
+' --------------------------------------------
+class "tindakan" as ServiceAction {
+  ' === ATTRIBUTES ===
+  + int id {PK}
+  + string trans_kode {FK → ServiceOrder}
+  + string tindakan
+  + decimal harga
+  + decimal subtotal
+  + datetime created_at
+
+  ' === OPERATIONS (API Methods) ===
+  + createTindakan(data) : ServiceAction
+  + getTindakanByTransKode(transKode) : List<ServiceAction>
+}
+
+' --------------------------------------------
+' PRODUCT ENTITY
+' --------------------------------------------
+class "produk" as Product {
+  ' === ATTRIBUTES ===
+  + string kode_barang {PK}
+  + string nama_produk
+  + int harga
+  + text deskripsi
+  + string gambar
+  + string gambar_url
+
+  ' === OPERATIONS (API Methods) ===
+  + getProduk() : List<Product>
+  + getProdukPaginated(limit, offset) : Map {data, total, hasMore}
+}
+
+' --------------------------------------------
+' VOUCHER ENTITY
+' --------------------------------------------
+class "vouchers" as Voucher {
+  ' === ATTRIBUTES ===
+  + int voucher_id {PK}
+  + string voucher_code
+  + text description
+  + decimal discount_percent
+  + date start_date
+  + date end_date
+  + int max_usage
+  + string status
+  + string voucher_gambar
+
+  ' === OPERATIONS (API Methods) ===
+  + getVouchers() : List<Voucher>
+}
+
+' --------------------------------------------
+' USER VOUCHER JUNCTION ENTITY
+' --------------------------------------------
+class "user_vouchers" as UserVoucher {
+  ' === ATTRIBUTES ===
+  + int id {PK}
+  + string id_costomer {FK → Customer}
+  + int voucher_id {FK → Voucher}
+  + datetime claimed_date
+  + string used {enum: yes/no}
+
+  ' === OPERATIONS (API Methods) ===
+  + getUserVouchers(customerId) : List<UserVoucher>
+  + claimVoucher(customerId, voucherId) : UserVoucher
+  + updateUserVoucher(userVoucherId, updates) : void
+  + markVoucherUsed(voucherCode, customerId) : void
+}
+
+' --------------------------------------------
+' PAYMENT TRANSACTION ENTITY
+' --------------------------------------------
+class "payment_transactions" as PaymentTransaction {
+  ' === ATTRIBUTES ===
+  + bigint id {PK}
+  + string external_id
+  + string transaction_id
+  + string payment_method {enum: EWALLET_OVO, QRIS, VA, etc.}
+  + decimal amount
+  + string status {enum: PENDING, SUCCESS, FAILED}
+  + text metadata {JSON}
+  + datetime created_at
+  + datetime updated_at
+
+  ' === OPERATIONS (API Methods) ===
+  + getPaymentTransactions(customerId) : List<PaymentTransaction>
+}
+
+' --------------------------------------------
+' CHECKOUT/ORDERS (Extended from transaksi)
+' --------------------------------------------
+package "checkout" <<Rectangle>> {
+  class CheckoutService {
+    ' === CHECKOUT OPERATIONS ===
+    + estimateShipping(customerLat, customerLng) : Map
+    + createCheckoutOrder(customerId, items, totalPrice, paymentMethod, deliveryAddress, lat, lng, [voucherCode, voucherDiscount, isPointExchange]) : Map
+    + updatePaymentStatus(orderCode, paymentStatus) : Map
+    + updateDeliveryStatus(orderCode, deliveryStatus) : Map
+    + updateCheckoutOrder(orderCode, updates) : Map
+    + getOrderByCode(orderCode) : Map
+    + getCustomerOrders(customerId) : List<Map>
+    + getAllOrders() : List<Map>
+    + getExpeditionZones() : List<Map>
+    + validateVoucher(voucherCode, customerId) : Map
+    + validatePointExchange(customerId, kodeBarang) : Map
+    + processPointExchange(customerId, kodeBarang, orderData) : Map
+    + addPointsFromPurchase(customerId, purchaseAmount, orderCode) : Map
+    + getPointTransactions(customerId) : List<Map>
+  }
+
+  class NotificationService {
+    ' === NOTIFICATION OPERATIONS ===
+    + sendOrderNotification(orderId) : void
+    + sendStatusUpdateNotification(transKode, newStatus) : void
+    + getOrderNotifications(customerId) : List<Notification>
+  }
+}
+
+' --------------------------------------------
+' TECHNICIAN SERVICES
+' --------------------------------------------
+package "technician" <<Rectangle>> {
+  class LocationTrackingService {
+    ' === LOCATION TRACKING ===
+    + startTracking(transKode, kryKode) : void
+    + stopTracking() : void
+    + updateDriverLocation(transKode, kryKode, lat, lng) : void
+    + getDriverLocation(transKode) : Map?
+    + isTrackingActive() : bool
+  }
+
+  class BackgroundOrderService {
+    ' === BACKGROUND SYNC ===
+    + syncNewOrders() : List<TechnicianOrder>
+    + scheduleBackgroundSync() : void
+  }
+
+  class TechnicianOrderModel {
+    ' === HELPER METHODS ===
+    + fromMap(map) : TechnicianOrder
+    + toMap() : Map
+    + copyWith(...) : TechnicianOrder
+    ' Constants for status mapping
+    + OrderStatusExtension.fromString(status) : OrderStatus
+  }
+}
+
+' --------------------------------------------
+' MISSING TABLES (Not Implemented)
+' --------------------------------------------
+package "missing" <<Rectangle>> {
+  class "status_tracking" as StatusTracking {
+    + int id {PK}
+    + string trans_kode {FK}
+    + string old_status
+    + string new_status
+    + string changed_by {FK → Technician?}
+    + datetime changed_at
+    + text notes
+    ' NOT IMPLEMENTED - status stored in transaksi only
+  }
+
+  class "tts" as TTS {
+    + int tts_kode {PK}
+    + string trans_kode {FK}
+    + string cos_kode {FK}
+    + string kry_kode {FK}
+    + text customer_signature {base64?}
+    + text technician_signature {base64?}
+    + datetime signed_at
+    + text notes
+    ' NOT IMPLEMENTED - no signature capture
+  }
+
+  class "penugasan_teknisi" as Assignment {
+    + int assignment_id {PK}
+    + string trans_kode {FK}
+    + string kry_kode {FK}
+    + datetime assigned_at
+    + string assigned_by {FK → Technician?}
+    + text notes
+    ' NOT IMPLEMENTED - implicit via transaksi.kry_kode
+  }
+}
+
+' --------------------------------------------
+' RELATIONSHIPS
+' --------------------------------------------
+Customer "1" <--► "0..*" ServiceOrder : "places / belongs to"
+Technician "1" <--► "0..*" ServiceOrder : "handles / assigned to"
+ServiceOrder "1" <--► "0..*" OrderItem : "contains"
+ServiceOrder "1" <--► "0..*" ServiceAction : "performs"
+ServiceOrder "1" <--► "0..*" PaymentTransaction : "pays for"
+Customer "1" <--► "0..*" UserVoucher : "claims"
+Voucher "1" <--► "0..*" UserVoucher : "available to"
+
+' Dashed relationships for missing tables (potential future)
+ServiceOrder .. StatusTracking : "could track history"
+ServiceOrder .. TTS : "could have receipt"
+Technician .. Assignment : "could be assigned via"
+Assignment "0..*" -- "0..*" ServiceOrder : "links"
+
+' Service dependencies
+ServiceOrder .. CheckoutService : "uses"
+TechnicianOrderModel .. ServiceOrder : "DTO/Model"
+LocationTrackingService .. ServiceOrder : "tracks"
+BackgroundOrderService .. Technician : "syncs for"
+
+' --------------------------------------------
+' STEREOTYPES & NOTES
+' --------------------------------------------
+Customer <<Entity>>
+Technician <<Entity>>
+ServiceOrder <<Entity>>
+OrderItem <<Entity>>
+ServiceAction <<Entity>>
+Product <<Entity>>
+Voucher <<Entity>>
+UserVoucher <<Entity>>
+PaymentTransaction <<Entity>>
+
+CheckoutService <<Service>>
+LocationTrackingService <<Service>>
+BackgroundOrderService <<Service>>
+TechnicianOrderModel <<Model>>
+
+StatusTracking <<Entity>> <<missing>>
+TTS <<Entity>> <<missing>>
+Assignment <<Entity>> <<missing>>
+
+' --------------------------------------------
+' ANNOTATIONS
+' --------------------------------------------
+note top of Customer
+  Table: costomers
+  Primary user entity
+  PK: cos_kode
+end note
+
+note top of ServiceOrder
+  Table: transaksi
+  Central order entity
+  PK: trans_kode
+  Status enum: 14 states
+end note
+
+note top of CheckoutService
+  Handles order creation,
+  payment, delivery tracking
+end note
+
+note top of LocationTrackingService
+  Real-time GPS tracking
+  for technician location
+  Uses SharedPreferences
+end note
+
+@enduml

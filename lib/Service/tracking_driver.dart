@@ -81,9 +81,23 @@ class _TrackingPageState extends State<TrackingPage>
   DateTime? _updatedAt;
   double? _totalCost; // Untuk menyimpan total biaya dari tindakan
 
+  // Estimasi waktu
+  DateTime? _enrouteStartTime;
+  double? _initialDistanceKm;
+  final double _avgSpeedKmh = 40; // Kecepatan rata-rata kota (km/h)
+  String? _currentEstimatedArrival;
+
+  // Estimasi repairing
+  DateTime? _repairingStartTime;
+  String? _repairingEstimation;
+
   // Service type inference
   String _inferredServiceType = 'delivery'; // 'delivery' or 'pickup'
   bool _hasConfirmedType = false;
+
+  // Offline / technician action info
+  String? _ketKeluhan;
+  List<dynamic> _tindakanList = [];
 
   @override
   void initState() {
@@ -140,9 +154,62 @@ class _TrackingPageState extends State<TrackingPage>
       _inferredServiceType =
           (kryKode != null && kryKode.isNotEmpty) ? 'delivery' : 'pickup';
 
+      final wasEnroute = _currentStatus == 'enroute';
+      final isNowEnroute = status == 'enroute';
+      final isRepairing = status == 'repairing';
+
+      if (!isNowEnroute) {
+        _enrouteStartTime = null;
+        _initialDistanceKm = null;
+        _currentEstimatedArrival = null;
+      }
+
+      if (!isRepairing) {
+        _repairingStartTime = null;
+        _repairingEstimation = null;
+      }
+
+      if (isNowEnroute) {
+        final distanceKmStr = detail['distance_km']?.toString();
+        _initialDistanceKm = distanceKmStr != null
+            ? double.tryParse(distanceKmStr)
+            : null;
+
+        if (!wasEnroute) {
+          _enrouteStartTime = DateTime.now();
+          if (_initialDistanceKm != null && _initialDistanceKm! > 0) {
+            final estimatedMinutes = (_initialDistanceKm! / _avgSpeedKmh) * 60;
+            _currentEstimatedArrival =
+                'Estimasi ${estimatedMinutes.toStringAsFixed(0)} menit';
+          } else {
+            _currentEstimatedArrival = 'Estimasi sedang dihitung...';
+          }
+        } else if (_currentEstimatedArrival == 'Estimasi sedang dihitung...') {
+          _currentEstimatedArrival = 'Estimasi 30 menit';
+        }
+      }
+
+      if (isRepairing) {
+        if (_repairingStartTime == null) {
+          _repairingStartTime = DateTime.now();
+          _repairingEstimation = 'Estimasi 25 menit';
+        } else {
+          final elapsedMinutes =
+              DateTime.now().difference(_repairingStartTime!).inMinutes;
+          final remaining = 25 - elapsedMinutes;
+          if (remaining > 0) {
+            _repairingEstimation =
+                'Estimasi ${remaining.toStringAsFixed(0)} menit';
+          } else {
+            _repairingEstimation = 'Perbaikan hampir selesai';
+          }
+        }
+      }
+
       // Ambil subtotal dari tindakan (tidak digunakan lagi)
+      List<dynamic>? tindakanData;
       try {
-        await ApiService.getTindakanByTransKode(
+        tindakanData = await ApiService.getTindakanByTransKode(
           widget.queueCode!,
         );
         // Subtotal calculation removed as it's not used
@@ -154,6 +221,8 @@ class _TrackingPageState extends State<TrackingPage>
       final transTotal =
           double.tryParse(detail['trans_total']?.toString() ?? '0') ?? 0.0;
 
+      final ketKeluhan = detail['ket_keluhan']?.toString() ?? '';
+
       if (mounted) {
         setState(() {
           _currentStatus = status;
@@ -161,6 +230,8 @@ class _TrackingPageState extends State<TrackingPage>
               createdAt ?? DateTime.now().subtract(const Duration(hours: 2));
           _updatedAt = updatedAt ?? DateTime.now();
           _totalCost = transTotal; // Set total cost dari trans_total
+          _ketKeluhan = ketKeluhan;
+          _tindakanList = tindakanData ?? [];
           _timeline = _buildTimelineFromCurrentStatus(
             _currentStatus,
             _createdAt!,
@@ -179,12 +250,12 @@ class _TrackingPageState extends State<TrackingPage>
     'waiting',
     'accepted',
     'enroute',
-    'arrived',
     'waitingapproval',
     'approved',
     'waitingOrder',
     'pickingparts',
     'repairing',
+    'processing',
     'menunggu_verifikasi',
     'completed',
   ];
@@ -194,20 +265,21 @@ class _TrackingPageState extends State<TrackingPage>
       'waiting',
       'accepted',
       'enroute',
-      'arrived',
       'waitingapproval',
       'approved',
       'waitingOrder',
       'pickingparts',
       'repairing',
+      'processing',
       'menunggu_verifikasi',
       'completed',
     ],
     'pickup': [
-      'itemSubmitted', // Pengecekan
+      'itemSubmitted',
       'waitingapproval',
       'waitingOrder',
       'repairing',
+      'processing',
       'menunggu_verifikasi',
       'completed',
     ],
@@ -237,6 +309,9 @@ class _TrackingPageState extends State<TrackingPage>
       case 'itemsubmitted':
       case 'item_submitted':
         return 'itemSubmitted';
+      case 'diproses':
+      case 'processing':
+        return 'processing';
       case 'menunggu_verifikasi':
         return 'menunggu_verifikasi';
       default:
@@ -260,21 +335,13 @@ class _TrackingPageState extends State<TrackingPage>
         return serviceType == 'pickup'
             ? _StatusMeta(
                 'Menunggu Teknisi',
-                'Barang Anda sedang dipersiapkan untuk diperiksa teknisi.',
+                'Teknisi sedang dalam perjalanan menuju lokasi Anda.',
+                null,
               )
             : _StatusMeta(
-                'Teknisi Mengajukan Part',
-                'Teknisi dalam perjalanan menuju lokasi Anda.',
-              );
-      case 'arrived':
-        return serviceType == 'pickup'
-            ? _StatusMeta(
-                'Barang Diterima',
-                'Barang Anda telah diterima dan sedang diperiksa teknisi.',
-              )
-            : _StatusMeta(
-                'Sampai Lokasi',
-                'Teknisi telah tiba di lokasi Anda.',
+                'Teknisi Dalam Perjalanan',
+                'Teknisi sedang dalam perjalanan menuju lokasi Anda.',
+                null,
               );
       case 'itemsubmitted':
         return _StatusMeta(
@@ -296,10 +363,12 @@ class _TrackingPageState extends State<TrackingPage>
             ? _StatusMeta(
                 'Menunggu Transaksi User',
                 'User Harus Melakukan Transaksi untuk ke tahap perbaikan',
+                'Estimasi 2-3 hari | Sedang dalam pemesanan spare part.',
               )
             : _StatusMeta(
                 'Sedang dalam Pengajuan Part',
                 'Pesanan sedang dalam pengajuan part.',
+                'Estimasi 2-3 hari | Sedang dalam pemesanan spare part.',
               );
       case 'pickingparts':
         return _StatusMeta(
@@ -310,6 +379,13 @@ class _TrackingPageState extends State<TrackingPage>
         return _StatusMeta(
           'Sedang Dikerjakan',
           'Perbaikan perangkat Anda sedang diproses.',
+          'Estimasi 20-30 menit.',
+        );
+      case 'processing':
+      case 'diproses':
+        return _StatusMeta(
+          'Diproses',
+          'Tindakan perbaikan sudah dicatat teknisi dan sedang diproses.',
         );
       case 'menunggu_verifikasi':
         return _StatusMeta(
@@ -416,6 +492,7 @@ class _TrackingPageState extends State<TrackingPage>
             time: times[i],
             title: meta.title,
             description: meta.description,
+            estimation: meta.estimation,
             state: StepState.done,
           ),
         );
@@ -430,7 +507,8 @@ class _TrackingPageState extends State<TrackingPage>
           time: times[validActiveIndex],
           title: currentMeta.title,
           description: currentMeta.description,
-          state: StepState.done,
+          estimation: currentMeta.estimation,
+          state: StepState.progress,
         ),
       );
 
@@ -442,7 +520,8 @@ class _TrackingPageState extends State<TrackingPage>
             time: times[validActiveIndex + 1],
             title: nextMeta.title,
             description: nextMeta.description,
-            state: StepState.progress,
+            estimation: nextMeta.estimation,
+            state: StepState.pending,
           ),
         );
       }
@@ -3923,7 +4002,7 @@ class _TrackingPageState extends State<TrackingPage>
         child: Column(
           children: [
             Text(
-              'Status Order (${_inferredServiceType == 'delivery' ? 'Delivery' : 'Pickup'})',
+              'Status Order (${_inferredServiceType == 'delivery' ? 'Home Service' : 'Offline'})',
               style: GoogleFonts.poppins(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -3933,6 +4012,54 @@ class _TrackingPageState extends State<TrackingPage>
 
             if (_inferredServiceType == 'pickup') ...[
               const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.orange.shade50,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.orange.shade200),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.store, size: 16, color: Colors.orange.shade700),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Offline',
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: Colors.orange.shade700,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ] else ...[
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.blue.shade200),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.home_repair_service, size: 16, color: Colors.blue.shade700),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Home Service',
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: Colors.blue.shade700,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
 
             const SizedBox(height: 8),
@@ -3969,6 +4096,44 @@ class _TrackingPageState extends State<TrackingPage>
                             fontWeight: FontWeight.w500,
                           ),
                         ),
+                        if (_currentStatus == 'enroute' &&
+                            _currentEstimatedArrival != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text(
+                              _currentEstimatedArrival!,
+                              style: GoogleFonts.poppins(
+                                fontSize: 12,
+                                color: Colors.blue,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        if (_currentStatus == 'repairing' &&
+                            _repairingEstimation != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text(
+                              _repairingEstimation!,
+                              style: GoogleFonts.poppins(
+                                fontSize: 12,
+                                color: Colors.orange,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        if (_currentStatus == 'waitingOrder')
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text(
+                              'Estimasi 2-3 hari | Sedang dalam pemesanan spare part.',
+                              style: GoogleFonts.poppins(
+                                fontSize: 12,
+                                color: Colors.purple,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
                         const SizedBox(height: 4),
                         LinearProgressIndicator(
                           backgroundColor: Theme.of(
@@ -4016,7 +4181,7 @@ class _TrackingPageState extends State<TrackingPage>
                       ),
                     ),
                     const SizedBox(height: 8),
-                    ..._getCompletedStatuses().map(
+                    ..._getCompletedStatuses().reversed.map(
                       (item) => Padding(
                         padding: const EdgeInsets.only(bottom: 8),
                         child: Row(
@@ -4061,6 +4226,129 @@ class _TrackingPageState extends State<TrackingPage>
                 ),
               ),
               const SizedBox(height: 16),
+            ],
+
+            if (_ketKeluhan != null && _ketKeluhan!.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.shadow.withValues(alpha: 25),
+                      blurRadius: 6,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Hasil Diagnosa Teknisi',
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      _ketKeluhan!,
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+
+            if (_tindakanList.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.shadow.withValues(alpha: 25),
+                      blurRadius: 6,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Rincian Tindakan',
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    ..._tindakanList.map((t) {
+                      final nama = t['nama_tindakan']?.toString() ?? '-';
+                      final ket = t['keterangan']?.toString() ?? '';
+                      final qty = t['jumlah']?.toString() ?? '1';
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(
+                              Icons.check_box_outlined,
+                              size: 18,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '$nama (x$qty)',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurface,
+                                    ),
+                                  ),
+                                  if (ket.isNotEmpty)
+                                    Text(
+                                      ket,
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 12,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onSurfaceVariant,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+                  ],
+                ),
+              ),
             ],
 
             // Button Bayar DP (muncul saat status approved atau waitingOrder)
@@ -4278,12 +4566,14 @@ class _TimelineItem {
   final DateTime? time;
   final String title;
   final String description;
+  final String? estimation;
   final StepState state;
 
   _TimelineItem({
     required this.time,
     required this.title,
     required this.description,
+    this.estimation,
     required this.state,
   });
 }
@@ -4291,5 +4581,7 @@ class _TimelineItem {
 class _StatusMeta {
   final String title;
   final String description;
-  _StatusMeta(this.title, this.description);
+  final String? estimation;
+
+  _StatusMeta(this.title, this.description, [this.estimation]);
 }

@@ -5,6 +5,7 @@ class SessionManager {
   static const String _keyUserName = 'cos_nama';
   static const String _keyPoin = 'cos_poin';
   static const String _keyRole = 'role';
+  static const String _keyKryKode = 'kry_kode';
 
   // Simpan data login
   static Future<void> saveUserSession(String id, String name, int poin, {String? role}) async {
@@ -16,6 +17,11 @@ class SessionManager {
     if (role != null) {
       await prefs.setString(_keyRole, role);
     }
+  }
+
+  static Future<void> saveKryKode(String kryKode) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keyKryKode, kryKode);
   }
 
   // Ambil data login
@@ -36,6 +42,7 @@ class SessionManager {
     await prefs.remove(_keyUserName);
     await prefs.remove(_keyPoin);
     await prefs.remove(_keyRole);
+    await prefs.remove(_keyKryKode);
     await prefs.setBool('isLoggedIn', false);
   }
 
@@ -60,6 +67,10 @@ class SessionManager {
   // Get technician ID (kry_kode)
   static Future<String?> getkry_kode() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_keyUserId); // Assuming technician ID is stored in the same key for now
+    final kryKode = prefs.getString(_keyKryKode);
+    if (kryKode != null && kryKode.isNotEmpty) {
+      return kryKode;
+    }
+    return prefs.getString(_keyUserId);
   }
 }

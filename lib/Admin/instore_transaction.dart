@@ -275,8 +275,7 @@ class _InStoreTransactionPageState extends State<InStoreTransactionPage> {
       final customerResponse = await ApiService.addCostomer(customerPayload);
       print('DEBUG: Customer creation response: $customerResponse');
 
-      if (customerResponse == null ||
-          !customerResponse.containsKey('id_costomer')) {
+      if (!customerResponse.containsKey('id_costomer')) {
         throw Exception('Gagal membuat customer');
       }
 

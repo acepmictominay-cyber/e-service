@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:azza_service/Others/session_manager.dart';
 import 'package:azza_service/api_services/api_service.dart';
@@ -7,7 +6,6 @@ import 'package:azza_service/utils/error_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // haptic + formatters
 import 'package:google_fonts/google_fonts.dart';
-import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'login.dart';
 import '../Home/home.dart';

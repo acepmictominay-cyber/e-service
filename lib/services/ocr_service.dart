@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:google_ml_kit/google_ml_kit.dart';
+import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image/image.dart' as img;
 
@@ -537,6 +537,32 @@ class OCRService {
         'tanggal_lahir': dateConfidence,
         'overall': overallConfidence,
       }
+    };
+  }
+
+  // ============================
+  // TEST HELPER - PARSE SAMPLE KTP TEXT
+  // ============================
+  static Map<String, dynamic> testParseWithSampleText() {
+    const sampleText = '''
+PROVINSI JAWA BARAT
+KABUPATEN KARAWANG
+NIK 3273090107200004
+ACEP
+TEMPAT LAHIR KARAWANG
+DUSUN KARANGJAYA
+RT 001 RW 002
+KEL/DESA KARANGJAYA
+TANGGAL LAHIR 01-07-2004
+''';
+
+    final parsed = parseCustomerDataWithConfidence(sampleText);
+    final inner = Map<String, dynamic>.from(parsed['data'] as Map);
+    inner['kel_desa'] = inner['alamat'];
+
+    return {
+      'success': true,
+      'data': {'data': inner, 'confidence': parsed['confidence']},
     };
   }
 

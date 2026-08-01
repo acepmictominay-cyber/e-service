@@ -330,7 +330,7 @@ class BackgroundServiceManager {
         priority: Priority.high,
         showWhen: true,
         icon: '@mipmap/ic_launcher',
-        largeIcon: const DrawableResourceAndroidBitmap(
+        largeIcon: DrawableResourceAndroidBitmap(
           '@mipmap/ic_launcher',
         ),
       );

@@ -6,13 +6,14 @@ enum OrderStatus {
   enRoute,
   arrived,
   waitingApproval,
-  approved, // Status baru untuk menandakan sudah diapprove admin
+  approved,
   pickingParts,
   repairing,
   completed,
   jobDone,
-  waitingOrder, // Status untuk order yang bisa dialihkan
-  waitingOrderList, // Status untuk order yang telah dialihkan
+  waitingOrder,
+  waitingOrderList,
+  processing,
 }
 
 extension OrderStatusExtension on OrderStatus {
@@ -42,13 +43,15 @@ extension OrderStatusExtension on OrderStatus {
         return 'waitingorder';
       case OrderStatus.waitingOrderList:
         return 'waitingorderlist';
+      case OrderStatus.processing:
+        return 'diproses';
     }
   }
 
   String get displayName {
     switch (this) {
       case OrderStatus.waiting:
-        return 'Menunggu';
+        return 'Baru';
       case OrderStatus.accepted:
         return 'Diterima';
       case OrderStatus.enRoute:
@@ -56,7 +59,7 @@ extension OrderStatusExtension on OrderStatus {
       case OrderStatus.arrived:
         return 'Tiba';
       case OrderStatus.waitingApproval:
-        return 'Menunggu Persetujuan';
+        return 'Menunggu Persetujuan Admin';
       case OrderStatus.approved:
         return 'Disetujui';
       case OrderStatus.pickingParts:
@@ -68,9 +71,11 @@ extension OrderStatusExtension on OrderStatus {
       case OrderStatus.jobDone:
         return 'Pekerjaan Selesai';
       case OrderStatus.waitingOrder:
-        return 'Menunggu Order';
+        return 'Menunggu Order Part';
       case OrderStatus.waitingOrderList:
         return 'Order Dialihkan';
+      case OrderStatus.processing:
+        return 'Diproses';
     }
   }
 
@@ -99,6 +104,8 @@ extension OrderStatusExtension on OrderStatus {
         return Colors.teal;
       case OrderStatus.waitingOrderList:
         return Colors.orangeAccent;
+      case OrderStatus.processing:
+        return Colors.brown;
     }
   }
 
@@ -127,6 +134,8 @@ extension OrderStatusExtension on OrderStatus {
         return Icons.swap_horiz;
       case OrderStatus.waitingOrderList:
         return Icons.forward;
+      case OrderStatus.processing:
+        return Icons.handyman;
     }
   }
 
@@ -163,6 +172,9 @@ extension OrderStatusExtension on OrderStatus {
       case 'waitingorderlist':
       case 'waiting_order_list':
         return OrderStatus.waitingOrderList;
+      case 'processing':
+      case 'diproses':
+        return OrderStatus.processing;
       default:
         return OrderStatus.waiting;
     }
@@ -187,6 +199,7 @@ class TechnicianOrder {
   final DateTime? createdAt;
   final String? cosKode;
   final String? approvalNotes;
+  final String? kryKode;
 
   TechnicianOrder({
     required this.orderId,
@@ -206,6 +219,7 @@ class TechnicianOrder {
     this.createdAt,
     this.cosKode,
     this.approvalNotes,
+    this.kryKode,
   });
 
   // Helper method untuk cek apakah sudah diapprove
@@ -224,12 +238,11 @@ class TechnicianOrder {
       customerName: map['cos_nama']?.toString() ?? map['customer_name']?.toString() ?? 'Unknown',
       customerAddress: map['alamat']?.toString() ?? map['cos_alamat']?.toString() ?? 'Unknown',
       customerPhone: map['cos_hp']?.toString() ?? map['cos_hp']?.toString() ?? map['cos_tlp']?.toString(),
-      deviceType: map['device']?.toString() ?? map['brg_nama']?.toString(),
-      deviceBrand: map['merek']?.toString() ?? map['brg_merk']?.toString(),
-      deviceSerial: map['seri']?.toString() ?? map['brg_sn']?.toString(),
-      warrantyStatus: map['status_garansi']?.toString() ?? map['garansi_status']?.toString(),
+      deviceType: map['device']?.toString(),
+      deviceBrand: map['merek']?.toString(),
+      deviceSerial: map['seri']?.toString(),
+      warrantyStatus: map['status_garansi']?.toString(),
       estimatedPrice: _parseNum(map['trans_total']) ?? _parseNum(map['trans_total']) ?? _parseNum(map['total']),
-      // Membaca status dari trans_status field di database
       status: OrderStatusExtension.fromString(
         map['trans_status']?.toString() ?? map['status']?.toString() ?? 'waiting'
       ),
@@ -237,7 +250,9 @@ class TechnicianOrder {
         ? DateTime.tryParse(map['created_at'].toString())
         : null,
       cosKode: map['cos_kode']?.toString(),
-      approvalNotes: map['approval_notes']?.toString() ?? map['ket_keluhan']?.toString(),
+      damageDescription: map['ket_keluhan']?.toString(),
+      approvalNotes: map['approval_notes']?.toString(),
+      kryKode: map['kry_kode']?.toString() ?? map['kode_karyawan']?.toString(),
     );
   }
 
@@ -259,6 +274,7 @@ class TechnicianOrder {
     DateTime? createdAt,
     String? cosKode,
     String? approvalNotes,
+    String? kryKode,
   }) {
     return TechnicianOrder(
       orderId: orderId ?? this.orderId,
@@ -278,6 +294,7 @@ class TechnicianOrder {
       createdAt: createdAt ?? this.createdAt,
       cosKode: cosKode ?? this.cosKode,
       approvalNotes: approvalNotes ?? this.approvalNotes,
+      kryKode: kryKode ?? this.kryKode,
     );
   }
 

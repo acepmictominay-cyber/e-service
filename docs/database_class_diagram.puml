@@ -1,0 +1,149 @@
+@startuml
+
+class "customers" as Customer {
+  + string cos_kode {PK}
+  + string cos_nama
+  + text cos_alamat
+  + string cos_hp
+  + string username
+  + string password
+  + string role
+
+  --
+  + login()
+  + registrasi()
+  + buatPesanan()
+  + cekStatusPesanan()
+  + gunakanVoucher()
+}
+
+class "karyawan" as Technician {
+  + string kry_kode {PK}
+  + string kry_nama
+  + string kry_hp
+  + string username
+  + string password
+  + string role
+
+  --
+  + lihatDaftarPesanan()
+  + ambilPesanan()
+  + updateStatusPesanan()
+  + inputTindakan()
+}
+
+class "devices" as Device {
+  + int device_id {PK}
+  + string serial_number
+  + string brand
+  + string model
+  + string device_type
+  + text description
+  + string condition
+
+  --
+  + tambahDevice()
+  + updateCondition()
+  + validateSerial()
+}
+
+class "transaksi" as ServiceOrder {
+  + string trans_kode {PK}
+  + string cos_kode
+  + string kry_kode
+  + int device_id
+  + string trans_status
+  + decimal trans_total
+
+  --
+  + buatPesanan()
+  + updateStatus()
+  + hitungTotal()
+  + validasiPesanan()
+}
+
+class "order_list" as OrderItem {
+  + int id {PK}
+  + string trans_kode
+  + int jumlah
+  + decimal price
+  + decimal subtotal
+
+  --
+  + hitungSubtotal()
+}
+
+class "tindakan" as ServiceAction {
+  + int id {PK}
+  + string trans_kode
+  + string tindakan
+  + decimal harga
+
+  --
+  + tambahTindakan()
+  + hitungBiaya()
+}
+
+class "vouchers" as Voucher {
+  + int voucher_id {PK}
+  + string voucher_code
+  + decimal discount_percent
+
+  --
+  + validasiVoucher()
+  + hitungDiskon()
+}
+
+class "user_vouchers" as UserVoucher {
+  + int id {PK}
+  + string id_costomer
+  + int voucher_id
+
+  --
+  + klaimVoucher()
+  + gunakanVoucher()
+}
+
+class "payment_transactions" as PaymentTransaction {
+  + bigint id {PK}
+  + string transaction_id
+  + decimal amount
+  + string status
+
+  --
+  + prosesPembayaran()
+  + verifikasiPembayaran()
+}
+
+class "status_tracking" as StatusTracking {
+  + int id {PK}
+  + string trans_kode
+  + string old_status
+  + string new_status
+
+  --
+  + simpanRiwayatStatus()
+}
+
+class "tts" as TTS {
+  + int tts_kode {PK}
+  + string trans_kode
+
+  --
+  + generateTTS()
+  + simpanTandaTangan()
+}
+
+' RELATIONSHIP
+Customer "1" -- "0..*" ServiceOrder
+Technician "1" -- "0..*" ServiceOrder
+Device "1" -- "0..*" ServiceOrder
+ServiceOrder "1" -- "0..*" OrderItem
+ServiceOrder "1" -- "0..*" ServiceAction
+ServiceOrder "1" -- "0..*" StatusTracking
+ServiceOrder "1" -- "0..1" TTS
+Customer "0..*" -- "0..*" UserVoucher
+Voucher "1" -- "0..*" UserVoucher
+ServiceOrder "0..*" -- "0..*" PaymentTransaction
+
+@enduml

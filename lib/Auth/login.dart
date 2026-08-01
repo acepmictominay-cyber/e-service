@@ -254,15 +254,21 @@ class _LoginScreenState extends State<LoginScreen> {
                                       ) ??
                                       0;
 
-                                  // Simpan session dengan role
-                                  await SessionManager.saveUserSession(
-                                    user['id_costomer']?.toString() ??
-                                        user['kry_kode']?.toString() ??
-                                        '',
-                                    user['cos_nama'] ?? user['kry_nama'] ?? '',
-                                    poin,
-                                    role: role,
-                                  );
+                                   // Simpan session dengan role
+                                   await SessionManager.saveUserSession(
+                                     user['id_costomer']?.toString() ??
+                                         user['kry_kode']?.toString() ??
+                                         '',
+                                     user['cos_nama'] ?? user['kry_nama'] ?? '',
+                                     poin,
+                                     role: role,
+                                   );
+
+                                   if (role == 'karyawan') {
+                                     await SessionManager.saveKryKode(
+                                       user['kry_kode']?.toString() ?? '',
+                                     );
+                                   }
 
                                   UserPointData.setPoints(poin);
 

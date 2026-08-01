@@ -39,14 +39,14 @@ class XenditPaymentMethodDialog extends StatelessWidget {
                       context,
                       bank,
                     ))
-                .toList(),
+                ,
             _buildSectionHeader('E-Wallet'),
             ...ApiConfig.xenditSupportedEWallets
                 .map((ewallet) => _buildEWalletOption(
                       context,
                       ewallet,
                     ))
-                .toList(),
+                ,
             _buildSectionHeader('Kartu'),
             _buildPaymentOption(
               context,
@@ -765,7 +765,7 @@ class EWalletDisplayWidget extends StatelessWidget {
                 urlToOpen = _getEWalletFallbackUrl(ewalletType);
               }
 
-              if (urlToOpen != null && urlToOpen.isNotEmpty) {
+              if (urlToOpen.isNotEmpty) {
                 final uri = Uri.parse(urlToOpen);
                 if (await canLaunchUrl(uri)) {
                   await launchUrl(uri, mode: LaunchMode.externalApplication);
